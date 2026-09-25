@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Verification Queue — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Pending Submissions Queue</h1>
+      <p style="color: #64748b; font-size: 0.95rem;">Carefully check details and coordinates before publishing to public listings.</p>
+    </div>
+    <a href="{% url 'moderation:dashboard' %}" class="btn btn-secondary">&larr; Back to Dashboard</a>
+  </div>
+
+  {% if events %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Event Title</th>
+            <th>Type</th>
+            <th>Event Date</th>
+            <th>Timing</th>
+            <th>Venue / Address</th>
+            <th>Submitted By</th>
+            <th>Submitted On</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in events %}
+            <tr>
+              <td>
+                <strong>{{ event.title }}</strong>
+                <div style="font-size: 0.8rem; color: #64748b;">{{ event.food_details|truncatechars:45 }}</div>
+              </td>
+              <td><span class="badge badge-type">{{ event.get_event_type_display }}</span></td>
+              <td>{{ event.event_date|date:"M d, Y" }}</td>
+              <td>{{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</td>
+              <td>
+                <div>{{ event.venue_name }}</div>
+                <div style="font-size: 0.775rem; color: #94a3b8;">{{ event.address|truncatechars:35 }}</div>
+              </td>
+              <td>{{ event.submitted_by.full_name }}</td>
+              <td style="font-size: 0.8rem; color: #94a3b8;">{{ event.created_at|date:"M d, g:i A" }}</td>
+              <td>
+                <a href="{% url 'moderation:event_review' event.id %}" class="btn btn-primary btn-sm">
+                  Review & Verify
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-tag">Pending Queue</div>
+      <h3>All submissions reviewed</h3>
+      <p>There are no pending events waiting for moderation at this time.</p>
+      <a href="{% url 'moderation:dashboard' %}" class="btn btn-secondary">Return to Dashboard</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

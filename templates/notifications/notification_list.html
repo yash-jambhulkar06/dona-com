@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; padding: 2rem 1rem 4rem;">
+  <!-- Header Card -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0 0 0.25rem;">Notifications</h1>
+      <p style="color: #64748b; font-size: 0.95rem; margin: 0;">Real-time alerts, community announcements, and submission updates</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <button type="button" class="btn btn-secondary btn-sm" id="fullPageMarkAllReadBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Mark All Read</span>
+      </button>
+      <button type="button" class="btn btn-outline btn-sm" id="fullPageClearAllBtn" style="color: #dc2626; border-color: #fecaca;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <span>Clear All</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Feed -->
+  <div class="card" style="padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    {% if page_obj %}
+      <div>
+        {% for item in page_obj %}
+          <div class="notif-item {% if not item.is_read %}is-unread{% endif %}" 
+               data-id="{{ item.id }}" 
+               data-url="{{ item.target_url }}"
+               style="border-bottom: 1px solid #f1f5f9; padding: 1.15rem 1.25rem;">
+            <div class="notif-item-icon 
+              {% if item.notification_type == 'EVENT_APPROVED' %}notif-icon-approved
+              {% elif item.notification_type == 'EVENT_REJECTED' %}notif-icon-rejected
+              {% elif item.notification_type == 'NEW_SUBMISSION' %}notif-icon-submission
+              {% elif item.notification_type == 'NEW_REPORT' or item.notification_type == 'REPORT_RESOLVED' %}notif-icon-report
+              {% elif item.notification_type == 'EVENT_NEARBY' or item.notification_type == 'EVENT_LIVE' %}notif-icon-food
+              {% else %}notif-icon-system{% endif %}">
+              {% if item.notification_type == 'EVENT_APPROVED' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              {% elif item.notification_type == 'EVENT_REJECTED' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              {% elif item.notification_type == 'NEW_SUBMISSION' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+              {% elif item.notification_type == 'NEW_REPORT' or item.notification_type == 'REPORT_RESOLVED' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+              {% elif item.notification_type == 'EVENT_NEARBY' or item.notification_type == 'EVENT_LIVE' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              {% endif %}
+            </div>
+            <div class="notif-item-text">
+              <div class="notif-item-title" style="font-size: 0.95rem;">{{ item.title }}</div>
+              <div class="notif-item-msg" style="font-size: 0.85rem; margin-bottom: 0.4rem;">{{ item.message }}</div>
+              <div class="notif-item-footer">
+                <span class="notif-item-time">{{ item.time_ago }}</span>
+                {% if not item.is_read %}
+                  <span class="notif-unread-dot" title="Unread"></span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+        <div style="padding: 1.25rem; display: flex; justify-content: center; gap: 0.5rem; background: #f8fafc; border-top: 1px solid #f1f5f9;">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+          {% endif %}
+          <span style="display: inline-flex; align-items: center; font-size: 0.85rem; color: #64748b; padding: 0 0.5rem;">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div style="padding: 4rem 1.5rem; text-align: center;">
+        <div class="notif-empty-icon" style="width: 56px; height: 56px; margin: 0 auto 1rem;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">All Caught Up!</h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">You do not have any notifications yet. New event alerts and submission updates will appear here in real time.</p>
+        <a href="{% url 'food:event_list' %}" class="btn btn-primary btn-sm">
+          Browse Free Food Events
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const markAllBtn = document.getElementById('fullPageMarkAllReadBtn');
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', async () => {
+        try {
+          const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+          const res = await fetch('/notifications/api/read-all/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrf,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (res.ok) {
+            document.querySelectorAll('.notif-item.is-unread').forEach(el => el.classList.remove('is-unread'));
+            document.querySelectorAll('.notif-unread-dot').forEach(el => el.remove());
+            if (typeof showToast === 'function') showToast('All notifications marked as read', 'success');
+          }
+        } catch (e) {}
+      });
+    }
+
+    const clearAllBtn = document.getElementById('fullPageClearAllBtn');
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear all notifications?')) return;
+        try {
+          const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+          const res = await fetch('/notifications/api/clear-all/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrf,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (res.ok) {
+            location.reload();
+          }
+        } catch (e) {}
+      });
+    }
+
+    // Attach click handlers to navigate
+    document.querySelectorAll('.notif-item').forEach(el => {
+      el.addEventListener('click', async () => {
+        const id = el.dataset.id;
+        const url = el.dataset.url;
+        try {
+          const csrf = getCookie('csrftoken');
+          await fetch(`/notifications/api/read/${id}/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrf,
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (e) {}
+        if (url && url !== '#') {
+          window.location.href = url;
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

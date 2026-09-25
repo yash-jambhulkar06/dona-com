@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Free Food Events — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a;">All Free Food Events</h1>
+    <p style="color: #64748b; font-size: 0.95rem;">Browse all verified free food opportunities.</p>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <form method="GET" action="{% url 'food:event_list' %}" class="filter-grid">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Search Query</label>
+        <input type="text" name="q" class="form-input" placeholder="Search title, venue, or address..." value="{{ search_query }}">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Event Category</label>
+        <select name="type" class="form-select">
+          <option value="">All Categories</option>
+          {% for code, name in event_types %}
+            <option value="{{ code }}" {% if selected_type == code %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Date</label>
+        <select name="date" class="form-select">
+          <option value="">Any Date</option>
+          <option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option>
+          <option value="tomorrow" {% if selected_date == 'tomorrow' %}selected{% endif %}>Tomorrow</option>
+          <option value="this_week" {% if selected_date == 'this_week' %}selected{% endif %}>Next 7 Days</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Status</label>
+        <select name="availability" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="now" {% if selected_availability == 'now' %}selected{% endif %}>Available Now</option>
+          <option value="soon" {% if selected_availability == 'soon' %}selected{% endif %}>Starts Soon</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary" style="height: 42px;">Filter</button>
+        <a href="{% url 'food:event_list' %}" class="btn btn-secondary" style="height: 42px;">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  <div style="margin-bottom: 1rem; color: #64748b; font-size: 0.9rem;">
+    Found <strong>{{ results_count }}</strong> verified event{{ results_count|pluralize }}.
+  </div>
+
+  {% if page_obj %}
+    <div class="cards-grid">
+      {% for item in page_obj %}
+        {% with event=item.event dist=item.distance_km %}
+          <article class="event-card">
+            <div class="event-card-header">
+              <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="badge {{ event.availability_status.css_class }}">
+                  {{ event.availability_status.label }}
+                </span>
+                {% if user.is_authenticated %}
+                  <button type="button" class="fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}" 
+                          data-event-id="{{ event.id }}" 
+                          title="Save favorite">
+                    {% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="event-card-body">
+              <h3 class="event-card-title">
+                <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
+              </h3>
+
+              <div class="event-meta-row">
+                <span>Date: {{ event.event_date|date:"D, M d, Y" }}</span>
+                <span>•</span>
+                <span>Time: {{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
+              </div>
+
+              <div class="event-meta-row">
+                <span>Venue: {{ event.venue_name }}</span>
+              </div>
+
+              <div class="event-food-summary">
+                <strong>Food Details:</strong> {{ event.food_details|truncatechars:120 }}
+              </div>
+            </div>
+
+            <div class="event-card-footer">
+              <div>
+                {% if dist %}
+                  <span class="distance-pill">{{ dist }} km away</span>
+                {% else %}
+                  <span style="font-size: 0.8rem; color: #64748b;">{{ event.address|truncatechars:28 }}</span>
+                {% endif %}
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}" 
+                   target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
+                  Directions
+                </a>
+                <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">
+                  Details
+                </a>
+              </div>
+            </div>
+          </article>
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+      <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2.5rem;">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}&date={{ selected_date }}&availability={{ selected_availability }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+        {% endif %}
+        
+        <span style="padding: 0.4rem 1rem; font-size: 0.9rem; color: #64748b;">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&type={{ selected_type }}&date={{ selected_date }}&availability={{ selected_availability }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-tag">Filter Results</div>
+      <h3>No free food events match your criteria</h3>
+      <p>Try clearing your search query or broadening the date and category filters.</p>
+      <a href="{% url 'food:event_list' %}" class="btn btn-secondary">Clear All Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

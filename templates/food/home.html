@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Free Food Near You — Dona.Com{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-pill">
+      Verified Community Free Food Platform
+    </div>
+    <h1 class="hero-title">
+      Where can I find <span>free food near me</span>?
+    </h1>
+    <p class="hero-subtitle">
+      Discover free community meals, temple mahaprasad, gurudwara langar, celebrations, and NGO food distributions happening around you right now.
+    </p>
+
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+        <a href="#" class="btn btn-primary btn-lg btn-near-me">
+          Find Free Food Near Me
+        </a>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="openModal('manualLocationModal')">
+          Search Location Manually
+        </button>
+      {% else %}
+        <a href="{% url 'accounts:login' %}?next={% url 'food:nearby_events' %}" class="btn btn-primary btn-lg">
+          Sign In to Find Food Near Me
+        </a>
+        <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-lg">
+          Create Free Account
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat-item">
+        <div class="hero-stat-num">{{ active_now_count }}</div>
+        <div class="hero-stat-label">Available Right Now</div>
+      </div>
+      <div class="hero-stat-item">
+        <div class="hero-stat-num">{{ total_approved }}</div>
+        <div class="hero-stat-label">Upcoming Verified Events</div>
+      </div>
+      <div class="hero-stat-item">
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Admin Verified & Free</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Filter & Results Section -->
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    
+    {% if user.is_authenticated %}
+      <div class="filter-bar">
+        <form action="{% url 'food:event_list' %}" method="GET" class="filter-grid">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" class="form-input" placeholder="Search title, venue, or address...">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Event Type</label>
+            <select name="type" class="form-select">
+              <option value="">All Categories</option>
+              {% for code, name in event_types %}
+                <option value="{{ code }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Availability</label>
+            <select name="availability" class="form-select">
+              <option value="">Any Time</option>
+              <option value="now">Available Now</option>
+              <option value="soon">Starting Soon (within 1 hour)</option>
+              <option value="today">Today</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Distance</label>
+            <select name="max_distance" class="form-select">
+              <option value="">Any Distance</option>
+              <option value="5">Within 5 km</option>
+              <option value="15">Within 15 km</option>
+              <option value="30">Within 30 km</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="height: 42px;">
+            Filter Events
+          </button>
+        </form>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 700;">
+          Recommended & Active Listings
+        </h2>
+        <a href="{% url 'food:event_list' %}" class="btn btn-outline btn-sm">View All &rarr;</a>
+      </div>
+
+      {% if recommended_results %}
+        <div class="cards-grid">
+          {% for item in recommended_results %}
+            {% with event=item.event dist=item.distance_km %}
+              <article class="event-card">
+                <div class="event-card-header">
+                  <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="badge {{ event.availability_status.css_class }}">
+                      {{ event.availability_status.label }}
+                    </span>
+                    <button type="button" class="fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}" 
+                            data-event-id="{{ event.id }}" 
+                            title="Save favorite">
+                      {% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="event-card-body">
+                  <h3 class="event-card-title">
+                    <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
+                  </h3>
+
+                  <div class="event-meta-row">
+                    <span>Date: {{ event.event_date|date:"D, M d" }}</span>
+                    <span>•</span>
+                    <span>Time: {{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
+                  </div>
+
+                  <div class="event-meta-row">
+                    <span>Venue: {{ event.venue_name }}</span>
+                  </div>
+
+                  <div class="event-food-summary">
+                    <strong>Food Details:</strong> {{ event.food_details|truncatechars:120 }}
+                  </div>
+                </div>
+
+                <div class="event-card-footer">
+                  <div>
+                    {% if dist %}
+                      <span class="distance-pill">{{ dist }} km away</span>
+                    {% else %}
+                      <span style="font-size: 0.8rem; color: #64748b;">{{ event.address|truncatechars:28 }}</span>
+                    {% endif %}
+                  </div>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}" 
+                       target="_blank" rel="noopener" class="btn btn-secondary btn-sm" title="Directions">
+                      Directions
+                    </a>
+                    <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">
+                      Details
+                    </a>
+                  </div>
+                </div>
+              </article>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-tag">Status</div>
+          <h3>No free food events currently scheduled</h3>
+          <p>There are no active or upcoming listings right now. Know of a community langar, feast, or distribution? Share it with everyone!</p>
+          <a href="{% url 'food:event_add' %}" class="btn btn-primary">Submit Free Food Event</a>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- Member-Exclusive Sign-in Gate -->
+      <div class="auth-gate-card">
+        <div class="auth-gate-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Member-Exclusive Access</span>
+        </div>
+
+        <h2 class="auth-gate-title">
+          Sign In to Access Free Food Listings & Live Directions
+        </h2>
+        <p class="auth-gate-subtitle">
+          Community food distributions, temple mahaprasad, gurudwara langars, live availability statuses, and navigation directions are available to registered community members.
+        </p>
+
+        <div class="auth-gate-features">
+          <div class="auth-gate-feature-item">
+            <div class="auth-gate-feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div class="auth-gate-feature-heading">Real-Time Meal Statuses</div>
+              <div class="auth-gate-feature-desc">Know immediately if food is being served right now or starting within the hour.</div>
+            </div>
+          </div>
+
+          <div class="auth-gate-feature-item">
+            <div class="auth-gate-feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div>
+              <div class="auth-gate-feature-heading">Distance & Live Navigation</div>
+              <div class="auth-gate-feature-desc">Calculate proximity and open instant turn-by-turn Google Maps routing.</div>
+            </div>
+          </div>
+
+          <div class="auth-gate-feature-item">
+            <div class="auth-gate-feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div class="auth-gate-feature-heading">100% Free & Verified</div>
+              <div class="auth-gate-feature-desc">Every event is reviewed and approved by moderators before appearing on the map.</div>
+            </div>
+          </div>
+
+          <div class="auth-gate-feature-item">
+            <div class="auth-gate-feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="auth-gate-feature-heading">Favorites & Alerts</div>
+              <div class="auth-gate-feature-desc">Bookmark regular community kitchens and manage your saved places easily.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-gate-actions">
+          <a href="{% url 'accounts:login' %}?next={% url 'food:home' %}" class="btn btn-primary btn-lg">
+            Sign In to View Events
+          </a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-lg">
+            Create Free Account
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Community Call to Action Banner -->
+    <div class="community-cta-banner">
+      <div style="max-width: 600px;">
+        <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">Know of Free Food Being Served?</h3>
+        <p style="opacity: 0.9; line-height: 1.5;">
+          Help community members by posting details of weddings, religious events, langars, or charitable food distributions. Every verified listing feeds someone in need.
+        </p>
+      </div>
+      <div>
+        <a href="{% url 'food:event_add' %}" class="btn btn-secondary btn-lg" style="background: white; color: #991b1b; font-weight: 700;">
+          Submit Free Food Event
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

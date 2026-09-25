@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 640px; padding-top: 2rem;">
+  <div style="background-color: white; border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: 2rem; box-shadow: var(--shadow-sm);">
+    
+    <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+      <div style="width: 4rem; height: 4rem; border-radius: 50%; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 700;">
+        {% if user.profile_image %}
+          <img src="{{ user.profile_image }}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        {% else %}
+          {{ user.first_name|default:user.email|default:"U"|slice:":1"|upper }}
+        {% endif %}
+      </div>
+      <div>
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a;">{{ user.full_name }}</h1>
+        <p style="color: #64748b; font-size: 0.9rem;">
+          {% if user.email %}Email: {{ user.email }}{% endif %}
+          {% if user.mobile %}Mobile: {{ user.mobile }}{% endif %}
+        </p>
+        {% if user.is_staff %}
+          <span class="badge badge-warning" style="margin-top: 0.25rem;">Moderator / Staff</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+      <div style="background-color: #f8fafc; border-radius: 10px; padding: 1.25rem; text-align: center; border: 1px solid #e2e8f0;">
+        <div style="font-size: 1.85rem; font-weight: 800; color: #dc2626;">{{ submissions_count }}</div>
+        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Submissions</div>
+        <a href="{% url 'food:my_submissions' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none;">View All &rarr;</a>
+      </div>
+
+      <div style="background-color: #f8fafc; border-radius: 10px; padding: 1.25rem; text-align: center; border: 1px solid #e2e8f0;">
+        <div style="font-size: 1.85rem; font-weight: 800; color: #dc2626;">{{ favorites_count }}</div>
+        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Saved Favorites</div>
+        <a href="{% url 'food:favorites' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none;">View All &rarr;</a>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-size: 0.85rem; color: #64748b;">
+        Member since {{ user.date_joined|date:"F Y" }}
+      </div>
+      <a href="{% url 'accounts:logout' %}" class="btn btn-outline btn-sm">Sign Out</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

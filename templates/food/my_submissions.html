@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}My Submissions — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">My Submissions</h1>
+      <p style="color: #64748b; font-size: 0.95rem;">Track the moderation and verification status of your submitted free food events.</p>
+    </div>
+    <a href="{% url 'food:event_add' %}" class="btn btn-primary">Submit Another Event</a>
+  </div>
+
+  {% if submissions %}
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      {% for event in submissions %}
+        <div style="background: white; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
+            <div>
+              <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+              <h3 style="font-size: 1.25rem; font-weight: 700; margin-top: 0.35rem; color: #0f172a;">
+                {{ event.title }}
+              </h3>
+            </div>
+            
+            <div>
+              {% if event.status == 'PENDING' %}
+                <span class="badge badge-warning" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">Pending Admin Review</span>
+              {% elif event.status == 'APPROVED' %}
+                <span class="badge badge-success" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">Approved & Public</span>
+              {% elif event.status == 'REJECTED' %}
+                <span class="badge badge-danger" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">Rejected</span>
+              {% elif event.status == 'EXPIRED' %}
+                <span class="badge badge-expired" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">Expired</span>
+              {% else %}
+                <span class="badge badge-expired">{{ event.get_status_display }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.9rem; color: #475569; margin-bottom: 1rem;">
+            <div>Event Date: <strong>{{ event.event_date|date:"M d, Y" }}</strong> ({{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }})</div>
+            <div>Venue: <strong>{{ event.venue_name }}</strong></div>
+            <div>Submitted on: {{ event.created_at|date:"M d, Y, g:i A" }}</div>
+          </div>
+
+          <!-- Rejection feedback alert if rejected -->
+          {% if event.status == 'REJECTED' and event.admin_note %}
+            <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 0.85rem 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.9rem; color: #991b1b;">
+              <strong>Moderator Rejection Reason:</strong> {{ event.admin_note }}
+            </div>
+          {% endif %}
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            {% if event.status == 'APPROVED' %}
+              <a href="{% url 'food:event_detail' event.id %}" class="btn btn-outline btn-sm">View Public Listing</a>
+            {% elif event.status == 'PENDING' %}
+              <a href="{% url 'food:event_detail' event.id %}" class="btn btn-secondary btn-sm">Preview Submission</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-tag">Submissions</div>
+      <h3>You have not submitted any free food events yet</h3>
+      <p>Share free food events happening in your local community. Each submission is verified to help people find reliable meals.</p>
+      <a href="{% url 'food:event_add' %}" class="btn btn-primary">Submit Your First Event</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

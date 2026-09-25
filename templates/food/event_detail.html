@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="margin-bottom: 1rem;">
+    <a href="{% url 'food:event_list' %}" style="text-decoration: none; color: #64748b; font-size: 0.9rem; font-weight: 500;">
+      &larr; Back to all events
+    </a>
+  </div>
+
+  <div class="event-detail-grid">
+    <!-- Main Content Column -->
+    <div class="event-main-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+        <span class="badge badge-type" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+          {{ event.get_event_type_display }}
+        </span>
+        <span class="badge {{ event.availability_status.css_class }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+          {{ event.availability_status.label }}
+        </span>
+      </div>
+
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1.25; margin-bottom: 1rem;">
+        {{ event.title }}
+      </h1>
+
+      <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+        <div>Date: <strong>{{ event.event_date|date:"l, F d, Y" }}</strong></div>
+        <div>Time: <strong>{{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</strong></div>
+        <div>Venue: <strong>{{ event.venue_name }}</strong></div>
+      </div>
+
+      <!-- Food Details Callout -->
+      <div class="detail-section" style="margin-top: 0; padding-top: 0; border-top: none;">
+        <h2 class="detail-section-title">Food Served</h2>
+        <div class="food-details-box">
+          {{ event.food_details|linebreaks }}
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="detail-section">
+        <h2 class="detail-section-title">Event Description & Community Context</h2>
+        <p style="color: #334155; line-height: 1.7; font-size: 1rem;">
+          {{ event.description|linebreaks }}
+        </p>
+      </div>
+
+      <!-- Location and Interactive Map -->
+      <div class="detail-section">
+        <h2 class="detail-section-title">Location & Venue Details</h2>
+        <p style="color: #475569; margin-bottom: 1rem; font-size: 0.95rem;">
+          <strong>{{ event.venue_name }}</strong><br>
+          {{ event.address }}
+        </p>
+        <div id="eventDetailMap" style="height: 350px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;"></div>
+        <a href="{{ directions_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-block">
+          Open in Google Maps (Get Turn-by-Turn Directions)
+        </a>
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div>
+      <div class="event-sidebar-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">Event Actions</h3>
+
+        <a href="{{ directions_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-block">
+          Get Directions
+        </a>
+
+        {% if user.is_authenticated %}
+          <button type="button" class="btn btn-secondary btn-block fav-btn {% if is_favorited %}is-favorited{% endif %}" 
+                  data-event-id="{{ event.id }}" style="justify-content: center;">
+            <span class="fav-text">{% if is_favorited %}Saved in Favorites{% else %}Save to Favorites{% endif %}</span>
+          </button>
+
+          <button type="button" class="btn btn-outline btn-block" onclick="openModal('reportModal')" style="color: #dc2626; border-color: #fca5a5;">
+            Report Incorrect Listing
+          </button>
+        {% else %}
+          <div style="background-color: #f8fafc; border-radius: 8px; padding: 1rem; text-align: center; font-size: 0.85rem; color: #64748b;">
+            <a href="{% url 'accounts:login' %}" style="font-weight: 600; color: #dc2626;">Sign in</a> to save this event to your favorites or submit updates.
+          </div>
+        {% endif %}
+
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; font-size: 0.825rem; color: #64748b;">
+          <div><strong>Listing Status:</strong> {{ event.get_status_display }}</div>
+          <div style="margin-top: 0.35rem;"><strong>Submitted:</strong> {{ event.created_at|date:"M d, Y" }}</div>
+          {% if event.approved_at %}
+            <div style="margin-top: 0.35rem;"><strong>Verified:</strong> {{ event.approved_at|date:"M d, Y" }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+{% if user.is_authenticated %}
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Report This Listing</h3>
+        <button type="button" class="alert-close" onclick="closeModal('reportModal')">&times;</button>
+      </div>
+      <form action="{% url 'food:event_report' event.id %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Reason for reporting</label>
+          {{ report_form.reason }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Additional Details</label>
+          {{ report_form.details }}
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('reportModal')">Cancel</button>
+          <button type="submit" class="btn btn-danger">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const lat = {{ event.latitude }};
+    const lng = {{ event.longitude }};
+    const title = "{{ event.title|escapejs }}";
+
+    if (typeof L !== 'undefined' && document.getElementById('eventDetailMap')) {
+      const map = L.map('eventDetailMap').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup(`<strong>${title}</strong><br>{{ event.venue_name|escapejs }}`)
+        .openPopup();
+    }
+  });
+</script>
+{% endblock %}

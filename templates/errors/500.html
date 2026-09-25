@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error (500) — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 4rem 1.25rem; text-align: center;">
+  <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626; margin-bottom: 0.5rem;">System Error</div>
+  <h1 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">500 — Internal Server Error</h1>
+  <p style="color: #64748b; max-width: 500px; margin: 0 auto 2rem; font-size: 1rem;">
+    Something unexpected went wrong. Our team has been notified and we are working to fix it.
+  </p>
+  <a href="{% url 'food:home' %}" class="btn btn-primary">Return to Home</a>
+</div>
+{% endblock %}

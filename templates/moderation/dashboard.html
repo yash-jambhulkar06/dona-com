@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Moderation Dashboard — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Admin Moderation Dashboard</h1>
+      <p style="color: #64748b; font-size: 0.95rem;">Review submissions, manage listing verification, and address community reports.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{% url 'moderation:pending_queue' %}" class="btn btn-primary">
+        Pending Queue ({{ pending_count }})
+      </a>
+      <a href="{% url 'moderation:reports_list' %}" class="btn btn-secondary">
+        Reports Queue ({{ pending_reports_count }})
+      </a>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card metric-pending">
+      <div style="font-size: 0.825rem; font-weight: 700; color: #9a3412; text-transform: uppercase;">Pending Review</div>
+      <div class="metric-value">{{ pending_count }}</div>
+      <a href="{% url 'moderation:pending_queue' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #ea580c; font-weight: 600; text-decoration: none;">Open Queue &rarr;</a>
+    </div>
+
+    <div class="metric-card metric-approved">
+      <div style="font-size: 0.825rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Approved & Public</div>
+      <div class="metric-value">{{ approved_count }}</div>
+      <a href="{% url 'food:event_list' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none;">View Directory &rarr;</a>
+    </div>
+
+    <div class="metric-card">
+      <div style="font-size: 0.825rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Rejected Submissions</div>
+      <div class="metric-value">{{ rejected_count }}</div>
+    </div>
+
+    <div class="metric-card metric-reports">
+      <div style="font-size: 0.825rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Pending Reports</div>
+      <div class="metric-value">{{ pending_reports_count }}</div>
+      <a href="{% url 'moderation:reports_list' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #b91c1c; font-weight: 600; text-decoration: none;">Manage Reports &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Recent Pending Submissions -->
+  <div style="margin-bottom: 2.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 700;">Submissions Awaiting Verification</h2>
+      <a href="{% url 'moderation:pending_queue' %}" class="btn btn-outline btn-sm">View All Pending &rarr;</a>
+    </div>
+
+    {% if recent_pending %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Date & Time</th>
+              <th>Venue</th>
+              <th>Submitted By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in recent_pending %}
+              <tr>
+                <td><strong>{{ event.title }}</strong></td>
+                <td><span class="badge badge-type">{{ event.get_event_type_display }}</span></td>
+                <td>{{ event.event_date|date:"M d, Y" }} ({{ event.start_time|time:"g:i A" }})</td>
+                <td>{{ event.venue_name }}</td>
+                <td>{{ event.submitted_by.full_name }}</td>
+                <td>
+                  <a href="{% url 'moderation:event_review' event.id %}" class="btn btn-primary btn-sm">
+                    Review
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: 2.5rem 1rem;">
+        <div class="empty-state-tag">Queue Status</div>
+        <h3>Pending queue is all clear</h3>
+        <p>All user submissions have been reviewed and moderated.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Moderation Audit Logs -->
+  <div>
+    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Recent Moderation Audit Logs</h2>
+    {% if recent_logs %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Event</th>
+              <th>Moderator</th>
+              <th>Reason / Note</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in recent_logs %}
+              <tr>
+                <td>
+                  {% if log.action == 'APPROVE' %}
+                    <span class="badge badge-success">Approved</span>
+                  {% elif log.action == 'REJECT' %}
+                    <span class="badge badge-danger">Rejected</span>
+                  {% else %}
+                    <span class="badge badge-info">{{ log.get_action_display }}</span>
+                  {% endif %}
+                </td>
+                <td><a href="{% url 'moderation:event_review' log.event.id %}" style="color: inherit; font-weight: 600;">{{ log.event.title }}</a></td>
+                <td>{{ log.admin.full_name|default:log.admin.email|default:"Staff" }}</td>
+                <td style="color: #64748b;">{{ log.reason_or_note|default:"—" }}</td>
+                <td style="white-space: nowrap; font-size: 0.8rem; color: #94a3b8;">{{ log.created_at|date:"M d, g:i A" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: #64748b; font-size: 0.9rem;">No moderation actions recorded yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Register — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-card-wrap">
+    <div class="auth-card">
+      <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626; margin-bottom: 0.5rem; letter-spacing: -0.02em;">
+        Dona.Com
+      </div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">
+        Create an Account
+      </h1>
+      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.75rem;">
+        Join Dona.Com to share free food listings, track community events, and bookmark favorites.
+      </p>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger" style="text-align: left; font-size: 0.875rem; margin-bottom: 1.25rem;">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'accounts:register' %}" novalidate style="text-align: left;">
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <div class="form-group">
+          <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name</label>
+          {{ form.full_name }}
+          {% if form.full_name.errors %}
+            <div class="form-error" style="margin-top: 0.35rem;">
+              {{ form.full_name.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <div class="form-error" style="margin-top: 0.35rem;">
+              {{ form.email.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <div class="form-error" style="margin-top: 0.35rem;">
+              {{ form.password.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.confirm_password.id_for_label }}" class="form-label">Confirm Password</label>
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}
+            <div class="form-error" style="margin-top: 0.35rem;">
+              {{ form.confirm_password.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem 1rem; font-size: 1rem; margin-top: 1rem;">
+          Register
+        </button>
+      </form>
+
+      <div style="margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; font-size: 0.9rem; color: #64748b;">
+        Already have an account? 
+        <a href="{% url 'accounts:login' %}{% if next %}?next={{ next }}{% endif %}" style="color: #dc2626; font-weight: 600; text-decoration: none;">
+          Sign In
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

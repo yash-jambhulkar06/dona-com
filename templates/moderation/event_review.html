@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Submission: {{ event.title }} — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+    <a href="{% url 'moderation:pending_queue' %}" style="text-decoration: none; color: #64748b; font-weight: 500;">
+      &larr; Back to Pending Queue
+    </a>
+    <div>
+      <span class="badge {% if event.status == 'PENDING' %}badge-warning{% elif event.status == 'APPROVED' %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 0.9rem; padding: 0.4rem 0.85rem;">
+        Status: {{ event.get_status_display }}
+      </span>
+    </div>
+  </div>
+
+  <div class="event-detail-grid">
+    <!-- Event Details Review Column -->
+    <div class="event-main-card">
+      <span class="badge badge-type" style="margin-bottom: 0.5rem;">{{ event.get_event_type_display }}</span>
+      <h1 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem;">
+        {{ event.title }}
+      </h1>
+
+      <div style="background-color: #f8fafc; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #475569;">
+        <strong>Submitted By:</strong> {{ event.submitted_by.full_name }} ({{ event.submitted_by.email|default:event.submitted_by.mobile }})<br>
+        <strong>Submitted On:</strong> {{ event.created_at|date:"F d, Y at g:i A" }}
+      </div>
+
+      <div class="detail-section" style="margin-top: 0; padding-top: 0; border-top: none;">
+        <h2 class="detail-section-title">Date & Timings</h2>
+        <p style="font-size: 1rem; color: #334155;">
+          <strong>Date:</strong> {{ event.event_date|date:"l, F d, Y" }}<br>
+          <strong>Serving Hours:</strong> {{ event.start_time|time:"g:i A" }} to {{ event.end_time|time:"g:i A" }}
+        </p>
+      </div>
+
+      <div class="detail-section">
+        <h2 class="detail-section-title">Food Details</h2>
+        <div class="food-details-box">
+          {{ event.food_details|linebreaks }}
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h2 class="detail-section-title">Description & Background</h2>
+        <p style="color: #334155; line-height: 1.6;">
+          {{ event.description|linebreaks }}
+        </p>
+      </div>
+
+      <div class="detail-section">
+        <h2 class="detail-section-title">Venue & Location Verification</h2>
+        <p style="color: #334155; margin-bottom: 0.75rem;">
+          <strong>{{ event.venue_name }}</strong><br>
+          {{ event.address }}<br>
+          <span style="font-size: 0.825rem; color: #64748b;">Latitude: {{ event.latitude }}, Longitude: {{ event.longitude }}</span>
+        </p>
+        <div id="reviewMap" style="height: 300px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 0.75rem;"></div>
+      </div>
+
+      {% if logs %}
+        <div class="detail-section">
+          <h2 class="detail-section-title">Moderation History</h2>
+          <ul style="list-style: none; font-size: 0.85rem; color: #475569; display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for log in logs %}
+              <li style="padding: 0.5rem; background: #f8fafc; border-radius: 6px;">
+                <strong>{{ log.get_action_display }}</strong> by {{ log.admin.full_name }} on {{ log.created_at|date:"M d, Y, g:i A" }}<br>
+                <em>{{ log.reason_or_note }}</em>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Moderation Actions Sidebar -->
+    <div>
+      <div class="event-sidebar-card">
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+          Moderator Decisions
+        </h3>
+
+        <!-- Approve Form -->
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1.25rem;">
+          <h4 style="color: #166534; font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Approve Submission
+          </h4>
+          <p style="font-size: 0.825rem; color: #15803d; margin-bottom: 1rem;">
+            Approving will immediately publish this event to the public directory and map discovery.
+          </p>
+          <form action="{% url 'moderation:event_approve' event.id %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <input type="text" name="admin_note" class="form-input" placeholder="Optional admin verification note" style="font-size: 0.85rem;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Approve & Publish
+            </button>
+          </form>
+        </div>
+
+        <!-- Reject Form -->
+        <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 1.25rem;">
+          <h4 style="color: #991b1b; font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Reject Submission
+          </h4>
+          <p style="font-size: 0.825rem; color: #b91c1c; margin-bottom: 1rem;">
+            Submissions that are incomplete, paid, spam, or misleading should be rejected with feedback.
+          </p>
+          <form action="{% url 'moderation:event_reject' event.id %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <textarea name="rejection_reason" class="form-textarea" rows="3" placeholder="Specify reason for rejection (visible to submitter)..." required style="font-size: 0.85rem;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger btn-block">
+              Reject Submission
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const lat = {{ event.latitude }};
+    const lng = {{ event.longitude }};
+
+    if (typeof L !== 'undefined' && document.getElementById('reviewMap')) {
+      const map = L.map('reviewMap').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup(`<strong>${"{{ event.title|escapejs }}"}</strong><br>${"{{ event.venue_name|escapejs }}"}`)
+        .openPopup();
+    }
+  });
+</script>
+{% endblock %}

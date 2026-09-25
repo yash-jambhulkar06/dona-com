@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit a Free Food Event — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 780px; padding-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Submit Free Food Event</h1>
+    <p style="color: #64748b; font-size: 0.95rem;">
+      Share information about free food being served in your community.
+    </p>
+    <div class="alert alert-info" style="margin-top: 1rem;">
+      <strong>Moderation Notice:</strong> Every submission is reviewed by an administrator before it becomes publicly visible on the platform.
+    </div>
+  </div>
+
+  <div style="background-color: white; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+    <form method="POST" action="{% url 'food:event_add' %}">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Event Title *</label>
+        {{ form.title }}
+        {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Event Type *</label>
+          {{ form.event_type }}
+          {% if form.event_type.errors %}<div class="form-error">{{ form.event_type.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Event Date *</label>
+          {{ form.event_date }}
+          {% if form.event_date.errors %}<div class="form-error">{{ form.event_date.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Start Time *</label>
+          {{ form.start_time }}
+          {% if form.start_time.errors %}<div class="form-error">{{ form.start_time.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">End Time *</label>
+          {{ form.end_time }}
+          {% if form.end_time.errors %}<div class="form-error">{{ form.end_time.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Food Details *</label>
+        {{ form.food_details }}
+        <div class="form-help">Mention food items (e.g. Rice, Dal, Sabzi, Puri, Kheer), veg/non-veg, and packaging.</div>
+        {% if form.food_details.errors %}<div class="form-error">{{ form.food_details.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description & Context *</label>
+        {{ form.description }}
+        <div class="form-help">Provide organizer details, occasion, or special guidelines for visitors.</div>
+        {% if form.description.errors %}<div class="form-error">{{ form.description.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Venue / Place Name *</label>
+        {{ form.venue_name }}
+        {% if form.venue_name.errors %}<div class="form-error">{{ form.venue_name.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Full Street Address *</label>
+        {{ form.address }}
+        {% if form.address.errors %}<div class="form-error">{{ form.address.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Map Pin Picker -->
+      <div class="form-group">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+          <label class="form-label" style="margin-bottom: 0;">Pin Exact Location on Map *</label>
+          <button type="button" class="btn btn-outline btn-sm" id="btnPickerLocateMe">
+            Use My Current Location
+          </button>
+        </div>
+        <p style="font-size: 0.8rem; color: #64748b;">
+          Click on the map or drag the pin to set the exact coordinates of where food is being served.
+        </p>
+
+        <div id="pickerMap" class="map-picker"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+          <div>
+            <label class="form-label" style="font-size: 0.8rem;">Latitude</label>
+            {{ form.latitude }}
+            {% if form.latitude.errors %}<div class="form-error">{{ form.latitude.errors.0 }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.8rem;">Longitude</label>
+            {{ form.longitude }}
+            {% if form.longitude.errors %}<div class="form-error">{{ form.longitude.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+        <a href="{% url 'food:home' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg">Submit for Verification</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize coordinate picker
+    FoodMap.initLocationPicker('pickerMap', 'id_latitude', 'id_longitude', 'id_address');
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Community Reports — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Community Reports</h1>
+      <p style="color: #64748b; font-size: 0.95rem;">Review reports submitted by users regarding incorrect or outdated listings.</p>
+    </div>
+    <a href="{% url 'moderation:dashboard' %}" class="btn btn-secondary">&larr; Back to Dashboard</a>
+  </div>
+
+  <!-- Status Filter Tabs -->
+  <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+    <a href="?status=PENDING" class="btn btn-sm {% if current_status == 'PENDING' %}btn-primary{% else %}btn-secondary{% endif %}">Pending</a>
+    <a href="?status=RESOLVED" class="btn btn-sm {% if current_status == 'RESOLVED' %}btn-primary{% else %}btn-secondary{% endif %}">Resolved</a>
+    <a href="?status=DISMISSED" class="btn btn-sm {% if current_status == 'DISMISSED' %}btn-primary{% else %}btn-secondary{% endif %}">Dismissed</a>
+    <a href="?status=" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+  </div>
+
+  {% if reports %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Reason</th>
+            <th>Details</th>
+            <th>Reported By</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Moderation Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for report in reports %}
+            <tr>
+              <td>
+                <a href="{% url 'moderation:event_review' report.event.id %}" style="font-weight: 700; color: inherit;">
+                  {{ report.event.title }}
+                </a>
+                <div style="font-size: 0.775rem; color: #64748b;">{{ report.event.venue_name }}</div>
+              </td>
+              <td>
+                <span class="badge badge-danger">{{ report.get_reason_display }}</span>
+              </td>
+              <td style="max-width: 220px; font-size: 0.85rem; color: #475569;">
+                {{ report.details|default:"No additional details provided" }}
+              </td>
+              <td style="font-size: 0.85rem;">
+                {{ report.reported_by.full_name }}
+              </td>
+              <td style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap;">
+                {{ report.created_at|date:"M d, g:i A" }}
+              </td>
+              <td>
+                <span class="badge {% if report.status == 'PENDING' %}badge-warning{% elif report.status == 'RESOLVED' %}badge-success{% else %}badge-expired{% endif %}">
+                  {{ report.get_status_display }}
+                </span>
+              </td>
+              <td>
+                {% if report.status == 'PENDING' %}
+                  <form action="{% url 'moderation:report_action' report.id %}" method="POST" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="resolve" class="btn btn-primary btn-sm" title="Mark resolved">Resolve</button>
+                    <button type="submit" name="action" value="unpublish" class="btn btn-danger btn-sm" title="Remove event listing">Unpublish Event</button>
+                    <button type="submit" name="action" value="dismiss" class="btn btn-secondary btn-sm" title="Dismiss false report">Dismiss</button>
+                  </form>
+                {% else %}
+                  <span style="font-size: 0.8rem; color: #94a3b8;">
+                    Reviewed by {{ report.reviewed_by.full_name|default:"Staff" }}
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-tag">Reports Queue</div>
+      <h3>No reports found</h3>
+      <p>There are no community reports under this status.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

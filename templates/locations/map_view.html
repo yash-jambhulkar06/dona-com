@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Interactive Free Food Map — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Free Food Map Discovery</h1>
+      <p style="color: #64748b; font-size: 0.95rem;">Locate active and upcoming community meals and food distributions near you.</p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button type="button" class="btn btn-primary btn-sm btn-near-me">
+        Center on My Location
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('manualLocationModal')">
+        Search City or Area
+      </button>
+    </div>
+  </div>
+
+  <div id="fullDiscoveryMap" class="map-container"></div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: #64748b; margin-top: -1rem; margin-bottom: 2rem;">
+    <div>Showing <strong>{{ total_pins }}</strong> verified location{{ total_pins|pluralize }} on the map.</div>
+    <div style="display: flex; gap: 1rem;">
+      <span>Pin: Available & Upcoming Events</span>
+      <span>Blue Marker: Your Location</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const pins = {{ pins_json|safe }};
+    FoodMap.initFullMap('fullDiscoveryMap', pins);
+  });
+</script>
+{% endblock %}
