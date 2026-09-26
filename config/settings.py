@@ -19,6 +19,10 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 
 IS_VERCEL = bool(os.getenv('VERCEL') or os.getenv('VERCEL_ENV'))
+PUBLIC_APP_URL = os.getenv(
+    'PUBLIC_APP_URL',
+    'https://dona-com-kappa.vercel.app' if IS_VERCEL else '',
+)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
@@ -60,10 +64,10 @@ configured_hosts = [
 ]
 vercel_hosts = [
     _host_from_value(os.getenv(name, ''))
-    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'PUBLIC_APP_URL')
+    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL')
 ]
 ALLOWED_HOSTS = list(dict.fromkeys(
-    host for host in (configured_hosts + vercel_hosts + ['localhost', '127.0.0.1', 'testserver'])
+    host for host in (configured_hosts + vercel_hosts + [_host_from_value(PUBLIC_APP_URL), 'localhost', '127.0.0.1', 'testserver'])
     if host
 ))
 
@@ -241,10 +245,10 @@ configured_origins = [
 ]
 vercel_origins = [
     _origin_from_value(os.getenv(name, ''))
-    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'PUBLIC_APP_URL')
+    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL')
 ]
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
-    origin for origin in (configured_origins + vercel_origins + ['http://localhost:8000', 'http://127.0.0.1:8000'])
+    origin for origin in (configured_origins + vercel_origins + [_origin_from_value(PUBLIC_APP_URL), 'http://localhost:8000', 'http://127.0.0.1:8000'])
     if origin
 ))
 
