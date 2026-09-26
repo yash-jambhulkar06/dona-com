@@ -113,7 +113,50 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // Share verified event pages with native share or a clipboard fallback.
+  document.querySelectorAll('.share-event-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const shareData = {
+        title: btn.dataset.shareTitle || document.title,
+        text: btn.dataset.shareText || document.title,
+        url: window.location.href
+      };
+
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+          return;
+        }
+
+        await copyTextToClipboard(shareData.url);
+        showToast('Event link copied. Share it with someone who needs it.', 'success');
+      } catch (err) {
+        if (err && err.name !== 'AbortError') {
+          showToast('Unable to share this event right now.', 'error');
+        }
+      }
+    });
+  });
 });
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.setAttribute('readonly', '');
+  textArea.style.position = 'fixed';
+  textArea.style.opacity = '0';
+  document.body.appendChild(textArea);
+  textArea.select();
+  const copied = document.execCommand('copy');
+  textArea.remove();
+  if (!copied) throw new Error('Clipboard copy failed');
+}
 
 /**
  * Gets a cookie value by name (e.g. csrftoken)

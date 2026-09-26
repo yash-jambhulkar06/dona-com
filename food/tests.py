@@ -32,14 +32,13 @@ class EventAccessAuthenticationTests(TestCase):
             submitted_by=self.user
         )
 
-    def test_unauthenticated_user_sees_gate_on_home_page(self):
-        """Unauthenticated visitor sees home hero & auth gate, but no event cards."""
+    def test_unauthenticated_user_can_browse_home_page(self):
+        """Public homepage renders approved listings without a login gate."""
         response = self.client.get(reverse('food:home'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['recommended_results']), 0)
-        self.assertContains(response, 'Sign In to Access Free Food Listings')
-        self.assertContains(response, 'Member-Exclusive Access')
-        self.assertNotContains(response, 'Temple Maha Prasad Feast')
+        self.assertGreater(len(response.context['recommended_results']), 0)
+        self.assertContains(response, 'Temple Maha Prasad Feast')
+        self.assertNotContains(response, 'Member-Exclusive Access')
 
     def test_authenticated_user_sees_events_on_home_page(self):
         """Authenticated user sees recommended events and filter bar on home page."""
@@ -48,14 +47,13 @@ class EventAccessAuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertGreater(len(response.context['recommended_results']), 0)
         self.assertContains(response, 'Temple Maha Prasad Feast')
-        self.assertContains(response, 'Filter Events')
         self.assertNotContains(response, 'Member-Exclusive Access')
 
-    def test_unauthenticated_user_redirected_from_event_list(self):
-        """Unauthenticated visitor navigating to /food/ is redirected to login."""
-        url = reverse('food:event_list')
-        response = self.client.get(url)
-        self.assertRedirects(response, f"/login/?next={url}")
+    def test_unauthenticated_user_can_access_event_list(self):
+        """Public visitors can browse the approved event directory."""
+        response = self.client.get(reverse('food:event_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Temple Maha Prasad Feast')
 
     def test_authenticated_user_can_access_event_list(self):
         """Authenticated user can browse all events."""
@@ -64,11 +62,10 @@ class EventAccessAuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Temple Maha Prasad Feast')
 
-    def test_unauthenticated_user_redirected_from_nearby(self):
-        """Unauthenticated visitor navigating to /food/nearby/ is redirected to login."""
-        url = reverse('food:nearby_events')
-        response = self.client.get(url)
-        self.assertRedirects(response, f"/login/?next={url}")
+    def test_unauthenticated_user_can_access_nearby(self):
+        """Public visitors can use nearby discovery without location permission."""
+        response = self.client.get(reverse('food:nearby_events'))
+        self.assertEqual(response.status_code, 200)
 
     def test_authenticated_user_can_access_nearby(self):
         """Authenticated user can access nearby events."""
@@ -76,11 +73,18 @@ class EventAccessAuthenticationTests(TestCase):
         response = self.client.get(reverse('food:nearby_events'))
         self.assertEqual(response.status_code, 200)
 
-    def test_unauthenticated_user_redirected_from_event_detail(self):
-        """Unauthenticated visitor navigating directly to event detail is redirected to login."""
+    def test_unauthenticated_user_can_access_approved_event_detail(self):
+        """Public visitors can open approved event details."""
         url = reverse('food:event_detail', kwargs={'event_id': self.event.id})
         response = self.client.get(url)
-        self.assertRedirects(response, f"/login/?next={url}")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Temple Maha Prasad Feast')
+
+    def test_unauthenticated_user_cannot_access_pending_event_detail(self):
+        self.event.status = FreeFoodEvent.STATUS_PENDING
+        self.event.save(update_fields=['status'])
+        response = self.client.get(reverse('food:event_detail', kwargs={'event_id': self.event.id}))
+        self.assertEqual(response.status_code, 404)
 
     def test_authenticated_user_can_access_event_detail(self):
         """Authenticated user can access event detail view."""
@@ -89,11 +93,11 @@ class EventAccessAuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Temple Maha Prasad Feast')
 
-    def test_unauthenticated_user_redirected_from_map_view(self):
-        """Unauthenticated visitor navigating to map view is redirected to login."""
-        url = reverse('locations:map_view')
-        response = self.client.get(url)
-        self.assertRedirects(response, f"/login/?next={url}")
+    def test_unauthenticated_user_can_access_map_view(self):
+        """Public visitors can see approved event locations on the map."""
+        response = self.client.get(reverse('locations:map_view'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Temple Maha Prasad Feast')
 
     def test_authenticated_user_can_access_map_view(self):
         """Authenticated user can view map pins."""

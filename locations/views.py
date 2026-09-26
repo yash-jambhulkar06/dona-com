@@ -4,11 +4,9 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
 from food.models import FreeFoodEvent
 from .services import search_places_geocoding, get_recommended_events, reverse_geocode
 
-@login_required
 def map_view(request):
     """
     Interactive map view displaying all approved active and upcoming free-food events.
@@ -48,7 +46,6 @@ def map_view(request):
         'total_pins': len(pins),
     })
 
-@login_required
 def location_search_api(request):
     """
     AJAX endpoint for manual location search when browser geolocation is denied or unavailable.
@@ -60,7 +57,6 @@ def location_search_api(request):
     results = search_places_geocoding(query)
     return JsonResponse({'results': results})
 
-@login_required
 def reverse_geocode_api(request):
     """
     AJAX endpoint to reverse geocode lat/lng into a clean location name.

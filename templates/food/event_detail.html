@@ -2,6 +2,19 @@
 
 {% block title %}{{ event.title }} — Dona.Com{% endblock %}
 
+{% block meta_description %}{{ event.title }} at {{ event.venue_name }} on {{ event.event_date|date:"F j, Y" }}. Find verified free food on Dona.Com.{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="event">
+<meta property="og:title" content="{{ event.title|escape }} — Dona.Com">
+<meta property="og:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
+<meta property="og:url" content="{{ canonical_url }}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ event.title|escape }} — Dona.Com">
+<meta name="twitter:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
+
 {% block content %}
 <div class="container" style="padding-top: 2rem;">
   <div style="margin-bottom: 1rem;">
@@ -76,6 +89,7 @@
         </p>
 
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          {% csrf_token %}
           <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="SERVING" style="color: #059669; border-color: #10b981; font-weight: 700; background: #ecfdf5;">
             Confirm: Food is Serving Now
           </button>
@@ -165,6 +179,13 @@
           Get Directions
         </a>
 
+        <button type="button" class="btn btn-secondary btn-block share-event-btn"
+                data-share-title="{{ event.title|escape }}"
+                data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Dona.Com"
+                aria-label="Share {{ event.title }}">
+          Share This Event
+        </button>
+
         {% if user.is_authenticated %}
           <button type="button" class="btn btn-secondary btn-block fav-btn {% if is_favorited %}is-favorited{% endif %}" 
                   data-event-id="{{ event.id }}" style="justify-content: center;">
@@ -184,7 +205,7 @@
           <div><strong>Listing Status:</strong> {{ event.get_status_display }}</div>
           <div style="margin-top: 0.35rem;"><strong>Submitted:</strong> {{ event.created_at|date:"M d, Y" }}</div>
           {% if event.approved_at %}
-            <div style="margin-top: 0.35rem;"><strong>Verified:</strong> {{ event.approved_at|date:"M d, Y" }}</div>
+            <div style="margin-top: 0.35rem;"><strong>Dona Verified:</strong> {{ event.approved_at|timesince }} ago</div>
           {% endif %}
         </div>
       </div>

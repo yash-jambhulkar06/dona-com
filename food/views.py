@@ -17,21 +17,31 @@ def home_view(request):
     """
     Home page introducing the platform with direct location discovery CTA,
     active and upcoming events, filters, and community submission callout.
-    When unauthenticated, events remain protected behind a sign-in gate.
+    Public visitors can browse approved events; authentication is only needed
+    for account-specific actions such as favorites and submissions.
     """
     user_lat = request.GET.get('lat')
     user_lng = request.GET.get('lng')
     dietary = request.GET.get('dietary', '').strip()
     
-    recommended = []
     user_favorites_ids = set()
 
+    try:
+        lat_val = float(user_lat) if user_lat else None
+        lng_val = float(user_lng) if user_lng else None
+        if lat_val is not None and not -90 <= lat_val <= 90:
+            lat_val = None
+        if lng_val is not None and not -180 <= lng_val <= 180:
+            lng_val = None
+    except ValueError:
+        lat_val, lng_val = None, None
+
+    recommended = get_recommended_events(
+        user_lat=lat_val,
+        user_lng=lng_val,
+        dietary=dietary or None,
+    )[:9]
     if request.user.is_authenticated:
-        recommended = get_recommended_events(
-            user_lat=float(user_lat) if user_lat else None,
-            user_lng=float(user_lng) if user_lng else None,
-            dietary=dietary or None,
-        )[:9]
         user_favorites_ids = set(request.user.favorites.values_list('event_id', flat=True))
 
     # Active count metrics (safe summary counters for platform transparency)
@@ -69,7 +79,6 @@ def home_view(request):
     })
 
 
-@login_required
 def event_list_view(request):
     """
     Search and filter directory for all approved free food events.
@@ -91,10 +100,16 @@ def event_list_view(request):
         max_dist_val = float(max_dist) if max_dist else None
     except ValueError:
         max_dist_val = None
+    if max_dist_val is not None and max_dist_val < 0:
+        max_dist_val = None
 
     try:
         lat_val = float(user_lat) if user_lat else None
         lng_val = float(user_lng) if user_lng else None
+        if lat_val is not None and not -90 <= lat_val <= 90:
+            lat_val, lng_val = None, None
+        if lng_val is not None and not -180 <= lng_val <= 180:
+            lat_val, lng_val = None, None
     except ValueError:
         lat_val, lng_val = None, None
 
@@ -138,7 +153,6 @@ def event_list_view(request):
     })
 
 
-@login_required
 def nearby_events_view(request):
     """
     Dedicated location-centric discovery view. Requests browser coordinates
@@ -154,6 +168,8 @@ def nearby_events_view(request):
 
     try:
         radius_val = float(radius)
+        if radius_val <= 0:
+            radius_val = 25.0
     except ValueError:
         radius_val = 25.0
 
@@ -163,6 +179,8 @@ def nearby_events_view(request):
         try:
             lat_val = float(user_lat)
             lng_val = float(user_lng)
+            if not (-90 <= lat_val <= 90 and -180 <= lng_val <= 180):
+                raise ValueError
             results = get_recommended_events(
                 user_lat=lat_val,
                 user_lng=lng_val,
@@ -220,7 +238,6 @@ def nearby_events_view(request):
     })
 
 
-@login_required
 def event_detail_view(request, event_id):
     """
     Public event detail view.
@@ -245,6 +262,7 @@ def event_detail_view(request, event_id):
     report_form = ReportForm()
     claim_form = FoodRescueClaimForm()
     directions_url = f"https://www.google.com/maps/dir/?api=1&destination={event.latitude},{event.longitude}"
+    canonical_url = request.build_absolute_uri(reverse('food:event_detail', kwargs={'event_id': event.id}))
     
     # Community Live Status metrics (Future Scope Item 1)
     live_status = event.get_community_live_status()
@@ -260,6 +278,7 @@ def event_detail_view(request, event_id):
         'live_status': live_status,
         'rescue_claims': rescue_claims,
         'directions_url': directions_url,
+        'canonical_url': canonical_url,
     })
 
 

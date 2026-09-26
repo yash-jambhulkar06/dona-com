@@ -36,6 +36,7 @@
         <ul class="nav-links" id="navLinks">
           <li><a href="{% url 'food:home' %}" class="nav-link">Home</a></li>
           <li><a href="{% url 'food:event_list' %}" class="nav-link">Browse Events</a></li>
+          <li><a href="{% url 'locations:map_view' %}" class="nav-link">Map</a></li>
           <li><a href="{% url 'food:surplus_recovery' %}" class="nav-link" style="color: #ea580c; font-weight: 700;">Food Rescue</a></li>
           {% if user.is_authenticated and user.is_staff %}
           <li><a href="{% url 'moderation:dashboard' %}" class="nav-link"
@@ -177,6 +178,7 @@
         <ul class="mobile-nav-list">
           <li><a href="{% url 'food:home' %}" class="mobile-nav-link">Home</a></li>
           <li><a href="{% url 'food:event_list' %}" class="mobile-nav-link">Browse Events</a></li>
+          <li><a href="{% url 'locations:map_view' %}" class="mobile-nav-link">Map</a></li>
           <li><a href="{% url 'food:surplus_recovery' %}" class="mobile-nav-link" style="color: #ea580c; font-weight: 700;">Food Rescue Network</a></li>
           {% if user.is_authenticated %}
           <li><a href="{% url 'notifications:list_page' %}" class="mobile-nav-link">Notifications</a></li>
