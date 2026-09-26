@@ -5,7 +5,9 @@ Django settings for Community Free-Food Discovery Platform.
 from pathlib import Path
 import os
 import sys
+from urllib.parse import urlsplit
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,11 +18,54 @@ load_dotenv(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-change-me-in-production')
+IS_VERCEL = bool(os.getenv('VERCEL') or os.getenv('VERCEL_ENV'))
 
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if IS_VERCEL:
+        raise ImproperlyConfigured('SECRET_KEY must be set in Vercel environment variables.')
+    SECRET_KEY = 'django-insecure-default-change-me-in-production'
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if host.strip()]
+DEBUG = os.getenv('DEBUG', 'False' if IS_VERCEL else 'True').lower() in ('true', '1', 't')
+
+def _host_from_value(value):
+    """Return a hostname from a host or URL environment value."""
+    value = value.strip()
+    if not value:
+        return None
+    parsed = urlsplit(value if '://' in value else f'//{value}')
+    return parsed.hostname
+
+
+def _origin_from_value(value):
+    """Return an origin suitable for Django's CSRF trusted-origin setting."""
+    value = value.strip().rstrip('/')
+    if not value:
+        return None
+    if '://' not in value:
+        value = f'https://{value}'
+    parsed = urlsplit(value)
+    if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+        return None
+    return f'{parsed.scheme}://{parsed.netloc}'
+
+
+def _env_values(name):
+    return [value.strip() for value in os.getenv(name, '').split(',') if value.strip()]
+
+
+configured_hosts = [
+    _host_from_value(value)
+    for value in _env_values('ALLOWED_HOSTS')
+]
+vercel_hosts = [
+    _host_from_value(os.getenv(name, ''))
+    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'PUBLIC_APP_URL')
+]
+ALLOWED_HOSTS = list(dict.fromkeys(
+    host for host in (configured_hosts + vercel_hosts + ['localhost', '127.0.0.1', 'testserver'])
+    if host
+))
 
 # Application definition
 INSTALLED_APPS = [
@@ -190,7 +235,21 @@ else:
 
 
 # CSRF & Security settings
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:8000,http://127.0.0.1:8000').split(',') if origin.strip()]
+configured_origins = [
+    _origin_from_value(value)
+    for value in _env_values('CSRF_TRUSTED_ORIGINS')
+]
+vercel_origins = [
+    _origin_from_value(os.getenv(name, ''))
+    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'PUBLIC_APP_URL')
+]
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
+    origin for origin in (configured_origins + vercel_origins + ['http://localhost:8000', 'http://127.0.0.1:8000'])
+    if origin
+))
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
