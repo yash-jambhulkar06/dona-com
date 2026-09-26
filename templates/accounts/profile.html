@@ -23,6 +23,11 @@
         {% if user.is_staff %}
           <span class="badge badge-warning" style="margin-top: 0.25rem;">Moderator / Staff</span>
         {% endif %}
+        {% if user.is_verified_organizer %}
+          <span class="badge" style="background: #0284c7; color: #fff; margin-top: 0.25rem; font-weight: 700;">
+            {{ user.organizer_badge_label }} {% if user.organization_name %}({{ user.organization_name }}){% endif %}
+          </span>
+        {% endif %}
       </div>
     </div>
 

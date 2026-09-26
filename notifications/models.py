@@ -123,3 +123,36 @@ class NotificationRead(models.Model):
 
     def __str__(self):
         return f"{self.user} read {self.notification_id}"
+
+
+class ProximitySubscriber(models.Model):
+    """
+    Subscribers for 5 km proximity push alerts (Future Scope Item 3).
+    Stores user/device current coordinates for real-time location-based alerts.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='proximity_subscriptions'
+    )
+    session_key = models.CharField(max_length=64, blank=True, db_index=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    radius_km = models.FloatField(default=5.0, help_text="Proximity alert threshold in km (default: 5.0 km)")
+    push_enabled = models.BooleanField(default=True)
+    endpoint = models.CharField(max_length=500, blank=True, default='', help_text="Browser Web Push subscription endpoint or token")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'push_enabled']),
+            models.Index(fields=['latitude', 'longitude']),
+        ]
+
+    def __str__(self):
+        target = self.user.email if self.user else f"Session {self.session_key[:8]}"
+        return f"ProximityAlert({target} at {self.latitude},{self.longitude} <= {self.radius_km}km)"

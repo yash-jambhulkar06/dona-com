@@ -20,6 +20,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     
+    # Verified Organizer Badge Support
+    ORGANIZER_TYPE_CHOICES = [
+        ('NGO', 'Registered NGO / Non-Profit'),
+        ('COMMUNITY_KITCHEN', 'Community Kitchen / Langar Seva'),
+        ('RELIGIOUS_TRUST', 'Religious Trust / Temple / Gurudwara / Mosque / Church'),
+        ('INDIVIDUAL', 'Community Contributor'),
+    ]
+    is_verified_organizer = models.BooleanField(default=False, db_index=True)
+    organizer_type = models.CharField(max_length=50, blank=True, choices=ORGANIZER_TYPE_CHOICES)
+    organization_name = models.CharField(max_length=255, blank=True)
+    
     date_joined = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -40,3 +51,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     def full_name(self):
         name = f"{self.first_name} {self.last_name}".strip()
         return name if name else (self.email or 'Community Member')
+
+    @property
+    def organizer_badge_label(self):
+        if not self.is_verified_organizer:
+            return None
+        labels = {
+            'NGO': 'Verified NGO',
+            'COMMUNITY_KITCHEN': 'Verified Community Kitchen',
+            'RELIGIOUS_TRUST': 'Verified Religious Trust',
+            'INDIVIDUAL': 'Verified Organizer',
+        }
+        return labels.get(self.organizer_type, 'Verified Organizer')

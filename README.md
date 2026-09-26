@@ -92,21 +92,26 @@ Dona.Com delivers a complete set of production-grade features built for reliabil
 - **User Registration and Authentication:** Secure email/password account creation, session management, and profile controls.
 - **Google Sign-In:** One-click OAuth 2.0 / OpenID Connect authentication via Google Cloud.
 - **Mobile OTP Authentication:** Passwordless phone number verification powered by production SMS providers (Twilio / Fast2SMS) with rate limits and SHA-256 token hashing.
-- **Submit Free-Food Events/Places:** Intuitive submission forms capturing venue names, full addresses, event dates, start/end serving times, food details, and coordinates.
+- **Submit Free-Food Events/Places:** Intuitive submission forms capturing venue names, full addresses, event dates, start/end serving times, food details, coordinates, dietary preferences, and surplus rescue flags.
 - **Structured Event Categories:** Clear event categorization:
   - `Wedding`
   - `Birthday`
   - `Religious Event` (Mahaprasad, Langar, Bhandara)
   - `Community Meal` (NGO relief, charitable kitchens)
   - `Other` (Public gatherings, cultural feasts)
-- **Admin Approval/Rejection System:** Dedicated moderator dashboard allowing staff to review submissions, inspect coordinates, approve live listings, or reject with explanatory feedback.
+- **Community Live Status:** Real-time confirmation system allowing visitors and attendees to confirm serving status ("Food is currently serving" or "Food finished") with live counters and immediate status updates without page reload.
+- **Verified Organizer Badges:** Official verification marks with distinctive badges for registered NGOs, community kitchens, religious trusts (Temples, Gurudwaras, Mosques), and verified community contributors.
+- **5 km Proximity Push Alerts:** Native browser Web Notification API push alerts notifying nearby users when a verified free-food event is published within 5 km of their location.
+- **Dietary Preference Filtering & Allergen Indicators:** Dedicated multi-dietary filters and badges for Pure Vegetarian, Vegan, Jain Food (no onion/garlic/root veg), Halal, and allergen notices (nut-free, gluten-free, dairy-free).
+- **Surplus Food Recovery Network:** Dedicated portal for celebration feasts, banquet halls, and weddings to connect with volunteer food rescue networks (like Robin Hood Army, Roti Bank) for urgent pickup, preventing food waste.
+- **Admin Approval/Rejection System:** Dedicated moderator dashboard allowing staff to review submissions, inspect coordinates, verify organizer badges, approve live listings, or reject with explanatory feedback.
 - **Location-Based Food Discovery:** Live spatial queries calculating distance between the user's location and event venues using the Haversine formula.
 - **Nearby Free-Food Recommendations:** Intelligent sorting that prioritizes events that are currently serving food ("Available Now") and starting soon.
-- **Event Details and Location:** Full event profile pages displaying verified addresses, serving windows, menu notes, and direct turn-by-turn navigation links.
+- **Event Details and Location:** Full event profile pages displaying verified addresses, serving windows, menu notes, dietary tags, live status confirmations, and direct turn-by-turn navigation links.
 - **User-Friendly Interface:** Clean, intuitive navigation ensuring fast access across both mobile and desktop screens.
 - **Red-Themed Modern UI:** Custom-tailored design system using a modern, warm red palette (`#dc2626`) for strong visual clarity and brand identity.
 - **No Emojis in Application UI:** Consistent, professional aesthetic utilizing clean SVG iconography and modern typography without unicode emojis.
-- **Proper Working Production Functionality:** Real database persistence, working REST endpoints, and zero test/mock shortcuts.
+- **Proper Working Production Functionality:** Real database persistence on TiDB Cloud, working REST endpoints, and zero test/mock shortcuts.
 
 ---
 
@@ -221,51 +226,80 @@ Dona/
 │   └── wsgi.py                 # WSGI application entrypoint
 │
 ├── accounts/                   # Authentication & User Management
-│   ├── models.py               # Custom User and OTP verification models
+│   ├── models.py               # Custom User with Verified Organizer Badges and profiles
 │   ├── views.py                # Login, registration, profile, Google & OTP views
 │   └── urls.py                 # Authentication routes
 │
-├── food/                       # Food Events & Directory
-│   ├── models.py               # FreeFoodEvent, Favorite, and Report models
-│   ├── forms.py                # Event creation and reporting forms
-│   ├── views.py                # Event list, detail, home, and submission views
-│   └── urls.py                 # Event directory routes
+├── food/                       # Food Events, Directory & Recovery
+│   ├── models.py               # FreeFoodEvent, Favorite, Report, CommunityLiveStatus, FoodRescueClaim
+│   ├── forms.py                # Event submission, issue reports, and FoodRescueClaimForm
+│   ├── views.py                # Directory, detail, submission, live status voting, surplus recovery
+│   └── urls.py                 # Event directory and surplus recovery routes
 │
 ├── locations/                  # Spatial Discovery & Geolocation
-│   ├── services.py             # Haversine distance and recommendation engine
+│   ├── services.py             # Haversine distance, dietary filters, and recommendation engine
 │   ├── views.py                # Location search and map endpoints
 │   └── urls.py                 # Location routes
 │
 ├── moderation/                 # Admin Verification & Moderation
-│   ├── views.py                # Staff dashboard, approve/reject views, audit logs
+│   ├── views.py                # Staff dashboard, approve/reject, organizer verification, audit logs
 │   └── urls.py                 # Moderation workflow routes
 │
-├── notifications/              # Real-Time Notification System
-│   ├── models.py               # Notification models and read states
-│   ├── services.py             # Notification query and dispatch services
-│   └── views.py                # Notification API endpoints
+├── notifications/              # Real-Time Notification System & Proximity Alerts
+│   ├── models.py               # Notification, NotificationRead, and ProximitySubscriber models
+│   ├── services.py             # Dispatch engine, 5 km proximity push matcher, device location services
+│   └── views.py                # Notification API, read state, and proximity registration endpoints
 │
 ├── templates/                  # Presentation Templates
-│   ├── base.html               # Master layout with clean navbar and mobile drawer
-│   ├── accounts/               # Login, register, profile, and OTP templates
-│   ├── food/                   # Event list, detail, and submission pages
-│   ├── moderation/             # Admin review queues and dashboards
+│   ├── base.html               # Master layout with clean navbar, proximity alert banner, mobile drawer
+│   ├── accounts/               # Login, register, profile with verified badges, and OTP templates
+│   ├── food/                   # Event list, detail with live voting, form, surplus recovery portal
+│   ├── moderation/             # Admin review queues, organizer verification, and dashboards
 │   └── notifications/          # Notification history template
 │
 └── static/                     # Static Assets
-    ├── css/                    # Component, page, and notification styles
-    └── js/                     # Application scripts, geolocation, and notifications
+    ├── css/                    # Modern red theme, component badges, and notification styles
+    └── js/                     # Application scripts, geolocation, and Web Notification proximity push
 ```
 
 ---
 
-## 9. Future Scope
+## 9. Implemented Scope & Future Roadmap
 
-- **Community Live Status:** Allow visitors to confirm serving status ("Food is currently serving" or "Food finished") in real time.
-- **Verified Organizer Badges:** Verification marks for recognized NGOs, community kitchens, and religious trusts.
-- **Proximity Push Notifications:** Browser push alerts notifying users when a verified free-food event is published within 5 km.
-- **Dietary Preferences:** Enhanced filters for Pure Vegetarian, Vegan, Halal, Jain food, and allergen indicators.
-- **Surplus Food Recovery:** Integration with volunteer food rescue networks to prevent food waste at large celebrations.
+All 5 core enhancements identified in the project scope have been **fully implemented in production**:
+
+### 1. Community Live Status (Implemented)
+- **Real-Time Serving Verification:** Visitors and attendees at event venues can confirm whether food is actively serving or finished in real time.
+- **Dynamic Vote Metrics:** Calculates serving confirmations vs. finished alerts over an active 4-hour window, displaying real-time badges ("Community Verified: Serving Food" or "Community Alert: Food Finished").
+- **AJAX Live Interaction:** Users can cast confirmation votes with instant feedback without page reloads, backed by session-based rate limiting to prevent spam.
+
+### 2. Verified Organizer Badges (Implemented)
+- **Official Verification Marks:** Dedicated verification system distinguishing registered NGOs, community kitchens, religious trusts (Temples, Gurudwaras, Mosques, Churches), and verified volunteers.
+- **Visual Shield Badging:** Verified badges with organization names prominently displayed across event cards, event profiles, directory filters, and user account profiles.
+- **Admin Verification Controls:** Moderators can inspect and grant official organizer credentials during event reviews or from staff moderation queues.
+
+### 3. Proximity Push Notifications (Implemented)
+- **5 km Geolocation Matching:** Automatic distance calculation comparing newly published events against registered subscriber coordinates using the Haversine formula.
+- **Native Web Notification API:** Browser push alerts notifying nearby users when a verified free-food event is published within 5 km of their location.
+- **Proximity Device Registration:** Dedicated API (`/notifications/api/register-proximity/`) registering user GPS coordinates with customizable alert radii.
+
+### 4. Dietary Preferences & Allergen Indicators (Implemented)
+- **Multi-Dietary Categorization:** Support for Pure Vegetarian, Vegan (100% plant-based), Jain Food (no root vegetables, onion, or garlic), Halal prepared meals, and mixed diets.
+- **Allergen Indicators:** Dedicated fields capturing notices for nut-free, gluten-free, and dairy-free options.
+- **Enhanced Directory Filters:** One-click filter pills on the home page and event directory enabling seekers to instantly find meals tailored to their dietary requirements.
+
+### 5. Surplus Food Recovery Network (Implemented)
+- **Celebration Waste Prevention:** Dedicated Surplus Food Rescue hub (`/food/surplus-recovery/`) connecting weddings, banquet halls, and large functions with excess food to volunteer food rescue networks.
+- **Volunteer Rescue Claims:** Volunteers and NGOs (e.g. Robin Hood Army, Roti Bank) can claim excess food batches for urgent pickup via interactive claim modals.
+- **Organizer Notification Loop:** Organizers receive immediate real-time notifications with volunteer contact information and estimated arrival times.
+
+---
+
+### Next-Generation Roadmap
+- **WhatsApp & Telegram Broadcasts:** Direct messaging bot integrations for receiving 5 km radius food alerts via WhatsApp and Telegram.
+- **Native Mobile Apps:** Cross-platform iOS and Android applications with background GPS geofencing.
+- **Machine Learning Demand Prediction:** Predictive analysis matching historical attendance to forecast meal shortages or surpluses.
+- **Offline-First PWA:** Progressive Web App service worker caching for seamless offline viewing during network drops.
 
 ---
 

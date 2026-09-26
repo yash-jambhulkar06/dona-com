@@ -134,6 +134,25 @@
             }
           });
           if (res.ok) {
+            const feedCard = document.querySelector('.card');
+            if (feedCard) {
+              feedCard.innerHTML = `
+                <div class="skeleton-notif-item" style="padding: 1.15rem 1.25rem;">
+                  <div class="skeleton skeleton-icon"></div>
+                  <div class="skeleton-notif-content">
+                    <div class="skeleton skeleton-title" style="width: 50%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                  </div>
+                </div>
+                <div class="skeleton-notif-item" style="padding: 1.15rem 1.25rem;">
+                  <div class="skeleton skeleton-icon"></div>
+                  <div class="skeleton-notif-content">
+                    <div class="skeleton skeleton-title" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 75%;"></div>
+                  </div>
+                </div>
+              `;
+            }
             location.reload();
           }
         } catch (e) {}

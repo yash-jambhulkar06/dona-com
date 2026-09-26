@@ -13,5 +13,6 @@ urlpatterns = [
     path('api/read/<uuid:notification_id>/', views.api_mark_read, name='api_mark_read'),
     path('api/read-all/', views.api_mark_all_read, name='api_mark_all_read'),
     path('api/clear-all/', views.api_clear_all, name='api_clear_all'),
+    path('api/register-proximity/', views.api_register_proximity_device, name='api_register_proximity'),
     path('api/test/', views.api_test_notification, name='api_test'),
 ]

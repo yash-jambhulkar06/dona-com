@@ -70,8 +70,25 @@
           {% endif %}
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem 1rem; font-size: 1rem; margin-top: 1rem;">
-          Register
+        <!-- Terms and Conditions Checkbox -->
+        <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 1.25rem;">
+          <label style="display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.875rem; color: #475569; cursor: pointer; line-height: 1.45;">
+            {{ form.agree_terms }}
+            <span>
+              I have read and agree to the 
+              <a href="#" onclick="openModal('termsModal'); return false;" style="color: #dc2626; font-weight: 600; text-decoration: underline;">Terms and Conditions</a> 
+              and Community Food Guidelines.
+            </span>
+          </label>
+          {% if form.agree_terms.errors %}
+            <div class="form-error" style="margin-top: 0.4rem;">
+              {{ form.agree_terms.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem 1rem; font-size: 1rem; margin-top: 0.5rem;">
+          Create Free Account
         </button>
       </form>
 
@@ -81,6 +98,50 @@
           Sign In
         </a>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal-overlay" id="termsModal">
+  <div class="modal-card" style="max-width: 620px; max-height: 85vh; overflow-y: auto;">
+    <div class="modal-header">
+      <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a;">Terms & Community Guidelines</h3>
+      <button type="button" class="alert-close" onclick="closeModal('termsModal')">&times;</button>
+    </div>
+
+    <div style="font-size: 0.875rem; color: #475569; line-height: 1.6; margin-top: 1rem;">
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">1. Purpose of Dona.Com</h4>
+      <p style="margin-bottom: 1rem;">
+        Dona.Com is a community platform dedicated to sharing information about 100% free food distributions, langars, temple mahaprasad, celebrations, and NGO food distribution programs. All listings must offer food completely free of cost.
+      </p>
+
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">2. Prohibition of Commercial Transactions</h4>
+      <p style="margin-bottom: 1rem;">
+        No fees, donations, ticket sales, or commercial charges may be demanded from attendees receiving food at any event listed on Dona.Com.
+      </p>
+
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">3. Accurate Information</h4>
+      <p style="margin-bottom: 1rem;">
+        When submitting a free food event, you agree to provide truthful, accurate details regarding the event date, operating hours, exact venue location, and food items provided.
+      </p>
+
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">4. Food Safety & Hygiene</h4>
+      <p style="margin-bottom: 1rem;">
+        Organizers and contributors must ensure that all food shared meets standard hygiene and safe handling practices. Food must be fresh and fit for consumption.
+      </p>
+
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">5. Community Moderation & Review</h4>
+      <p style="margin-bottom: 1rem;">
+        All submissions are reviewed by platform administrators before becoming publicly visible. Dona.Com reserves the right to reject, modify, or remove any listing that violates these terms or community standards.
+      </p>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('termsModal')">Close</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('agreeTermsCheckbox').checked = true; closeModal('termsModal');">
+        I Understand & Accept
+      </button>
     </div>
   </div>
 </div>

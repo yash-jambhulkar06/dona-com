@@ -44,6 +44,10 @@
         <div class="hero-stat-label">Upcoming Verified Events</div>
       </div>
       <div class="hero-stat-item">
+        <div class="hero-stat-num">{{ surplus_count }}</div>
+        <div class="hero-stat-label">Active Surplus Food Rescues</div>
+      </div>
+      <div class="hero-stat-item">
         <div class="hero-stat-num">100%</div>
         <div class="hero-stat-label">Admin Verified & Free</div>
       </div>
@@ -56,47 +60,27 @@
   <div class="container">
     
     {% if user.is_authenticated %}
-      <div class="filter-bar">
-        <form action="{% url 'food:event_list' %}" method="GET" class="filter-grid">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Search</label>
-            <input type="text" name="q" class="form-input" placeholder="Search title, venue, or address...">
-          </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Event Type</label>
-            <select name="type" class="form-select">
-              <option value="">All Categories</option>
-              {% for code, name in event_types %}
-                <option value="{{ code }}">{{ name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Availability</label>
-            <select name="availability" class="form-select">
-              <option value="">Any Time</option>
-              <option value="now">Available Now</option>
-              <option value="soon">Starting Soon (within 1 hour)</option>
-              <option value="today">Today</option>
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Distance</label>
-            <select name="max_distance" class="form-select">
-              <option value="">Any Distance</option>
-              <option value="5">Within 5 km</option>
-              <option value="15">Within 15 km</option>
-              <option value="30">Within 30 km</option>
-            </select>
-          </div>
-
-          <button type="submit" class="btn btn-primary" style="height: 42px;">
-            Filter Events
-          </button>
-        </form>
+      <!-- Dietary Quick Filter Bar (Future Scope Item 4) -->
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center;">
+        <span style="font-size: 0.85rem; font-weight: 700; color: #475569;">Dietary Filters:</span>
+        <a href="{% url 'food:home' %}" class="btn btn-sm {% if not selected_dietary %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px; font-size: 0.8rem; padding: 0.35rem 0.85rem;">
+          All Foods
+        </a>
+        <a href="?dietary=PURE_VEG" class="btn btn-sm {% if selected_dietary == 'PURE_VEG' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px; font-size: 0.8rem; padding: 0.35rem 0.85rem;">
+          Pure Veg
+        </a>
+        <a href="?dietary=JAIN" class="btn btn-sm {% if selected_dietary == 'JAIN' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px; font-size: 0.8rem; padding: 0.35rem 0.85rem;">
+          Jain Food
+        </a>
+        <a href="?dietary=VEGAN" class="btn btn-sm {% if selected_dietary == 'VEGAN' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px; font-size: 0.8rem; padding: 0.35rem 0.85rem;">
+          Vegan
+        </a>
+        <a href="?dietary=HALAL" class="btn btn-sm {% if selected_dietary == 'HALAL' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-radius: 20px; font-size: 0.8rem; padding: 0.35rem 0.85rem;">
+          Halal
+        </a>
+        <a href="{% url 'food:surplus_recovery' %}" class="btn btn-sm btn-outline" style="border-radius: 20px; font-size: 0.8rem; padding: 0.35rem 0.85rem; color: #ea580c; border-color: #ea580c; font-weight: 700;">
+          Surplus Food Rescue Network &rarr;
+        </a>
       </div>
 
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
@@ -112,7 +96,26 @@
             {% with event=item.event dist=item.distance_km %}
               <article class="event-card">
                 <div class="event-card-header">
-                  <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+                  <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                    <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+                    <!-- Dietary Badge -->
+                    <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-weight: 700; font-size: 0.75rem;">
+                      {{ event.dietary_badge_info.label }}
+                    </span>
+                    <!-- Verified Badge -->
+                    {% if event.has_verified_organizer %}
+                      <span class="badge" style="background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: 700;">
+                        Verified
+                      </span>
+                    {% endif %}
+                    <!-- Surplus Badge -->
+                    {% if event.is_surplus_food %}
+                      <span class="badge" style="background: #ea580c; color: #fff; font-size: 0.75rem; font-weight: 700;">
+                        Rescue
+                      </span>
+                    {% endif %}
+                  </div>
+
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <span class="badge {{ event.availability_status.css_class }}">
                       {{ event.availability_status.label }}
@@ -138,6 +141,9 @@
 
                   <div class="event-meta-row">
                     <span>Venue: {{ event.venue_name }}</span>
+                    {% if event.has_verified_organizer and event.verified_organizer_badge.name %}
+                      <span style="color: #0284c7; font-weight: 600;">• {{ event.verified_organizer_badge.name }}</span>
+                    {% endif %}
                   </div>
 
                   <div class="event-food-summary">

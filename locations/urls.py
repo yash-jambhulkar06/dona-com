@@ -6,4 +6,6 @@ app_name = 'locations'
 urlpatterns = [
     path('food/map/', views.map_view, name='map_view'),
     path('api/locations/search/', views.location_search_api, name='search_api'),
+    path('api/locations/reverse/', views.reverse_geocode_api, name='reverse_api'),
 ]
+

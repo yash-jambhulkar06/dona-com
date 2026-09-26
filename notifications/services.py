@@ -2,7 +2,7 @@ import logging
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth import get_user_model
-from .models import Notification, NotificationRead
+from .models import Notification, NotificationRead, ProximitySubscriber
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -49,10 +49,21 @@ def notify_admins(title="", message="", notification_type="SYSTEM", target_url="
         logger.error(f"Failed to notify admins: {e}")
     return []
 
+from food.models import FreeFoodEvent
+
 def notify_broadcast(title="", message="", notification_type="EVENT_NEARBY", target_url="/", related_event=None):
     """
-    Broadcasts an announcement or new food event to all community members.
+    Broadcasts an announcement or new food event to community members.
+    Old / expired events are not broadcasted.
     """
+    if related_event:
+        now = timezone.localtime()
+        if related_event.event_date < now.date() or (related_event.event_date == now.date() and related_event.end_time < now.time()):
+            # Event has already ended; do not broadcast
+            return None
+        if related_event.status in [FreeFoodEvent.STATUS_EXPIRED, FreeFoodEvent.STATUS_CANCELLED, FreeFoodEvent.STATUS_REJECTED]:
+            return None
+
     return send_notification(
         recipient=None,
         title=title,
@@ -86,26 +97,132 @@ def notify_favorites_subscribers(event, title="", message="", notification_type=
         logger.error(f"Failed to notify favorite subscribers: {e}")
     return []
 
+def update_proximity_subscription(user=None, session_key='', latitude=None, longitude=None, radius_km=5.0, endpoint=''):
+    """
+    Registers or updates a user/device location for 5 km proximity push alerts (Future Scope Item 3).
+    """
+    if latitude is None or longitude is None:
+        return None
+
+    try:
+        sub = None
+        if user and user.is_authenticated:
+            sub = ProximitySubscriber.objects.filter(user=user).first()
+        elif session_key:
+            sub = ProximitySubscriber.objects.filter(session_key=session_key).first()
+
+        if sub:
+            sub.latitude = latitude
+            sub.longitude = longitude
+            sub.radius_km = radius_km
+            sub.push_enabled = True
+            if endpoint:
+                sub.endpoint = endpoint
+            if user and user.is_authenticated:
+                sub.user = user
+            sub.save()
+            return sub
+        else:
+            return ProximitySubscriber.objects.create(
+                user=user if (user and user.is_authenticated) else None,
+                session_key=session_key or '',
+                latitude=latitude,
+                longitude=longitude,
+                radius_km=radius_km,
+                push_enabled=True,
+                endpoint=endpoint or ''
+            )
+    except Exception as e:
+        logger.error(f"Failed to update proximity subscription: {e}")
+        return None
+
+def notify_proximity_subscribers(event, max_radius_km=5.0):
+    """
+    Browser Push Alerts for events published within 5 km (Future Scope Item 3).
+    Calculates distance to registered subscribers and creates targeted notifications.
+    """
+    try:
+        from locations.services import haversine_distance
+        
+        ev_lat = float(event.latitude)
+        ev_lng = float(event.longitude)
+        
+        # Get active subscribers who opted into proximity push alerts
+        subscribers = ProximitySubscriber.objects.filter(push_enabled=True)
+        created_notifications = []
+        notified_user_ids = set()
+
+        for sub in subscribers:
+            if not sub.latitude or not sub.longitude:
+                continue
+            dist = haversine_distance(ev_lat, ev_lng, float(sub.latitude), float(sub.longitude))
+            effective_radius = min(sub.radius_km or 5.0, max_radius_km)
+            
+            if dist <= effective_radius:
+                if sub.user and sub.user.id not in notified_user_ids:
+                    notified_user_ids.add(sub.user.id)
+                    title = f"Free Food Near You: {event.title}"
+                    msg = f"{event.get_event_type_display()} is happening {dist} km away at {event.venue_name}. Tap to view details and live status!"
+                    created_notifications.append(
+                        Notification(
+                            recipient=sub.user,
+                            title=title,
+                            message=msg,
+                            notification_type="EVENT_NEARBY",
+                            target_url=f"/food/{event.id}/",
+                            related_event=event
+                        )
+                    )
+
+        if created_notifications:
+            return Notification.objects.bulk_create(created_notifications)
+    except Exception as e:
+        logger.error(f"Failed to notify proximity subscribers: {e}")
+    return []
+
 def get_user_notifications(user, limit=30, unread_only=False, since=None):
     """
-    Retrieves notifications relevant to this user (personal + broadcast).
-    Supports delta fetching via `since` ISO timestamp or datetime.
+    Retrieves notifications strictly for the authenticated user.
+    Unauthenticated users receive NO notifications.
+    Notifications linked to past / expired / cancelled events are filtered out.
     """
-    if user and user.is_authenticated:
-        # User gets their personal notifications OR broadcast (recipient is null)
-        qs = Notification.objects.filter(
-            Q(recipient=user) | Q(recipient__isnull=True)
-        ).select_related('related_event')
-    else:
-        # Anonymous visitors get public broadcast notifications
-        qs = Notification.objects.filter(recipient__isnull=True).select_related('related_event')
+    if not user or not user.is_authenticated:
+        return Notification.objects.none()
+
+    now = timezone.localtime()
+    today = now.date()
+    current_time = now.time()
+
+    # User receives their targeted notifications OR community broadcasts
+    qs = Notification.objects.filter(
+        Q(recipient=user) | Q(recipient__isnull=True)
+    ).select_related('related_event')
+
+    # Filter out old events:
+    # 1. Event date is before today
+    # 2. Event date is today and end_time has passed
+    # 3. Event is EXPIRED, CANCELLED, or REJECTED
+    past_event_condition = Q(
+        related_event__isnull=False
+    ) & (
+        Q(related_event__event_date__lt=today) |
+        Q(related_event__event_date=today, related_event__end_time__lt=current_time) |
+        Q(related_event__status__in=[
+            FreeFoodEvent.STATUS_EXPIRED,
+            FreeFoodEvent.STATUS_CANCELLED,
+            FreeFoodEvent.STATUS_REJECTED
+        ])
+    )
+    qs = qs.exclude(past_event_condition)
+
+    # General notifications older than 7 days should not be displayed
+    qs = qs.filter(created_at__gte=now - timezone.timedelta(days=7))
 
     if since:
         qs = qs.filter(created_at__gt=since)
 
     # Exclude read if unread_only
-    if unread_only and user and user.is_authenticated:
-        # Exclude read personal notifications and read broadcast notifications
+    if unread_only:
         read_broadcast_ids = NotificationRead.objects.filter(user=user).values_list('notification_id', flat=True)
         qs = qs.exclude(
             Q(recipient=user, is_read=True) |
@@ -116,25 +233,45 @@ def get_user_notifications(user, limit=30, unread_only=False, since=None):
 
 def get_unread_count(user):
     """
-    Calculates exact unread count for user in a high-performance query.
+    Calculates exact unread count strictly for authenticated users.
+    Old / expired events are excluded.
+    Unauthenticated users have an unread count of 0.
     """
     if not user or not user.is_authenticated:
-        # For anonymous visitors, count broadcasts created in the last 24h
-        cutoff = timezone.now() - timezone.timedelta(days=1)
-        return Notification.objects.filter(recipient__isnull=True, created_at__gte=cutoff).count()
+        return 0
 
-    # Personal unread
-    personal_unread = Notification.objects.filter(recipient=user, is_read=False).count()
+    now = timezone.localtime()
+    today = now.date()
+    current_time = now.time()
 
-    # Broadcast unread (broadcasts that user hasn't marked read yet)
-    cutoff = timezone.now() - timezone.timedelta(days=7) # last 7 days broadcast
+    past_event_condition = Q(
+        related_event__isnull=False
+    ) & (
+        Q(related_event__event_date__lt=today) |
+        Q(related_event__event_date=today, related_event__end_time__lt=current_time) |
+        Q(related_event__status__in=[
+            FreeFoodEvent.STATUS_EXPIRED,
+            FreeFoodEvent.STATUS_CANCELLED,
+            FreeFoodEvent.STATUS_REJECTED
+        ])
+    )
+
+    # Personal unread (within last 7 days, excluding past events)
+    personal_unread = Notification.objects.filter(
+        recipient=user,
+        is_read=False,
+        created_at__gte=now - timezone.timedelta(days=7)
+    ).exclude(past_event_condition).count()
+
+    # Broadcast unread (within last 7 days, excluding past events and already read)
     read_broadcast_ids = NotificationRead.objects.filter(user=user).values_list('notification_id', flat=True)
     broadcast_unread = Notification.objects.filter(
         recipient__isnull=True,
-        created_at__gte=cutoff
-    ).exclude(id__in=read_broadcast_ids).count()
+        created_at__gte=now - timezone.timedelta(days=7)
+    ).exclude(id__in=read_broadcast_ids).exclude(past_event_condition).count()
 
     return personal_unread + broadcast_unread
+
 
 def mark_notification_as_read(user, notification_id):
     """

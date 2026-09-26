@@ -45,6 +45,19 @@ class RegisterForm(forms.Form):
             'autocomplete': 'new-password',
         })
     )
+    agree_terms = forms.BooleanField(
+        required=True,
+        label="I agree to the Terms and Conditions and Community Guidelines",
+        error_messages={
+            'required': 'You must agree to the Terms and Conditions to create an account.'
+        },
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-checkbox',
+            'id': 'agreeTermsCheckbox',
+            'style': 'width: 1.15rem; height: 1.15rem; accent-color: #dc2626; margin-top: 2px; cursor: pointer;',
+        })
+    )
+
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip().lower()

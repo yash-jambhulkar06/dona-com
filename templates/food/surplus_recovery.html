@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Surplus Food Recovery Network — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+  <!-- Header Banner -->
+  <div style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); border-radius: var(--radius-lg); padding: 2.5rem 2rem; color: #ffffff; margin-bottom: 2.5rem; box-shadow: var(--shadow-md);">
+    <div style="max-width: 720px;">
+      <span class="badge" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-weight: 800; font-size: 0.85rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+        Volunteer Food Rescue Network
+      </span>
+      <h1 style="font-size: 2.3rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem; color: #ffffff;">
+        Surplus Food Recovery & Rescue
+      </h1>
+      <p style="font-size: 1.05rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.5rem;">
+        Preventing food waste at weddings, banquets, and large celebrations. Connect registered NGOs, community kitchens, and volunteer food rescue teams for immediate pickup of excess prepared meals.
+      </p>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'food:event_add' %}" class="btn" style="background: #ffffff; color: #c2410c; font-weight: 700; border: none;">
+          Post Surplus Event Food
+        </a>
+        <a href="{% url 'food:event_list' %}?surplus=true" class="btn btn-outline" style="color: #ffffff; border-color: rgba(255, 255, 255, 0.6); font-weight: 700;">
+          Filter by Distance
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Surplus Events Grid -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;">
+        Active Surplus Food Alerts
+      </h2>
+      <p style="font-size: 0.9rem; color: #64748b;">
+        {{ surplus_events|length }} celebration feasts currently have surplus food ready for volunteer pickup.
+      </p>
+    </div>
+  </div>
+
+  {% if surplus_events %}
+    <div class="events-grid">
+      {% for event in surplus_events %}
+        <div class="event-card" style="border: 2px solid {% if event.rescue_status == 'AVAILABLE' %}#ea580c{% else %}#cbd5e1{% endif %};">
+          <div class="event-card-header">
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+              <span class="badge" style="background: #ea580c; color: #fff; font-weight: 700; font-size: 0.75rem;">
+                SURPLUS RESCUE
+              </span>
+              <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-size: 0.75rem;">
+                {{ event.dietary_badge_info.label }}
+              </span>
+              {% if event.has_verified_organizer %}
+                <span class="badge" style="background: #0284c7; color: #fff; font-size: 0.75rem;">
+                  Verified
+                </span>
+              {% endif %}
+            </div>
+            <span class="badge {% if event.rescue_status == 'AVAILABLE' %}badge-success{% else %}badge-warning{% endif %}" style="font-size: 0.75rem;">
+              {{ event.get_rescue_status_display }}
+            </span>
+          </div>
+
+          <div class="event-card-body">
+            <h3 class="event-card-title">
+              <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
+            </h3>
+
+            <div style="background: #fff7ed; border-radius: 8px; padding: 0.65rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: #9a3412;">
+              <strong>Quantity:</strong> {{ event.surplus_quantity|default:"Excess meals available" }}<br>
+              <strong>Pickup Phone:</strong> {{ event.rescue_contact_phone|default:"See Details" }}
+            </div>
+
+            <p style="font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem; line-height: 1.5;">
+              <strong>Venue:</strong> {{ event.venue_name }}<br>
+              <span style="color: #64748b;">{{ event.address }}</span>
+            </p>
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.825rem; color: #64748b; padding-top: 0.5rem; border-top: 1px solid #f1f5f9; margin-bottom: 1rem;">
+              <span>{{ event.event_date|date:"M d, Y" }}</span>
+              <span>{{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-block" style="background: #ea580c; border-color: #c2410c; font-size: 0.85rem;">
+                Claim for Rescue & Pickup
+              </a>
+              {% if event.rescue_contact_phone %}
+                <a href="tel:{{ event.rescue_contact_phone }}" class="btn btn-outline" style="color: #ea580c; border-color: #fed7aa; padding: 0.5rem 0.75rem;">
+                  Call
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 3rem 1.5rem; text-align: center;">
+      <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+        No Active Surplus Food Alerts Right Now
+      </h3>
+      <p style="color: #64748b; font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+        When weddings, banquets, and celebration hosts report excess feast food, alerts appear here for volunteer pickup and food rescue networks.
+      </p>
+      <a href="{% url 'food:event_add' %}" class="btn btn-primary">
+        Post a Surplus Food Event
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

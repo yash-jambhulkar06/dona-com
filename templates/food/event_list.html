@@ -11,7 +11,7 @@
 
   <!-- Filter Bar -->
   <div class="filter-bar">
-    <form method="GET" action="{% url 'food:event_list' %}" class="filter-grid">
+    <form method="GET" action="{% url 'food:event_list' %}" class="filter-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
       <div class="form-group" style="margin-bottom: 0;">
         <label class="form-label">Search Query</label>
         <input type="text" name="q" class="form-input" placeholder="Search title, venue, or address..." value="{{ search_query }}">
@@ -23,6 +23,17 @@
           <option value="">All Categories</option>
           {% for code, name in event_types %}
             <option value="{{ code }}" {% if selected_type == code %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Dietary Preference Filter (Future Scope Item 4) -->
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Dietary Preference</label>
+        <select name="dietary" class="form-select">
+          <option value="">All Dietary</option>
+          {% for code, name in dietary_types %}
+            <option value="{{ code }}" {% if selected_dietary == code %}selected{% endif %}>{{ name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -46,7 +57,19 @@
         </select>
       </div>
 
-      <div style="display: flex; gap: 0.5rem;">
+      <!-- Quick Toggles -->
+      <div style="display: flex; flex-direction: column; justify-content: center; gap: 0.35rem;">
+        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; color: #0f172a; cursor: pointer;">
+          <input type="checkbox" name="surplus" value="true" {% if selected_surplus %}checked{% endif %}>
+          Surplus Food Rescue Only
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; color: #0f172a; cursor: pointer;">
+          <input type="checkbox" name="verified" value="true" {% if selected_verified %}checked{% endif %}>
+          Verified Organizers Only
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
         <button type="submit" class="btn btn-primary" style="height: 42px;">Filter</button>
         <a href="{% url 'food:event_list' %}" class="btn btn-secondary" style="height: 42px;">Reset</a>
       </div>
@@ -63,7 +86,26 @@
         {% with event=item.event dist=item.distance_km %}
           <article class="event-card">
             <div class="event-card-header">
-              <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+              <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+                <!-- Dietary Badge -->
+                <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-weight: 700; font-size: 0.75rem;">
+                  {{ event.dietary_badge_info.label }}
+                </span>
+                <!-- Verified Badge -->
+                {% if event.has_verified_organizer %}
+                  <span class="badge" style="background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: 700;">
+                    Verified
+                  </span>
+                {% endif %}
+                <!-- Surplus Badge -->
+                {% if event.is_surplus_food %}
+                  <span class="badge" style="background: #ea580c; color: #fff; font-size: 0.75rem; font-weight: 700;">
+                    Rescue Active
+                  </span>
+                {% endif %}
+              </div>
+
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span class="badge {{ event.availability_status.css_class }}">
                   {{ event.availability_status.label }}
@@ -91,6 +133,9 @@
 
               <div class="event-meta-row">
                 <span>Venue: {{ event.venue_name }}</span>
+                {% if event.has_verified_organizer and event.verified_organizer_badge.name %}
+                  <span style="color: #0284c7; font-weight: 600;">• {{ event.verified_organizer_badge.name }}</span>
+                {% endif %}
               </div>
 
               <div class="event-food-summary">
@@ -125,7 +170,7 @@
     {% if page_obj.has_other_pages %}
       <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2.5rem;">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}&date={{ selected_date }}&availability={{ selected_availability }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+          <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&surplus={{ selected_surplus }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
         {% endif %}
         
         <span style="padding: 0.4rem 1rem; font-size: 0.9rem; color: #64748b;">
@@ -133,7 +178,7 @@
         </span>
 
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&type={{ selected_type }}&date={{ selected_date }}&availability={{ selected_availability }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+          <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&surplus={{ selected_surplus }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
         {% endif %}
       </div>
     {% endif %}
@@ -147,4 +192,86 @@
     </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    function showListSkeletons() {
+      const grid = document.querySelector('.cards-grid');
+      if (grid) {
+        grid.innerHTML = `
+          <div class="skeleton-card">
+            <div class="skeleton-card-header">
+              <div class="skeleton skeleton-badge" style="width: 85px;"></div>
+              <div class="skeleton skeleton-badge" style="width: 65px;"></div>
+            </div>
+            <div class="skeleton-card-body">
+              <div class="skeleton skeleton-title" style="width: 70%; height: 20px;"></div>
+              <div class="skeleton skeleton-text medium"></div>
+              <div class="skeleton skeleton-text short"></div>
+              <div class="skeleton skeleton-text" style="height: 38px; margin-top: 6px; border-radius: 6px;"></div>
+            </div>
+            <div class="skeleton-card-footer">
+              <div class="skeleton skeleton-badge" style="width: 80px;"></div>
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="skeleton skeleton-btn" style="width: 75px;"></div>
+                <div class="skeleton skeleton-btn" style="width: 70px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-card-header">
+              <div class="skeleton skeleton-badge" style="width: 90px;"></div>
+              <div class="skeleton skeleton-badge" style="width: 70px;"></div>
+            </div>
+            <div class="skeleton-card-body">
+              <div class="skeleton skeleton-title" style="width: 65%; height: 20px;"></div>
+              <div class="skeleton skeleton-text medium"></div>
+              <div class="skeleton skeleton-text short"></div>
+              <div class="skeleton skeleton-text" style="height: 38px; margin-top: 6px; border-radius: 6px;"></div>
+            </div>
+            <div class="skeleton-card-footer">
+              <div class="skeleton skeleton-badge" style="width: 85px;"></div>
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="skeleton skeleton-btn" style="width: 75px;"></div>
+                <div class="skeleton skeleton-btn" style="width: 70px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-card-header">
+              <div class="skeleton skeleton-badge" style="width: 80px;"></div>
+              <div class="skeleton skeleton-badge" style="width: 65px;"></div>
+            </div>
+            <div class="skeleton-card-body">
+              <div class="skeleton skeleton-title" style="width: 75%; height: 20px;"></div>
+              <div class="skeleton skeleton-text medium"></div>
+              <div class="skeleton skeleton-text short"></div>
+              <div class="skeleton skeleton-text" style="height: 38px; margin-top: 6px; border-radius: 6px;"></div>
+            </div>
+            <div class="skeleton-card-footer">
+              <div class="skeleton skeleton-badge" style="width: 75px;"></div>
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="skeleton skeleton-btn" style="width: 75px;"></div>
+                <div class="skeleton skeleton-btn" style="width: 70px;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    const form = document.querySelector('.filter-grid');
+    if (form) {
+      form.addEventListener('submit', showListSkeletons);
+    }
+
+    document.querySelectorAll('.container a.btn-sm').forEach(link => {
+      if (link.href && link.href.includes('page=')) {
+        link.addEventListener('click', showListSkeletons);
+      }
+    });
+  });
+</script>
 {% endblock %}

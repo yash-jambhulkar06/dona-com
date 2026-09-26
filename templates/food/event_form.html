@@ -58,11 +58,50 @@
         </div>
       </div>
 
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Dietary Preference *</label>
+          {{ form.dietary_type }}
+          <div class="form-help">Filter suitability (Pure Veg, Vegan, Jain, Halal, etc.)</div>
+          {% if form.dietary_type.errors %}<div class="form-error">{{ form.dietary_type.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Allergens / Dietary Notes</label>
+          {{ form.allergens_info }}
+          <div class="form-help">e.g. Nut-Free, Gluten-Free, Dairy-Free available</div>
+          {% if form.allergens_info.errors %}<div class="form-error">{{ form.allergens_info.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">Food Details *</label>
         {{ form.food_details }}
         <div class="form-help">Mention food items (e.g. Rice, Dal, Sabzi, Puri, Kheer), veg/non-veg, and packaging.</div>
         {% if form.food_details.errors %}<div class="form-error">{{ form.food_details.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Surplus Food Recovery Option (Future Scope Item 5) -->
+      <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-weight: 700; color: #9a3412; font-size: 0.95rem; margin-bottom: 0.5rem;">
+          {{ form.is_surplus_food }}
+          Surplus Food Rescue: Excess celebration food available for volunteer pickup
+        </label>
+        <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.75rem;">
+          If this is a wedding, banquet, or large gathering with surplus prepared meals, volunteer food rescue networks will be alerted for immediate pickup to prevent food waste.
+        </p>
+        <div id="surplusFields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.85rem; color: #9a3412;">Estimated Surplus Quantity</label>
+            {{ form.surplus_quantity }}
+            {% if form.surplus_quantity.errors %}<div class="form-error">{{ form.surplus_quantity.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.85rem; color: #9a3412;">Pickup Coordinator Phone</label>
+            {{ form.rescue_contact_phone }}
+            {% if form.rescue_contact_phone.errors %}<div class="form-error">{{ form.rescue_contact_phone.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -96,7 +135,30 @@
           Click on the map or drag the pin to set the exact coordinates of where food is being served.
         </p>
 
-        <div id="pickerMap" class="map-picker"></div>
+        <!-- Search bar for finding location to place pin -->
+        <div style="position: relative; margin-bottom: 0.75rem;">
+          <input
+            type="text"
+            id="pickerSearchInput"
+            class="form-input"
+            placeholder="Search city, town, or village to move pin (e.g. Palandur, Bhandara, Nagpur)..."
+            autocomplete="off"
+          >
+          <div id="pickerSearchResults" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; z-index: 1000; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.1);"></div>
+        </div>
+
+        <div id="pickerMap" class="map-picker" style="position: relative;">
+          <div class="skeleton-map-wrapper">
+            <div class="skeleton-map-grid"></div>
+            <div class="skeleton-map-radar">
+              <div class="skeleton-map-pulse-ring" style="width: 44px; height: 44px;">
+                <div class="skeleton-map-dot" style="width: 10px; height: 10px;"></div>
+              </div>
+              <span style="font-size: 0.8rem;">Loading location pin map...</span>
+            </div>
+          </div>
+        </div>
+
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
           <div>

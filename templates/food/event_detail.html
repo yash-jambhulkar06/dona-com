@@ -14,17 +14,37 @@
     <!-- Main Content Column -->
     <div class="event-main-card">
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-        <span class="badge badge-type" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
-          {{ event.get_event_type_display }}
-        </span>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span class="badge badge-type" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+            {{ event.get_event_type_display }}
+          </span>
+          <!-- Dietary Preference Badge (Future Scope Item 4) -->
+          <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem; font-weight: 700;">
+            {{ event.dietary_badge_info.label }}
+          </span>
+          <!-- Verified Organizer Badge (Future Scope Item 2) -->
+          {% if event.has_verified_organizer %}
+            <span class="badge" style="background-color: #0284c7; color: #ffffff; font-size: 0.85rem; padding: 0.35rem 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              {{ event.verified_organizer_badge.label }}
+            </span>
+          {% endif %}
+        </div>
+
         <span class="badge {{ event.availability_status.css_class }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
           {{ event.availability_status.label }}
         </span>
       </div>
 
-      <h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1.25; margin-bottom: 1rem;">
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1.25; margin-bottom: 0.5rem;">
         {{ event.title }}
       </h1>
+
+      {% if event.has_verified_organizer and event.verified_organizer_badge.name %}
+        <div style="font-size: 0.95rem; color: #0284c7; font-weight: 600; margin-bottom: 1rem;">
+          Organized by: {{ event.verified_organizer_badge.name }} (Verified Partner)
+        </div>
+      {% endif %}
 
       <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
         <div>Date: <strong>{{ event.event_date|date:"l, F d, Y" }}</strong></div>
@@ -32,9 +52,83 @@
         <div>Venue: <strong>{{ event.venue_name }}</strong></div>
       </div>
 
+      <!-- Real-Time Community Live Status (Future Scope Item 1) -->
+      <div id="liveStatusContainer" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <div>
+            <span style="font-size: 0.8rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; color: #64748b;">Community Live Status</span>
+            <div id="liveStatusLabel" style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">
+              {{ live_status.status_label }}
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <span id="liveServingBadge" class="badge" style="background: #10b981; color: #fff; font-size: 0.8rem;">
+              Serving: <strong id="liveServingCount">{{ live_status.serving_count }}</strong>
+            </span>
+            <span id="liveFinishedBadge" class="badge" style="background: #ef4444; color: #fff; font-size: 0.8rem;">
+              Finished: <strong id="liveFinishedCount">{{ live_status.finished_count }}</strong>
+            </span>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">
+          Are you at this venue right now? Confirm the serving status to help community members:
+        </p>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="SERVING" style="color: #059669; border-color: #10b981; font-weight: 700; background: #ecfdf5;">
+            Confirm: Food is Serving Now
+          </button>
+          <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="FINISHED" style="color: #dc2626; border-color: #f87171; font-weight: 700; background: #fef2f2;">
+            Report: Food Finished
+          </button>
+        </div>
+        <div id="liveStatusFeedback" style="display: none; margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600;"></div>
+      </div>
+
+      <!-- Surplus Food Recovery Banner (Future Scope Item 5) -->
+      {% if event.is_surplus_food %}
+        <div style="background: #fff7ed; border: 2px solid #fb923c; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="badge" style="background: #ea580c; color: #ffffff; font-weight: 800; font-size: 0.85rem;">
+                SURPLUS FOOD RESCUE
+              </span>
+              <span style="font-weight: 700; color: #9a3412;">
+                Status: {{ event.get_rescue_status_display }}
+              </span>
+            </div>
+            {% if event.rescue_status == 'AVAILABLE' %}
+              <button type="button" class="btn btn-sm btn-primary" onclick="openModal('rescueClaimModal')" style="background: #ea580c; border-color: #c2410c;">
+                Volunteer: Claim Food for Rescue
+              </button>
+            {% endif %}
+          </div>
+          <p style="font-size: 0.875rem; color: #9a3412; margin-bottom: 0.5rem;">
+            <strong>Available Quantity:</strong> {{ event.surplus_quantity|default:"Excess feast food available for urgent pickup" }}<br>
+            <strong>Coordinator Contact:</strong> <a href="tel:{{ event.rescue_contact_phone }}" style="color: #ea580c; font-weight: 700;">{{ event.rescue_contact_phone }}</a>
+          </p>
+          {% if rescue_claims %}
+            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #fed7aa; font-size: 0.825rem; color: #9a3412;">
+              <strong>Active Claims:</strong>
+              {% for claim in rescue_claims %}
+                <div>Claimed by {{ claim.volunteer_name }} ({{ claim.organization|default:"Volunteer" }}) &bull; ETA: {{ claim.estimated_pickup_time }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
       <!-- Food Details Callout -->
       <div class="detail-section" style="margin-top: 0; padding-top: 0; border-top: none;">
-        <h2 class="detail-section-title">Food Served</h2>
+        <h2 class="detail-section-title">Food Served & Dietary Information</h2>
+        <div style="margin-bottom: 0.75rem;">
+          <span style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">Dietary Category:</span>
+          <span style="font-size: 0.9rem; color: #475569;">{{ event.get_dietary_type_display }}</span>
+          {% if event.allergens_info %}
+            <span style="margin-left: 1rem; font-size: 0.85rem; color: #64748b;">(Allergens: {{ event.allergens_info }})</span>
+          {% endif %}
+        </div>
         <div class="food-details-box">
           {{ event.food_details|linebreaks }}
         </div>
@@ -123,6 +217,46 @@
       </form>
     </div>
   </div>
+
+  <!-- Surplus Food Rescue Claim Modal (Future Scope Item 5) -->
+  <div class="modal-overlay" id="rescueClaimModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="color: #ea580c;">Claim Food for Rescue Pickup</h3>
+        <button type="button" class="alert-close" onclick="closeModal('rescueClaimModal')">&times;</button>
+      </div>
+      <form action="{% url 'food:claim_food_rescue' event.id %}" method="POST">
+        {% csrf_token %}
+        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">
+          Coordinate pickup with the venue to transport surplus food to communities in need:
+        </p>
+        <div class="form-group">
+          <label class="form-label">Volunteer Name *</label>
+          {{ claim_form.volunteer_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mobile Number *</label>
+          {{ claim_form.volunteer_phone }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rescue Organization / NGO</label>
+          {{ claim_form.organization }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated Arrival Time *</label>
+          {{ claim_form.estimated_pickup_time }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vehicle & Container Notes</label>
+          {{ claim_form.notes }}
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('rescueClaimModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="background: #ea580c; border-color: #c2410c;">Confirm Rescue Claim</button>
+        </div>
+      </form>
+    </div>
+  </div>
 {% endif %}
 
 {% endblock %}
@@ -145,6 +279,59 @@
         .bindPopup(`<strong>${title}</strong><br>{{ event.venue_name|escapejs }}`)
         .openPopup();
     }
+
+    // Community Live Status Real-Time AJAX Voting
+    const voteButtons = document.querySelectorAll('.live-vote-btn');
+    const feedbackEl = document.getElementById('liveStatusFeedback');
+
+    voteButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const statusVal = btn.dataset.status;
+        const formData = new FormData();
+        formData.append('status', statusVal);
+
+        // Get CSRF cookie or token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+        try {
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+
+          const res = await fetch("{% url 'food:api_live_status' event.id %}", {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          });
+
+          const data = await res.json();
+          if (data.status === 'success') {
+            document.getElementById('liveStatusLabel').textContent = data.live_status.status_label;
+            document.getElementById('liveServingCount').textContent = data.live_status.serving_count;
+            document.getElementById('liveFinishedCount').textContent = data.live_status.finished_count;
+
+            if (feedbackEl) {
+              feedbackEl.style.display = 'block';
+              feedbackEl.style.color = '#15803d';
+              feedbackEl.textContent = data.message;
+            }
+          } else {
+            if (feedbackEl) {
+              feedbackEl.style.display = 'block';
+              feedbackEl.style.color = '#b91c1c';
+              feedbackEl.textContent = data.message || 'Unable to update status.';
+            }
+          }
+        } catch (err) {
+          console.error('Error submitting live status:', err);
+        } finally {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        }
+      });
+    });
   });
 </script>
 {% endblock %}

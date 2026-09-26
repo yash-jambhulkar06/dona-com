@@ -21,7 +21,7 @@
   {% block extra_head %}{% endblock %}
 </head>
 
-<body>
+<body data-user-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}">
 
   <!-- Site Header -->
   <header class="site-header">
@@ -36,6 +36,7 @@
         <ul class="nav-links" id="navLinks">
           <li><a href="{% url 'food:home' %}" class="nav-link">Home</a></li>
           <li><a href="{% url 'food:event_list' %}" class="nav-link">Browse Events</a></li>
+          <li><a href="{% url 'food:surplus_recovery' %}" class="nav-link" style="color: #ea580c; font-weight: 700;">Food Rescue</a></li>
           {% if user.is_authenticated and user.is_staff %}
           <li><a href="{% url 'moderation:dashboard' %}" class="nav-link"
               style="color: #b91c1c; font-weight: 700;">Admin Panel</a></li>
@@ -45,7 +46,8 @@
 
       <!-- Header Right Group (Bell, Actions, Hamburger) -->
       <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <!-- Real-Time Mobile & Desktop Notification Bell -->
+        {% if user.is_authenticated %}
+        <!-- Real-Time Mobile & Desktop Notification Bell (Authenticated Members Only) -->
         <div class="notification-bell-wrapper" id="notificationBellWrapper">
           <button class="notification-bell-btn" id="notificationBellBtn" aria-label="Notifications"
             aria-expanded="false" type="button" title="Notifications">
@@ -56,6 +58,7 @@
             </svg>
             <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
           </button>
+
 
           <!-- Notification Dropdown (Desktop) / Bottom Sheet Tray (Mobile) -->
           <div class="notification-dropdown" id="notificationDropdown">
@@ -86,11 +89,41 @@
                 <button type="button" class="notif-tab active" id="notifTabAll">All</button>
                 <button type="button" class="notif-tab" id="notifTabUnread">Unread</button>
               </div>
+              <!-- 5 km Proximity Push Alerts Banner (Future Scope Item 3) -->
+              <div id="proximityAlertBanner" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem;">
+                <span style="color: #475569; font-weight: 600;">5 km Browser Food Alerts</span>
+                <button type="button" id="btnEnableProximityAlerts" class="btn btn-sm" style="background: #dc2626; color: #fff; padding: 0.25rem 0.6rem; font-size: 0.72rem; border-radius: 4px; border: none; font-weight: 700;">
+                  Enable Alerts
+                </button>
+              </div>
             </div>
 
-            <!-- Notification Items List -->
+            <!-- Notification Items List with Skeleton Shimmer by default -->
             <div class="notif-tray-body" id="notifTrayBody">
-              <!-- Dynamically populated by notifications.js -->
+              <div class="skeleton-notif-item">
+                <div class="skeleton skeleton-icon"></div>
+                <div class="skeleton-notif-content">
+                  <div class="skeleton skeleton-title" style="width: 58%; height: 14px;"></div>
+                  <div class="skeleton skeleton-text" style="width: 90%;"></div>
+                  <div class="skeleton skeleton-text short" style="width: 35%; height: 10px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-notif-item">
+                <div class="skeleton skeleton-icon"></div>
+                <div class="skeleton-notif-content">
+                  <div class="skeleton skeleton-title" style="width: 65%; height: 14px;"></div>
+                  <div class="skeleton skeleton-text" style="width: 82%;"></div>
+                  <div class="skeleton skeleton-text short" style="width: 40%; height: 10px;"></div>
+                </div>
+              </div>
+              <div class="skeleton-notif-item">
+                <div class="skeleton skeleton-icon"></div>
+                <div class="skeleton-notif-content">
+                  <div class="skeleton skeleton-title" style="width: 50%; height: 14px;"></div>
+                  <div class="skeleton skeleton-text" style="width: 86%;"></div>
+                  <div class="skeleton skeleton-text short" style="width: 30%; height: 10px;"></div>
+                </div>
+              </div>
             </div>
 
             <!-- Tray Footer with Clear All & View All -->
@@ -109,6 +142,7 @@
             </div>
           </div>
         </div>
+        {% endif %}
 
         <!-- Desktop Header Actions -->
         <div class="desktop-actions">
@@ -143,8 +177,9 @@
         <ul class="mobile-nav-list">
           <li><a href="{% url 'food:home' %}" class="mobile-nav-link">Home</a></li>
           <li><a href="{% url 'food:event_list' %}" class="mobile-nav-link">Browse Events</a></li>
-          <li><a href="{% url 'notifications:list_page' %}" class="mobile-nav-link">Notifications</a></li>
+          <li><a href="{% url 'food:surplus_recovery' %}" class="mobile-nav-link" style="color: #ea580c; font-weight: 700;">Food Rescue Network</a></li>
           {% if user.is_authenticated %}
+          <li><a href="{% url 'notifications:list_page' %}" class="mobile-nav-link">Notifications</a></li>
           <li><a href="{% url 'food:my_submissions' %}" class="mobile-nav-link">My Submissions</a></li>
           {% if user.is_staff %}
           <li><a href="{% url 'moderation:dashboard' %}" class="mobile-nav-link"
@@ -180,6 +215,7 @@
     <div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
   </header>
 
+  {% if user.is_authenticated %}
   <!-- Mobile Bottom Sheet Backdrop for Notifications -->
   <div class="mobile-sheet-backdrop" id="notificationSheetBackdrop"></div>
 
@@ -213,6 +249,8 @@
       <div class="hud-progress-fill" id="hudProgressBarFill"></div>
     </div>
   </div>
+  {% endif %}
+
 
   <!-- Main Body Content -->
   <main class="main-content">

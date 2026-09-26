@@ -33,13 +33,16 @@ def get_recommended_events(
     availability: Optional[str] = None,
     date_filter: Optional[str] = None,
     max_distance_km: Optional[float] = None,
-    search_query: Optional[str] = None
+    search_query: Optional[str] = None,
+    dietary: Optional[str] = None,
+    surplus_only: bool = False,
+    verified_only: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Rule-based recommendation engine for free-food discovery.
     1. Filter only APPROVED events.
     2. Exclude EXPIRED & CANCELLED events.
-    3. Apply search query & attribute filters.
+    3. Apply search query, dietary, surplus recovery, & attribute filters.
     4. Compute distance from user's current coordinates (if available).
     5. Rank: Available Now -> Starting Soon -> Nearby Distance -> Date/Time.
     """
@@ -72,6 +75,21 @@ def get_recommended_events(
     if event_type:
         queryset = queryset.filter(event_type=event_type)
 
+    # Dietary Preference filter (Future Scope Item 4)
+    if dietary:
+        queryset = queryset.filter(dietary_type=dietary)
+
+    # Surplus Food Recovery filter (Future Scope Item 5)
+    if surplus_only:
+        queryset = queryset.filter(is_surplus_food=True)
+
+    # Verified Organizer filter (Future Scope Item 2)
+    if verified_only:
+        queryset = queryset.filter(
+            Q(is_verified_organizer=True) |
+            Q(submitted_by__is_verified_organizer=True)
+        )
+
     # Date filter
     if date_filter == 'today':
         queryset = queryset.filter(event_date=today)
@@ -81,7 +99,7 @@ def get_recommended_events(
         queryset = queryset.filter(event_date__range=[today, today + timedelta(days=7)])
 
     # Materialize candidate list
-    candidate_events = list(queryset)
+    candidate_events = list(queryset.select_related('submitted_by'))
 
     results = []
     for event in candidate_events:
@@ -182,3 +200,39 @@ def search_places_geocoding(query: str) -> List[Dict[str, Any]]:
         pass
         
     return []
+
+
+def reverse_geocode(lat: float, lon: float) -> Optional[str]:
+    """
+    Reverse geocoding helper to convert coordinates to a clean human-readable place name.
+    """
+    try:
+        url = "https://nominatim.openstreetmap.org/reverse"
+        params = {
+            'lat': lat,
+            'lon': lon,
+            'format': 'json',
+            'zoom': 14,
+            'addressdetails': 1,
+        }
+        headers = {'User-Agent': 'CommunityFreeFoodDiscoveryApp/1.0'}
+        response = requests.get(url, params=params, headers=headers, timeout=4)
+        if response.status_code == 200:
+            data = response.json()
+            address = data.get('address', {})
+            place = (
+                address.get('village') or 
+                address.get('town') or 
+                address.get('city') or 
+                address.get('suburb') or 
+                address.get('county') or
+                data.get('display_name', '').split(',')[0]
+            )
+            district = address.get('county') or address.get('state_district') or address.get('state')
+            if place and district and place != district:
+                return f"{place}, {district}"
+            return place or data.get('display_name', '').split(',')[0]
+    except Exception:
+        pass
+    return None
+

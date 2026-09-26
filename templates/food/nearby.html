@@ -2,52 +2,197 @@
 
 {% block title %}Free Food Near Me — Dona.Com{% endblock %}
 
+{% block extra_head %}
+<style>
+  .nearby-search-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 1.5rem;
+  }
+
+  .nearby-search-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .nearby-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+  }
+
+  .nearby-input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .nearby-input-container:focus-within {
+    background: #ffffff;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
+  }
+
+  .nearby-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.95rem;
+    color: #0f172a;
+    width: 100%;
+  }
+
+  .nearby-search-results {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .map-search-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s;
+  }
+
+  .map-search-item:last-child { border-bottom: none; }
+  .map-search-item:hover { background: #fef2f2; }
+  .map-search-item-name { font-weight: 700; font-size: 0.92rem; color: #0f172a; }
+  .map-search-item-sub { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+  .map-search-empty { font-size: 0.875rem; color: #64748b; cursor: default; }
+
+  .nearby-map-container {
+    height: 380px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    margin-bottom: 2rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container" style="padding-top: 2rem;">
   <div style="margin-bottom: 1.5rem;">
-    <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a;">Free Food Near Me</h1>
-    <p style="color: #64748b; font-size: 0.95rem;">Rule-based recommendation ranked by proximity and current availability.</p>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Free Food Near Me</h1>
+    <p style="color: #64748b; font-size: 0.95rem;">Rule-based recommendation ranked by proximity and real-time availability.</p>
+  </div>
+
+  <!-- Prominent Location Search & Detect Bar -->
+  <div class="nearby-search-box">
+    <div style="font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.6rem; letter-spacing: 0.03em;">
+      Find Community Food Near Your Area
+    </div>
+    <div class="nearby-search-inner">
+      <div class="nearby-input-wrapper">
+        <div class="nearby-input-container">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="nearbyLocationInput"
+            class="nearby-search-input"
+            placeholder="Type your village, city or area (e.g. Palandur, Nagpur, Bhandara)..."
+            value="{% if location_name %}{{ location_name }}{% endif %}"
+            autocomplete="off"
+          >
+        </div>
+        <div id="nearbyLocationResults" class="nearby-search-results"></div>
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btnNearbyDetectGPS" style="display: flex; align-items: center; gap: 0.5rem; height: 44px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span>Use Current Location</span>
+      </button>
+
+      <a href="{% url 'locations:map_view' %}" class="btn btn-outline" style="height: 44px; display: flex; align-items: center; gap: 0.4rem;">
+        <span>Interactive Map View</span> &rarr;
+      </a>
+    </div>
   </div>
 
   {% if not has_location %}
-    <!-- Location Permission Required Banner -->
+    <!-- Location Required State -->
     <div class="empty-state" style="background: white; border: 2px dashed #cbd5e1;">
-      <div class="empty-state-tag">Location Required</div>
-      <h3>Location Permission Needed</h3>
+      <div class="empty-state-tag">Location Setup</div>
+      <h3>Where are you located?</h3>
       <p>
-        To discover free food events happening right around your current location, please allow browser location access or search your city manually.
+        Search for your town or village (e.g. <strong>Palandur</strong>, <strong>Bhandara</strong>, <strong>Nagpur</strong>) above, or tap "Use Current Location" to discover free meals around you.
       </p>
-      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <button type="button" class="btn btn-primary btn-near-me">
-          Use Current Location
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="openModal('manualLocationModal')">
-          Search Area Manually
-        </button>
-      </div>
     </div>
   {% else %}
     <!-- Radius & Location Status Bar -->
     <div class="location-banner">
       <div class="location-banner-text">
         <div>
-          <strong>Showing events near your detected coordinates</strong>
-          <div style="font-size: 0.8rem; color: #64748b;">Latitude: {{ user_lat|floatformat:4 }}, Longitude: {{ user_lng|floatformat:4 }}</div>
+          <strong style="color: #0f172a; font-size: 1.05rem;">
+            Showing events near: <span style="color: #dc2626;">{{ location_name|default:"Your Location" }}</span>
+          </strong>
+          <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+            Coordinates: {{ user_lat|floatformat:4 }}° N, {{ user_lng|floatformat:4 }}° E
+          </div>
         </div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
         <label style="font-size: 0.85rem; font-weight: 600; color: #475569;">Radius:</label>
         <div style="display: flex; gap: 0.35rem;">
-          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=5" class="btn btn-sm {% if radius == '5' %}btn-primary{% else %}btn-secondary{% endif %}">5 km</a>
-          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=15" class="btn btn-sm {% if radius == '15' %}btn-primary{% else %}btn-secondary{% endif %}">15 km</a>
-          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=30" class="btn btn-sm {% if radius == '30' %}btn-primary{% else %}btn-secondary{% endif %}">30 km</a>
-          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=50" class="btn btn-sm {% if radius == '50' %}btn-primary{% else %}btn-secondary{% endif %}">50 km</a>
+          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=5{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-sm {% if radius == '5' %}btn-primary{% else %}btn-secondary{% endif %}">5 km</a>
+          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=15{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-sm {% if radius == '15' %}btn-primary{% else %}btn-secondary{% endif %}">15 km</a>
+          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=30{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-sm {% if radius == '30' %}btn-primary{% else %}btn-secondary{% endif %}">30 km</a>
+          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=50{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-sm {% if radius == '50' %}btn-primary{% else %}btn-secondary{% endif %}">50 km</a>
         </div>
-        <button type="button" class="btn btn-outline btn-sm" onclick="openModal('manualLocationModal')">Change Area</button>
       </div>
     </div>
 
+    <!-- Interactive Location Discovery Map -->
+    <div id="nearbyMap" class="nearby-map-container" style="position: relative;">
+      <div class="skeleton-map-wrapper">
+        <div class="skeleton-map-grid"></div>
+        <div class="skeleton-map-radar">
+          <div class="skeleton-map-pulse-ring">
+            <div class="skeleton-map-dot"></div>
+          </div>
+          <span>Loading nearby map & events...</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">
+        Events Found ({% if results %}{{ results|length }}{% else %}0{% endif %})
+      </h2>
+      <div style="font-size: 0.85rem; color: #64748b;">
+        Blue pin = Your selected location | Red pins = Free food events
+      </div>
+    </div>
+
+    <div id="nearbyResultsContainer">
     {% if results %}
       <div class="cards-grid">
         {% for item in results %}
@@ -113,13 +258,225 @@
       <div class="empty-state">
         <div class="empty-state-tag">Search Radius</div>
         <h3>No free food events found within {{ radius }} km</h3>
-        <p>Try extending your search radius to 50 km or search another nearby city.</p>
+        <p>Try extending your search radius to 50 km or search another nearby town or city.</p>
         <div style="display: flex; justify-content: center; gap: 1rem;">
-          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=50" class="btn btn-primary">Extend to 50 km</a>
-          <button type="button" class="btn btn-secondary" onclick="openModal('manualLocationModal')">Search Another Area</button>
+          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=50{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-primary">Extend to 50 km</a>
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('nearbyLocationInput').focus()">Search Another Area</button>
         </div>
       </div>
     {% endif %}
+    </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize Nearby Map if coordinates present
+    {% if has_location %}
+      const pins = {{ pins_json|safe }};
+      FoodMap.initNearbyMap(
+        'nearbyMap',
+        pins,
+        '{{ user_lat }}',
+        '{{ user_lng }}',
+        '{{ radius }}',
+        '{{ location_name|default:"Your Location" }}'
+      );
+    {% endif %}
+
+    // Helper: Show Skeleton Event Cards
+    function renderNearbyCardsSkeleton(statusText) {
+      const container = document.getElementById('nearbyResultsContainer');
+      if (container) {
+        container.innerHTML = `
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.85rem;">
+            <div class="skeleton-map-pulse-ring" style="width: 32px; height: 32px; flex-shrink: 0;">
+              <div class="skeleton-map-dot" style="width: 8px; height: 8px;"></div>
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">${statusText || 'Finding verified community meals near you...'}</div>
+              <div style="font-size: 0.8rem; color: #64748b;">Filtering distance and active food opportunities</div>
+            </div>
+          </div>
+          <div class="cards-grid">
+            <div class="skeleton-card">
+              <div class="skeleton-card-header">
+                <div class="skeleton skeleton-badge" style="width: 90px;"></div>
+                <div class="skeleton skeleton-badge" style="width: 65px;"></div>
+              </div>
+              <div class="skeleton-card-body">
+                <div class="skeleton skeleton-title" style="width: 72%; height: 20px;"></div>
+                <div class="skeleton skeleton-text medium" style="height: 12px;"></div>
+                <div class="skeleton skeleton-text short" style="height: 12px;"></div>
+                <div class="skeleton skeleton-text" style="height: 38px; margin-top: 6px; border-radius: 6px;"></div>
+              </div>
+              <div class="skeleton-card-footer">
+                <div class="skeleton skeleton-badge" style="width: 85px; height: 24px;"></div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <div class="skeleton skeleton-btn" style="width: 75px; height: 32px;"></div>
+                  <div class="skeleton skeleton-btn" style="width: 70px; height: 32px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-card-header">
+                <div class="skeleton skeleton-badge" style="width: 85px;"></div>
+                <div class="skeleton skeleton-badge" style="width: 70px;"></div>
+              </div>
+              <div class="skeleton-card-body">
+                <div class="skeleton skeleton-title" style="width: 65%; height: 20px;"></div>
+                <div class="skeleton skeleton-text medium" style="height: 12px;"></div>
+                <div class="skeleton skeleton-text short" style="height: 12px;"></div>
+                <div class="skeleton skeleton-text" style="height: 38px; margin-top: 6px; border-radius: 6px;"></div>
+              </div>
+              <div class="skeleton-card-footer">
+                <div class="skeleton skeleton-badge" style="width: 90px; height: 24px;"></div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <div class="skeleton skeleton-btn" style="width: 75px; height: 32px;"></div>
+                  <div class="skeleton skeleton-btn" style="width: 70px; height: 32px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-card-header">
+                <div class="skeleton skeleton-badge" style="width: 95px;"></div>
+                <div class="skeleton skeleton-badge" style="width: 60px;"></div>
+              </div>
+              <div class="skeleton-card-body">
+                <div class="skeleton skeleton-title" style="width: 78%; height: 20px;"></div>
+                <div class="skeleton skeleton-text medium" style="height: 12px;"></div>
+                <div class="skeleton skeleton-text short" style="height: 12px;"></div>
+                <div class="skeleton skeleton-text" style="height: 38px; margin-top: 6px; border-radius: 6px;"></div>
+              </div>
+              <div class="skeleton-card-footer">
+                <div class="skeleton skeleton-badge" style="width: 80px; height: 24px;"></div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <div class="skeleton skeleton-btn" style="width: 75px; height: 32px;"></div>
+                  <div class="skeleton skeleton-btn" style="width: 70px; height: 32px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Attach skeleton trigger to radius buttons
+    document.querySelectorAll('.location-banner a.btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        renderNearbyCardsSkeleton('Updating radius & searching events...');
+      });
+    });
+
+    // 2. Wire up the location autocomplete search input
+    const input = document.getElementById('nearbyLocationInput');
+    const resultsBox = document.getElementById('nearbyLocationResults');
+    let debounce = null;
+
+    if (input && resultsBox) {
+      input.addEventListener('input', () => {
+        const query = input.value.trim();
+        clearTimeout(debounce);
+        if (query.length < 2) {
+          resultsBox.innerHTML = '';
+          resultsBox.style.display = 'none';
+          return;
+        }
+
+        // Display skeleton search items immediately while waiting for Nominatim
+        resultsBox.innerHTML = `
+          <div class="skeleton-search-item">
+            <div class="skeleton skeleton-title" style="width: 50%; height: 13px; margin-bottom: 4px;"></div>
+            <div class="skeleton skeleton-text" style="width: 85%; height: 11px; margin-bottom: 0;"></div>
+          </div>
+          <div class="skeleton-search-item">
+            <div class="skeleton skeleton-title" style="width: 62%; height: 13px; margin-bottom: 4px;"></div>
+            <div class="skeleton skeleton-text" style="width: 72%; height: 11px; margin-bottom: 0;"></div>
+          </div>
+          <div class="skeleton-search-item">
+            <div class="skeleton skeleton-title" style="width: 44%; height: 13px; margin-bottom: 4px;"></div>
+            <div class="skeleton skeleton-text" style="width: 90%; height: 11px; margin-bottom: 0;"></div>
+          </div>
+        `;
+        resultsBox.style.display = 'block';
+
+        debounce = setTimeout(async () => {
+          try {
+            const resp = await fetch(`/api/locations/search/?q=${encodeURIComponent(query)}`);
+            const data = await resp.json();
+            resultsBox.innerHTML = '';
+
+            if (!data.results || data.results.length === 0) {
+              resultsBox.innerHTML = '<div class="map-search-item map-search-empty">No matching places found. Try another town (e.g., Palandur, Nagpur, Bhandara).</div>';
+              resultsBox.style.display = 'block';
+              return;
+            }
+
+            data.results.forEach(place => {
+              const item = document.createElement('div');
+              item.className = 'map-search-item';
+              const shortName = place.display_name.split(',')[0];
+              item.innerHTML = `
+                <div class="map-search-item-name">${shortName}</div>
+                <div class="map-search-item-sub">${place.display_name}</div>
+              `;
+              item.addEventListener('click', () => {
+                input.value = shortName;
+                resultsBox.innerHTML = '';
+                resultsBox.style.display = 'none';
+                renderNearbyCardsSkeleton(`Locating free food near ${shortName}...`);
+                GeolocationManager.setStoredLocation(place.lat, place.lon, shortName, true);
+                window.location.href = `/food/nearby/?lat=${place.lat}&lng=${place.lon}&radius={{ radius|default:"25" }}&location_name=${encodeURIComponent(shortName)}`;
+              });
+              resultsBox.appendChild(item);
+            });
+            resultsBox.style.display = 'block';
+          } catch (err) {
+            console.error('Location search error:', err);
+          }
+        }, 300);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+          resultsBox.style.display = 'none';
+        }
+      });
+    }
+
+    // 3. Wire up "Use Current Location" button on nearby page
+    const detectBtn = document.getElementById('btnNearbyDetectGPS');
+    if (detectBtn) {
+      detectBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const origText = detectBtn.innerHTML;
+        detectBtn.innerHTML = '<span>Detecting location...</span>';
+        detectBtn.style.opacity = '0.7';
+        renderNearbyCardsSkeleton('Detecting your GPS/Network location...');
+
+        GeolocationManager.requestLocation(
+          (coords) => {
+            detectBtn.innerHTML = origText;
+            detectBtn.style.opacity = '1';
+            let url = `/food/nearby/?lat=${coords.lat}&lng=${coords.lng}&radius={{ radius|default:"25" }}`;
+            if (coords.locationName) {
+              url += `&location_name=${encodeURIComponent(coords.locationName)}`;
+            }
+            if (coords.isCoarse) {
+              showToast(`Network estimated location: ${coords.locationName}. If your location is Palandur, you can search Palandur above.`, 'info');
+            }
+            window.location.href = url;
+          },
+          (err) => {
+            detectBtn.innerHTML = origText;
+            detectBtn.style.opacity = '1';
+            showToast(err, 'error');
+          }
+        );
+      });
+    }
+  });
+</script>
 {% endblock %}

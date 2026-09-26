@@ -26,8 +26,13 @@
   let unreadPillEl = null;
   let hudEl = null;
 
-  // Initialize once DOM is ready
+  // Initialize once DOM is ready (Only for logged-in members)
   document.addEventListener('DOMContentLoaded', () => {
+    const isUserAuth = document.body.dataset.userAuthenticated === 'true';
+    if (!isUserAuth) {
+      return; // Strictly disabled for visitors who are not logged in
+    }
+
     initElements();
     setupEventListeners();
     requestNotificationPermissionIfAppropriate();
@@ -38,6 +43,7 @@
     // Start Real-Time Polling (every 4.5 seconds)
     startPolling();
   });
+
 
   function initElements() {
     bellBtn = document.getElementById('notificationBellBtn');
@@ -251,6 +257,39 @@
   }
 
   /**
+   * Renders skeleton shimmer placeholders while notifications are loading
+   */
+  function renderNotificationsSkeleton() {
+    if (!listContainerEl) return;
+    listContainerEl.innerHTML = `
+      <div class="skeleton-notif-item">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton-notif-content">
+          <div class="skeleton skeleton-title" style="width: 58%; height: 14px;"></div>
+          <div class="skeleton skeleton-text" style="width: 90%;"></div>
+          <div class="skeleton skeleton-text short" style="width: 35%; height: 10px;"></div>
+        </div>
+      </div>
+      <div class="skeleton-notif-item">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton-notif-content">
+          <div class="skeleton skeleton-title" style="width: 65%; height: 14px;"></div>
+          <div class="skeleton skeleton-text" style="width: 82%;"></div>
+          <div class="skeleton skeleton-text short" style="width: 40%; height: 10px;"></div>
+        </div>
+      </div>
+      <div class="skeleton-notif-item">
+        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton-notif-content">
+          <div class="skeleton skeleton-title" style="width: 50%; height: 14px;"></div>
+          <div class="skeleton skeleton-text" style="width: 86%;"></div>
+          <div class="skeleton skeleton-text short" style="width: 30%; height: 10px;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Renders the notifications inside the dropdown / bottom-sheet
    */
   function renderNotificationsList() {
@@ -344,6 +383,10 @@
     if (!dropdownEl) return;
     dropdownEl.classList.add('is-open');
     if (bellBtn) bellBtn.setAttribute('aria-expanded', 'true');
+
+    if (isFirstLoad && (!cachedNotifications || cachedNotifications.length === 0)) {
+      renderNotificationsSkeleton();
+    }
 
     // Close mobile hamburger menu drawer if open
     const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -737,6 +780,104 @@
       "'": '&#039;'
     };
     return String(text).replace(/[&<>"']/g, m => map[m]);
+  }
+
+  /**
+   * Browser Push Notifications (Web Notification API) & 5 km Proximity Alerts (Future Scope Item 3)
+   */
+  function requestNotificationPermissionIfAppropriate() {
+    setupProximityPush();
+  }
+
+  function setupProximityPush() {
+    const btn = document.getElementById('btnEnableProximityAlerts');
+    if (!btn) return;
+
+    if (!('Notification' in window)) {
+      btn.style.display = 'none';
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      btn.textContent = 'Alerts Active (5 km)';
+      btn.style.background = '#059669';
+      btn.style.color = '#ffffff';
+    }
+
+    btn.addEventListener('click', async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          btn.textContent = 'Locating...';
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                await registerProximityCoordinates(position.coords.latitude, position.coords.longitude);
+                btn.textContent = 'Alerts Active (5 km)';
+                btn.style.background = '#059669';
+                btn.style.color = '#ffffff';
+                triggerNativeBrowserNotification({
+                  id: 'welcome-alert',
+                  title: 'Dona.Com Proximity Alerts Active',
+                  message: 'You will receive browser notifications whenever free food is published within 5 km of your location.',
+                  target_url: '/food/'
+                });
+              },
+              (err) => {
+                btn.textContent = 'Alerts Enabled';
+                btn.style.background = '#059669';
+              }
+            );
+          }
+        } else {
+          btn.textContent = 'Alerts Blocked';
+          btn.style.background = '#64748b';
+        }
+      } catch (e) {
+        console.error('Proximity alert setup error:', e);
+      }
+    });
+  }
+
+  async function registerProximityCoordinates(lat, lng) {
+    try {
+      await fetch('/notifications/api/register-proximity/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+          latitude: lat,
+          longitude: lng,
+          radius_km: 5.0
+        })
+      });
+    } catch (e) {
+      console.warn('Could not register proximity coordinates:', e);
+    }
+  }
+
+  function triggerNativeBrowserNotification(notif) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+    try {
+      const nativeNotif = new Notification(notif.title, {
+        body: notif.message,
+        icon: '/static/icons/dona-icon.png',
+        tag: `dona-notif-${notif.id}`,
+        data: { url: notif.target_url }
+      });
+      nativeNotif.onclick = function () {
+        window.focus();
+        if (notif.target_url && notif.target_url !== '/') {
+          window.location.href = notif.target_url;
+        }
+      };
+    } catch (e) {
+      console.warn('Native notification display error:', e);
+    }
   }
 
   // Expose global clear trigger

@@ -56,26 +56,46 @@ def event_review_detail_view(request, event_id):
 @require_POST
 def event_approve_action(request, event_id):
     """Action to approve a submission, making it publicly discoverable."""
-    event = get_object_or_404(FreeFoodEvent, pk=event_id)
+    event = get_object_or_404(FreeFoodEvent.objects.select_related('submitted_by'), pk=event_id)
     admin_note = request.POST.get('admin_note', '').strip()
+    verify_organizer = request.POST.get('verify_organizer') in ('1', 'true', 'on')
+    organizer_type = request.POST.get('organizer_type', '').strip()
+    organization_name = request.POST.get('organization_name', '').strip()
     
     event.status = FreeFoodEvent.STATUS_APPROVED
     event.approved_at = timezone.now()
     event.approved_by = request.user
     if admin_note:
         event.admin_note = admin_note
-    event.save(update_fields=['status', 'approved_at', 'approved_by', 'admin_note', 'updated_at'])
+
+    # Verified Organizer Badge Support (Future Scope Item 2)
+    update_fields = ['status', 'approved_at', 'approved_by', 'admin_note', 'updated_at']
+    if verify_organizer:
+        event.is_verified_organizer = True
+        event.organizer_type = organizer_type or 'NGO'
+        event.organization_name = organization_name
+        update_fields.extend(['is_verified_organizer', 'organizer_type', 'organization_name'])
+        
+        # Also mark the submitter's profile as a verified organizer
+        if event.submitted_by:
+            event.submitted_by.is_verified_organizer = True
+            event.submitted_by.organizer_type = organizer_type or 'NGO'
+            if organization_name:
+                event.submitted_by.organization_name = organization_name
+            event.submitted_by.save(update_fields=['is_verified_organizer', 'organizer_type', 'organization_name'])
+
+    event.save(update_fields=update_fields)
     
     ModerationLog.objects.create(
         event=event,
         admin=request.user,
         action=ModerationLog.ACTION_APPROVE,
-        reason_or_note=admin_note or "Event approved for public listing."
+        reason_or_note=admin_note or f"Event approved for public listing. Verified Badge: {'Yes' if event.is_verified_organizer else 'No'}"
     )
     
-    # Real-Time Notifications: Submitter & Community Broadcast
+    # Real-Time Notifications & 5 km Proximity Push Alerts (Future Scope Item 3)
     try:
-        from notifications.services import send_notification, notify_broadcast
+        from notifications.services import send_notification, notify_broadcast, notify_proximity_subscribers
         if event.submitted_by:
             send_notification(
                 recipient=event.submitted_by,
@@ -92,6 +112,8 @@ def event_approve_action(request, event_id):
             target_url=f"/food/{event.id}/",
             related_event=event
         )
+        # Dispatch 5 km browser push notifications to nearby subscribers
+        notify_proximity_subscribers(event, max_radius_km=5.0)
     except Exception as e:
         pass
 

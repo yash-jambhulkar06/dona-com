@@ -37,8 +37,35 @@
       </div>
 
       <div class="detail-section">
-        <h2 class="detail-section-title">Food Details</h2>
-        <div class="food-details-box">
+        <h2 class="detail-section-title">Dietary & Food Specifications</h2>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+          <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-weight: 700;">
+            {{ event.dietary_badge_info.label }}
+          </span>
+          {% if event.is_surplus_food %}
+            <span class="badge" style="background: #ea580c; color: #fff; font-weight: 700;">
+              Surplus Food Rescue Active
+            </span>
+          {% endif %}
+          {% if event.has_verified_organizer %}
+            <span class="badge" style="background: #0284c7; color: #fff; font-weight: 700;">
+              Verified Organizer
+            </span>
+          {% endif %}
+        </div>
+        {% if event.allergens_info %}
+          <p style="font-size: 0.875rem; color: #475569; margin-bottom: 0.5rem;">
+            <strong>Allergens / Special Notes:</strong> {{ event.allergens_info }}
+          </p>
+        {% endif %}
+        {% if event.is_surplus_food %}
+          <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 0.75rem; border-radius: 8px; font-size: 0.875rem; color: #9a3412;">
+            <strong>Surplus Quantity:</strong> {{ event.surplus_quantity|default:"Celebration excess" }}<br>
+            <strong>Rescue Contact Phone:</strong> {{ event.rescue_contact_phone }}<br>
+            <strong>Rescue Status:</strong> {{ event.get_rescue_status_display }}
+          </div>
+        {% endif %}
+        <div class="food-details-box" style="margin-top: 0.75rem;">
           {{ event.food_details|linebreaks }}
         </div>
       </div>
@@ -83,18 +110,36 @@
         </h3>
 
         <!-- Approve Form -->
-        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1.25rem;">
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem;">
           <h4 style="color: #166534; font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem;">
             Approve Submission
           </h4>
           <p style="font-size: 0.825rem; color: #15803d; margin-bottom: 1rem;">
-            Approving will immediately publish this event to the public directory and map discovery.
+            Approving will publish this event live and dispatch 5 km proximity push alerts to nearby seekers.
           </p>
           <form action="{% url 'moderation:event_approve' event.id %}" method="POST">
             {% csrf_token %}
             <div class="form-group" style="margin-bottom: 0.75rem;">
               <input type="text" name="admin_note" class="form-input" placeholder="Optional admin verification note" style="font-size: 0.85rem;">
             </div>
+
+            <!-- Verified Organizer Badge Option -->
+            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: #0f172a; cursor: pointer; margin-bottom: 0.5rem;">
+                <input type="checkbox" name="verify_organizer" value="1" {% if event.has_verified_organizer %}checked{% endif %}>
+                Award Verified Organizer Badge
+              </label>
+              <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <select name="organizer_type" class="form-select" style="font-size: 0.8rem; padding: 0.4rem;">
+                  <option value="NGO" {% if event.organizer_type == 'NGO' %}selected{% endif %}>Registered NGO / Non-Profit</option>
+                  <option value="COMMUNITY_KITCHEN" {% if event.organizer_type == 'COMMUNITY_KITCHEN' %}selected{% endif %}>Community Kitchen / Langar Seva</option>
+                  <option value="RELIGIOUS_TRUST" {% if event.organizer_type == 'RELIGIOUS_TRUST' %}selected{% endif %}>Religious Trust / Temple / Gurudwara / Mosque</option>
+                  <option value="INDIVIDUAL" {% if event.organizer_type == 'INDIVIDUAL' %}selected{% endif %}>Verified Volunteer / Individual</option>
+                </select>
+                <input type="text" name="organization_name" class="form-input" placeholder="Organization name (e.g. Robin Hood Army / ISKCON)" value="{{ event.organization_name }}" style="font-size: 0.8rem; padding: 0.4rem;">
+              </div>
+            </div>
+
             <button type="submit" class="btn btn-primary btn-block">
               Approve & Publish
             </button>

@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from food.models import FreeFoodEvent
-from .services import search_places_geocoding, get_recommended_events
+from .services import search_places_geocoding, get_recommended_events, reverse_geocode
 
 @login_required
 def map_view(request):
@@ -59,3 +59,19 @@ def location_search_api(request):
         
     results = search_places_geocoding(query)
     return JsonResponse({'results': results})
+
+@login_required
+def reverse_geocode_api(request):
+    """
+    AJAX endpoint to reverse geocode lat/lng into a clean location name.
+    """
+    lat = request.GET.get('lat')
+    lng = request.GET.get('lng')
+    if not lat or not lng:
+        return JsonResponse({'name': None})
+    try:
+        name = reverse_geocode(float(lat), float(lng))
+        return JsonResponse({'name': name})
+    except (ValueError, TypeError):
+        return JsonResponse({'name': None})
+

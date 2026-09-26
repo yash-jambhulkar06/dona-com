@@ -16,14 +16,25 @@ from .services import (
     mark_all_notifications_as_read,
     send_notification,
     notify_admins,
-    notify_broadcast
+    notify_broadcast,
+    update_proximity_subscription,
+    notify_proximity_subscribers,
 )
 
 def api_get_notifications(request):
     """
-    Real-time polling endpoint for mobile HUD banners and notification drawer.
-    Supports delta syncing using `since` ISO datetime string.
+    Real-time polling endpoint for notification drawer and HUD.
+    Notifications are served ONLY to logged-in users.
     """
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'status': 'success',
+            'unread_count': 0,
+            'count': 0,
+            'notifications': [],
+            'server_time': timezone.now().isoformat(),
+        })
+
     since_str = request.GET.get('since')
     unread_only = request.GET.get('unread_only', 'false').lower() == 'true'
     limit = min(int(request.GET.get('limit', 20)), 50)
@@ -58,12 +69,21 @@ def api_get_notifications(request):
 def api_unread_count(request):
     """
     Ultra-lightweight ping for unread notification count badge.
+    Only returns count for logged-in users.
     """
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'status': 'success',
+            'unread_count': 0,
+            'server_time': timezone.now().isoformat(),
+        })
+
     return JsonResponse({
         'status': 'success',
         'unread_count': get_unread_count(request.user),
         'server_time': timezone.now().isoformat(),
     })
+
 
 
 @csrf_exempt
@@ -169,9 +189,11 @@ def api_test_notification(request):
     return redirect('notifications:list_page')
 
 
+@login_required
 def notification_list_page(request):
     """
     Dedicated notifications view page for full mobile and desktop history.
+    Accessible only to authenticated users.
     """
     all_notifs = get_user_notifications(user=request.user, limit=100)
     unread_cnt = get_unread_count(request.user)
@@ -185,3 +207,45 @@ def notification_list_page(request):
         'unread_count': unread_cnt,
         'total_count': len(all_notifs),
     })
+
+
+@csrf_exempt
+@require_POST
+def api_register_proximity_device(request):
+    """
+    Registers or updates the user/device coordinates for 5 km proximity push alerts (Future Scope Item 3).
+    Works for logged in users and visitors with active sessions.
+    """
+    try:
+        if request.content_type == 'application/json':
+            data = json.loads(request.body.decode('utf-8'))
+        else:
+            data = request.POST
+
+        lat = float(data.get('latitude') or data.get('lat'))
+        lng = float(data.get('longitude') or data.get('lng'))
+        radius = float(data.get('radius_km', 5.0))
+        endpoint = data.get('endpoint', '')
+
+        if not request.session.session_key:
+            request.session.save()
+        session_key = request.session.session_key or ''
+
+        sub = update_proximity_subscription(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=session_key,
+            latitude=lat,
+            longitude=lng,
+            radius_km=radius,
+            endpoint=endpoint
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Subscribed to proximity alerts within {radius} km',
+            'subscription_id': str(sub.id) if sub else None,
+            'radius_km': radius
+        })
+    except (ValueError, TypeError, json.JSONDecodeError) as e:
+        return HttpResponseBadRequest(f"Invalid coordinate parameters: {e}")
+
