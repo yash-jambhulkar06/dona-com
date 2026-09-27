@@ -3,195 +3,108 @@
 {% block title %}Find Free Food Near You — Dona.Com{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section">
+<section class="page-shell">
   <div class="container">
-    <div class="hero-pill">
-      Verified Community Free Food Platform
-    </div>
-    <h1 class="hero-title">
-      Where can I find <span>free food near me</span>?
-    </h1>
-    <p class="hero-subtitle">
-      Discover free community meals, temple mahaprasad, gurudwara langar, celebrations, and NGO food distributions happening around you right now.
-    </p>
-
-    <div class="hero-actions">
-      <a href="{% url 'food:nearby_events' %}" class="btn btn-primary btn-lg btn-near-me">
-        Find Food Near Me
-      </a>
-      <button type="button" class="btn btn-secondary btn-lg" onclick="openModal('manualLocationModal')">
-        Search Location Manually
-      </button>
-      <a href="{% url 'food:event_list' %}" class="btn btn-outline btn-lg">
-        Browse All Events
-      </a>
+    <div class="location-bar mobile-stack">
+      <div class="location-meta">
+        <span class="location-pin" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+        </span>
+        <div class="location-copy">
+          <small>Current location</small>
+          <strong>Sakoli, Maharashtra</strong>
+        </div>
+      </div>
+      <button type="button" class="location-change" onclick="openModal('manualLocationModal')">Change</button>
     </div>
 
-    <div class="hero-stats">
-      <div class="hero-stat-item">
-        <div class="hero-stat-num">{{ active_now_count }}</div>
-        <div class="hero-stat-label">Available Right Now</div>
-      </div>
-      <div class="hero-stat-item">
-        <div class="hero-stat-num">{{ total_approved }}</div>
-        <div class="hero-stat-label">Upcoming Verified Events</div>
-      </div>
-      <div class="hero-stat-item">
-        <div class="hero-stat-num">{{ surplus_count }}</div>
-        <div class="hero-stat-label">Active Surplus Food Rescues</div>
+    <div class="hero-panel">
+      <div class="hero-panel-inner">
+        <span class="hero-kicker">Verified community platform</span>
+        <h1>Find Free Food Near You</h1>
+        <p>Discover verified community meals, temple prasad, gurudwara langar, celebrations and NGO food distributions happening around you.</p>
+
+        <div class="hero-search">
+          <label class="search-box" aria-label="Search food or place">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <input type="text" placeholder="Search food, place or event..." aria-label="Search food, place or event">
+          </label>
+          <a href="{% url 'food:nearby_events' %}" class="btn btn-primary btn-lg">Find Food Near Me</a>
+          <button type="button" class="btn btn-secondary btn-lg" onclick="openModal('manualLocationModal')">Search Location Manually</button>
+        </div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- Filter & Results Section -->
-<section style="padding: 2.5rem 0;">
-  <div class="container">
-    
-      <!-- Dietary Quick Filter Bar (Future Scope Item 4) -->
-      <div class="dietary-filter-bar">
-        <span class="dietary-filter-label">Dietary Filters:</span>
-        <a href="{% url 'food:home' %}" class="filter-chip {% if not selected_dietary %}is-active{% endif %}">
-          All Foods
-        </a>
-        <a href="?dietary=PURE_VEG" class="filter-chip {% if selected_dietary == 'PURE_VEG' %}is-active{% endif %}">
-          Pure Veg
-        </a>
-        <a href="?dietary=JAIN" class="filter-chip {% if selected_dietary == 'JAIN' %}is-active{% endif %}">
-          Jain Food
-        </a>
-        <a href="?dietary=VEGAN" class="filter-chip {% if selected_dietary == 'VEGAN' %}is-active{% endif %}">
-          Vegan
-        </a>
-        <a href="?dietary=HALAL" class="filter-chip {% if selected_dietary == 'HALAL' %}is-active{% endif %}">
-          Halal
-        </a>
-        <a href="{% url 'food:surplus_recovery' %}" class="filter-chip rescue-link">
-          Surplus Food Rescue Network &rarr;
-        </a>
-      </div>
+    <div class="account-grid-two section-space">
+      <div class="stat-card"><strong>{{ active_now_count }}</strong><span>Available now</span></div>
+      <div class="stat-card"><strong>{{ total_approved }}</strong><span>Upcoming listings</span></div>
+      <div class="stat-card"><strong>{{ surplus_count }}</strong><span>Rescue alerts</span></div>
+      <div class="stat-card"><strong>{{ recommended_results|length }}</strong><span>Nearby picks</span></div>
+    </div>
 
-      <div class="section-heading">
-        <h2>Recommended & Active Listings</h2>
-        <a href="{% url 'food:event_list' %}" class="btn btn-outline btn-sm">View All &rarr;</a>
-      </div>
+    <div class="section-header section-space">
+      <h2>Available Near You</h2>
+      <a href="{% url 'food:event_list' %}" class="inline-link">View All</a>
+    </div>
 
-      {% if recommended_results %}
-        <div class="cards-grid">
-          {% for item in recommended_results %}
-            {% with event=item.event dist=item.distance_km %}
-              <article class="event-card">
-                <div class="event-card-header">
-                  <div class="event-card-badges">
-                    <span class="badge badge-type">{{ event.get_event_type_display }}</span>
-                    <!-- Dietary Badge -->
-                    <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-weight: 700; font-size: 0.75rem;">
-                      {{ event.dietary_badge_info.label }}
+    <div class="dietary-filter-bar">
+      <a href="{% url 'food:home' %}" class="filter-chip {% if not selected_dietary %}is-active{% endif %}">All</a>
+      <a href="?dietary=PURE_VEG" class="filter-chip {% if selected_dietary == 'PURE_VEG' %}is-active{% endif %}">Pure Veg</a>
+      <a href="?dietary=JAIN" class="filter-chip {% if selected_dietary == 'JAIN' %}is-active{% endif %}">Jain</a>
+      <a href="?dietary=VEGAN" class="filter-chip {% if selected_dietary == 'VEGAN' %}is-active{% endif %}">Vegan</a>
+      <a href="?dietary=HALAL" class="filter-chip {% if selected_dietary == 'HALAL' %}is-active{% endif %}">Halal</a>
+      <a href="{% url 'food:surplus_recovery' %}" class="filter-chip rescue-link">Rescue</a>
+    </div>
+
+    {% if recommended_results %}
+      <div class="cards-grid section-space-sm">
+        {% for item in recommended_results %}
+          {% with event=item.event dist=item.distance_km %}
+            <article class="event-card">
+              <div class="event-card-media">
+                <div class="event-card-media-content">
+                  <span class="event-card-media-label">{{ event.get_event_type_display }}</span>
+                  {% if event.has_verified_organizer %}
+                    <span class="event-card-media-icon" title="Verified">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
                     </span>
-                    <!-- Verified Badge -->
-                    {% if event.has_verified_organizer %}
-                      <span class="badge" style="background: #0284c7; color: #fff; font-size: 0.75rem; font-weight: 700;">
-                        Verified
-                      </span>
-                    {% endif %}
-                    <!-- Surplus Badge -->
-                    {% if event.is_surplus_food %}
-                      <span class="badge" style="background: #ea580c; color: #fff; font-size: 0.75rem; font-weight: 700;">
-                        Rescue
-                      </span>
-                    {% endif %}
-                  </div>
-
-                  <div class="event-card-actions">
-                    <span class="badge {{ event.availability_status.css_class }}">
-                      {{ event.availability_status.label }}
-                    </span>
-                    {% if user.is_authenticated %}
-                            <button type="button" class="fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}"
-                              data-event-id="{{ event.id }}"
-                              title="Save favorite">
-                        {% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}
-                      </button>
-                    {% else %}
-                      <a class="btn btn-outline btn-sm save-link" href="{% url 'accounts:login' %}?next={% url 'food:home' %}" aria-label="Sign in to save {{ event.title }}">Save</a>
-                    {% endif %}
-                  </div>
-                </div>
-
-                <div class="event-card-body">
-                  <h3 class="event-card-title">
-                    <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
-                  </h3>
-
-                  <div class="event-meta-row">
-                    <span>Date: {{ event.event_date|date:"D, M d" }}</span>
-                    <span>•</span>
-                    <span>Time: {{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
-                  </div>
-
-                  <div class="event-meta-row event-meta-venue">
-                    <span>Venue: {{ event.venue_name }}</span>
-                    {% if event.has_verified_organizer and event.verified_organizer_badge.name %}
-                      <span class="verified-organizer-tag">• {{ event.verified_organizer_badge.name }}</span>
-                    {% endif %}
-                  </div>
-
-                  {% if event.approved_at %}
-                    <div class="event-meta-row verification-row">Dona Verified {{ event.approved_at|timesince }} ago</div>
                   {% endif %}
-
-                  <div class="event-food-summary">
-                    <strong>Food Details:</strong> {{ event.food_details|truncatechars:120 }}
-                  </div>
                 </div>
-
-                <div class="event-card-footer">
-                  <div class="event-card-distance">
-                    {% if dist %}
-                      <span class="distance-pill">{{ dist }} km away</span>
-                    {% else %}
-                      <span class="event-address-text">{{ event.address|truncatechars:28 }}</span>
-                    {% endif %}
-                  </div>
-                  <div class="event-card-cta">
-                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}" 
-                       target="_blank" rel="noopener" class="btn btn-secondary btn-sm" title="Directions">
-                      Directions
-                    </a>
-                    <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">
-                      Details
-                    </a>
-                  </div>
+              </div>
+              <div class="event-card-header">
+                <span class="badge badge-type">{{ event.get_event_type_display }}</span>
+                <div class="event-card-actions">
+                  {% if event.has_verified_organizer %}<span class="badge badge-info">Verified</span>{% endif %}
+                  {% if user.is_authenticated %}
+                    <button type="button" class="fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}" data-event-id="{{ event.id }}">{% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}</button>
+                  {% else %}
+                    <a href="{% url 'accounts:login' %}?next={% url 'food:home' %}" class="fav-btn">Save</a>
+                  {% endif %}
                 </div>
-              </article>
-            {% endwith %}
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-state-tag">Status</div>
-          <h3>No free food events currently scheduled</h3>
-          <p>There are no active or upcoming listings right now. Know of a community langar, feast, or distribution? Share it with everyone!</p>
-          <a href="{% url 'food:event_add' %}" class="btn btn-primary">Submit Free Food Event</a>
-        </div>
-      {% endif %}
-
-    <!-- Community Call to Action Banner -->
-    <div class="community-cta-banner">
-      <div class="community-cta-copy">
-        <h3>Know of Free Food Being Served?</h3>
-        <p>
-          Help community members by posting details of weddings, religious events, langars, or charitable food distributions. Every verified listing feeds someone in need.
-        </p>
+              </div>
+              <div class="event-card-body">
+                <h3 class="event-card-title"><a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a></h3>
+                <div class="event-card-row"><span>{% if dist %}<strong>{{ dist }} km</strong>{% endif %}</span><span>•</span><span>{{ event.venue_name }}</span></div>
+                <div class="event-card-row"><span>{{ event.event_date|date:"D, M d" }}</span><span>•</span><span>{{ event.start_time|time:"g:i A" }}</span></div>
+                <div class="event-card-row"><span>{{ event.address|truncatechars:48 }}</span></div>
+                <div class="event-food-summary">{{ event.food_details|truncatechars:120 }}</div>
+              </div>
+              <div class="event-card-footer">
+                <span class="distance-pill">{% if dist %}{{ dist }} km away{% else %}Nearby{% endif %}</span>
+                <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">View</a>
+              </div>
+            </article>
+          {% endwith %}
+        {% endfor %}
       </div>
-      <div>
-        <a href="{% url 'food:event_add' %}" class="btn btn-secondary btn-lg community-cta-btn">
-          Submit Free Food Event
-        </a>
+    {% else %}
+      <div class="empty-state section-space-sm">
+        <div class="empty-state-tag">Status</div>
+        <h3>No free food events currently scheduled</h3>
+        <p>There are no active or upcoming listings right now.</p>
+        <a href="{% url 'food:event_add' %}" class="btn btn-primary">Submit Free Food Event</a>
       </div>
-    </div>
-
+    {% endif %}
   </div>
 </section>
 {% endblock %}
