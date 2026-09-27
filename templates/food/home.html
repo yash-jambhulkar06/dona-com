@@ -6,7 +6,7 @@
 <section class="page-shell">
   <div class="container">
     <!-- Location Context Bar -->
-    <div class="location-bar">
+    <div class="location-bar" id="homeLocationBar" style="cursor: pointer;" title="Tap to detect or change location">
       <div class="location-meta">
         <span class="location-pin" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -16,10 +16,10 @@
         </span>
         <div class="location-copy">
           <small>Current location</small>
-          <strong id="heroLocationName">Sakoli, Maharashtra</strong>
+          <strong id="heroLocationName">{% if location_name %}{{ location_name }}{% else %}Detecting location...{% endif %}</strong>
         </div>
       </div>
-      <button type="button" class="location-change" onclick="openModal('manualLocationModal')">Change</button>
+      <button type="button" class="location-change" id="btnChangeLocation" onclick="event.stopPropagation(); openModal('manualLocationModal')">Change</button>
     </div>
 
     <!-- Contained Dona Red Hero Component -->

@@ -9,6 +9,23 @@ const FoodMap = {
   _radiusCircle: null,  // holds the radius circle instance
   _mapInstance: null,   // reference to the main full-map Leaflet instance
 
+  _getRedPinIcon() {
+    return L.divIcon({
+      className: 'dona-map-pin',
+      html: `
+        <div style="position: relative; width: 30px; height: 38px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 6px rgba(220, 38, 38, 0.4)); cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="30" height="38" fill="#dc2626">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#ffffff" stroke-width="1.2"/>
+            <circle cx="12" cy="9" r="3" fill="#ffffff"/>
+          </svg>
+        </div>
+      `,
+      iconSize: [30, 38],
+      iconAnchor: [15, 38],
+      popupAnchor: [0, -36]
+    });
+  },
+
   // ──────────────────────────────────────────────────────────────
   // Full Discovery Map (map_view page)
   // ──────────────────────────────────────────────────────────────
@@ -50,7 +67,7 @@ const FoodMap = {
 
     // Plot all approved event pins (Red markers)
     pins.forEach(pin => {
-      const marker = L.marker([pin.lat, pin.lng]).addTo(map);
+      const marker = L.marker([pin.lat, pin.lng], { icon: FoodMap._getRedPinIcon() }).addTo(map);
       bounds.push([pin.lat, pin.lng]);
 
       const popupHtml = `
@@ -196,7 +213,7 @@ const FoodMap = {
     const bounds = [[lat, lng]];
 
     pins.forEach(pin => {
-      const marker = L.marker([pin.lat, pin.lng]).addTo(map);
+      const marker = L.marker([pin.lat, pin.lng], { icon: FoodMap._getRedPinIcon() }).addTo(map);
       bounds.push([pin.lat, pin.lng]);
 
       const distStr = pin.distance_km ? `<div style="font-size:0.8rem;font-weight:700;color:#16a34a;margin-bottom:0.25rem;">${pin.distance_km} km away</div>` : '';
@@ -380,7 +397,7 @@ const FoodMap = {
       }, 300);
     }
 
-    let marker = L.marker([initLat, initLng], { draggable: true }).addTo(map);
+    let marker = L.marker([initLat, initLng], { draggable: true, icon: FoodMap._getRedPinIcon() }).addTo(map);
 
     function updateCoords(lat, lng) {
       latInput.value = lat.toFixed(7);

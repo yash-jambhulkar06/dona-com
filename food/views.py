@@ -3,7 +3,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.http import JsonResponse, Http404
+from django.conf import settings
+from django.http import JsonResponse, Http404, HttpResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils import timezone
@@ -22,6 +23,7 @@ def home_view(request):
     """
     user_lat = request.GET.get('lat')
     user_lng = request.GET.get('lng')
+    location_name = request.GET.get('location_name', '').strip()
     dietary = request.GET.get('dietary', '').strip()
     
     user_favorites_ids = set()
@@ -35,6 +37,11 @@ def home_view(request):
             lng_val = None
     except ValueError:
         lat_val, lng_val = None, None
+
+    if not location_name and lat_val is not None and lng_val is not None:
+        from locations.services import reverse_geocode
+        location_name = reverse_geocode(lat_val, lng_val) or ""
+
 
     recommended = get_recommended_events(
         user_lat=lat_val,
@@ -74,6 +81,7 @@ def home_view(request):
         'event_types': FreeFoodEvent.EVENT_TYPES,
         'dietary_types': FreeFoodEvent.DIETARY_TYPES,
         'selected_dietary': dietary,
+        'location_name': location_name,
         'user_lat': user_lat,
         'user_lng': user_lng,
     })
@@ -519,3 +527,56 @@ def claim_food_rescue_view(request, event_id):
         messages.error(request, "Unable to complete claim. Please check your contact information.")
 
     return redirect('food:event_detail', event_id=event.id)
+
+
+# --------------------------------------------------------------------------
+# Progressive Web App (PWA) Endpoints
+# --------------------------------------------------------------------------
+def service_worker_view(request):
+    """
+    Serves the service worker from root URL /sw.js with Service-Worker-Allowed: /
+    Ensures the service worker has root scope across all application URLs.
+    """
+    sw_file = settings.BASE_DIR / 'static' / 'sw.js'
+    if not sw_file.exists() and hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+        fallback = settings.STATIC_ROOT / 'sw.js'
+        if fallback.exists():
+            sw_file = fallback
+
+    try:
+        with open(sw_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except IOError:
+        content = '// Service Worker file unavailable'
+    response = HttpResponse(content, content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
+def manifest_view(request):
+    """
+    Serves the web app manifest from root URL /manifest.json with proper MIME type.
+    """
+    manifest_file = settings.BASE_DIR / 'static' / 'manifest.json'
+    if not manifest_file.exists() and hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+        fallback = settings.STATIC_ROOT / 'manifest.json'
+        if fallback.exists():
+            manifest_file = fallback
+
+    try:
+        with open(manifest_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except IOError:
+        content = '{}'
+    response = HttpResponse(content, content_type='application/manifest+json')
+    response['Cache-Control'] = 'public, max-age=3600'
+    return response
+
+
+def offline_view(request):
+    """
+    Branded offline fallback page when device network is unavailable.
+    """
+    return render(request, 'offline.html')
+

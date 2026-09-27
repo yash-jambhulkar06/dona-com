@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}You are Offline — Dona.Com{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3.5rem; padding-bottom: 4rem; display: flex; justify-content: center;">
+  <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-modal); padding: 3rem 2rem; max-width: 480px; width: 100%; text-align: center; box-shadow: var(--shadow-card);">
+    <div style="width: 72px; height: 72px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    
+    <span class="badge badge-warning" style="margin-bottom: 0.75rem;">Offline Mode</span>
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Connection Lost</h1>
+    <p style="color: #64748b; font-size: 0.95rem; line-height: 1.55; margin-bottom: 2rem;">
+      Dona.Com needs an active internet connection to verify live food timings, distributions, and distance calculations. Check your Wi-Fi or mobile data and try again.
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <button type="button" class="btn btn-primary" onclick="window.location.reload()" style="justify-content: center; gap: 0.5rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        <span>Retry Connection</span>
+      </button>
+      <a href="{% url 'food:home' %}" class="btn btn-secondary" style="justify-content: center;">
+        Go to Home Screen
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

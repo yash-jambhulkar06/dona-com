@@ -265,15 +265,15 @@
    3. Notification Dropdown (Desktop) & Bottom Sheet (Mobile)
    -------------------------------------------------------------------------- */
 .notification-dropdown {
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
+  position: fixed;
+  top: calc(var(--header-height, 60px) + 8px);
+  right: max(1.25rem, calc((100vw - 1200px) / 2 + 1.25rem));
   width: 380px;
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid var(--border-color, #e2e8f0);
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.05);
-  z-index: 1050;
+  z-index: 1060;
   display: none;
   flex-direction: column;
   overflow: hidden;
@@ -568,11 +568,11 @@
     display: block !important;
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.35);
-    z-index: 1040;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 1055;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.25s ease;
   }
 
   .mobile-sheet-backdrop.is-active {
@@ -582,32 +582,45 @@
 
   .notification-dropdown {
     position: fixed !important;
-    top: 4.25rem !important;
-    left: 0.75rem !important;
-    right: 0.75rem !important;
-    bottom: auto !important;
-    width: auto !important;
-    max-width: 500px !important;
-    margin: 0 auto !important;
-    max-height: calc(100vh - 5.5rem) !important;
-    border-radius: 18px !important;
-    box-shadow: 0 16px 40px -5px rgba(0, 0, 0, 0.25) !important;
-    z-index: 1050 !important;
-    display: none !important;
-    transform: none !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    max-height: 82vh !important;
+    border-radius: 24px 24px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.25) !important;
+    z-index: 1060 !important;
+    display: flex !important;
+    transform: translateY(105%) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    visibility: hidden;
   }
 
   .notification-dropdown.is-open {
-    display: flex !important;
-    animation: dropdownFade 0.2s ease forwards !important;
+    visibility: visible !important;
+    transform: translateY(0%) !important;
   }
 
   .mobile-sheet-handle {
-    display: none;
+    display: block !important;
+    width: 38px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 4px;
+    margin: 10px auto 4px;
+    flex-shrink: 0;
   }
 
   .notif-tray-body {
-    max-height: calc(100vh - 220px);
+    max-height: calc(82vh - 160px) !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Optimize floating HUD for small phone screens */
@@ -615,6 +628,7 @@
     top: 0.75rem;
     width: calc(100% - 1.25rem);
     border-radius: 16px;
+    z-index: 1070 !important;
   }
 
   .hud-inner {

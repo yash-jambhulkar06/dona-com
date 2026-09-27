@@ -26,22 +26,19 @@
   let unreadPillEl = null;
   let hudEl = null;
 
-  // Initialize once DOM is ready (Only for logged-in members)
+  // Initialize once DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
-    const isUserAuth = document.body.dataset.userAuthenticated === 'true';
-    if (!isUserAuth) {
-      return; // Strictly disabled for visitors who are not logged in
-    }
-
     initElements();
     setupEventListeners();
-    requestNotificationPermissionIfAppropriate();
-    
-    // Initial fetch to load notifications and badge
-    fetchNotifications(true);
 
-    // Start Real-Time Polling (every 4.5 seconds)
-    startPolling();
+    const isUserAuth = document.body.dataset.userAuthenticated === 'true';
+    if (isUserAuth) {
+      requestNotificationPermissionIfAppropriate();
+      // Initial fetch to load notifications and badge
+      fetchNotifications(true);
+      // Start Real-Time Polling (every 4.5 seconds)
+      startPolling();
+    }
   });
 
 
@@ -64,9 +61,40 @@
       });
     }
 
+    // Close button inside tray
+    const notifCloseBtn = document.getElementById('notifCloseBtn');
+    if (notifCloseBtn) {
+      notifCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeTray();
+      });
+    }
+
     // Close when clicking mobile backdrop
     if (backdropEl) {
-      backdropEl.addEventListener('click', closeTray);
+      backdropEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeTray();
+      });
+    }
+
+    // Drawer notifications link
+    const drawerNotifLink = document.getElementById('mobileDrawerNotifLink');
+    if (drawerNotifLink) {
+      drawerNotifLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const mobileDrawer = document.getElementById('mobileMenuDrawer');
+        const mobileBackdrop = document.getElementById('mobileMenuBackdrop');
+        if (mobileBtn && mobileDrawer) {
+          mobileBtn.classList.remove('is-active');
+          mobileBtn.setAttribute('aria-expanded', 'false');
+          mobileDrawer.classList.remove('is-open');
+          mobileDrawer.setAttribute('aria-hidden', 'true');
+          if (mobileBackdrop) mobileBackdrop.classList.remove('is-open');
+        }
+        openTray();
+      });
     }
 
     // Close desktop dropdown on click outside
