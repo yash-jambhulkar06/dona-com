@@ -9,106 +9,181 @@
 <meta property="og:title" content="{{ event.title|escape }} — Dona.Com">
 <meta property="og:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
 <meta property="og:url" content="{{ canonical_url }}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ event.title|escape }} — Dona.Com">
 <meta name="twitter:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
 <link rel="canonical" href="{{ canonical_url }}">
+<style>
+  /* Mobile sticky bottom action bar */
+  @media (max-width: 768px) {
+    .detail-sticky-bar {
+      position: fixed;
+      bottom: var(--bottom-nav-height);
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-color);
+      padding: 0.65rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 1050;
+      box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .detail-sticky-bar .btn {
+      flex: 1;
+    }
+  }
+  @media (min-width: 769px) {
+    .detail-sticky-bar {
+      display: none !important;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 2rem;">
+<div class="container" style="padding-top: 1.25rem;">
+  <!-- Back Link -->
   <div style="margin-bottom: 1rem;">
-    <a href="{% url 'food:event_list' %}" style="text-decoration: none; color: #64748b; font-size: 0.9rem; font-weight: 500;">
-      &larr; Back to all events
+    <a href="{% url 'food:event_list' %}" class="inline-link" style="color: #64748b; font-size: 0.875rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <span>Back to all events</span>
     </a>
   </div>
 
   <div class="event-detail-grid">
     <!-- Main Content Column -->
     <div class="event-main-card">
+      <!-- Immersive Large Food Image Header -->
+      <div class="event-detail-hero-media">
+        {% if event.is_surplus_food %}
+          <img src="/static/images/surplus.jpg" alt="{{ event.title }}">
+        {% elif event.event_type == 'Langar' %}
+          <img src="/static/images/langar.jpg" alt="{{ event.title }}">
+        {% elif event.event_type == 'Mahaprasad' %}
+          <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}">
+        {% elif event.event_type == 'Wedding' or event.event_type == 'Birthday' %}
+          <img src="/static/images/celebration.jpg" alt="{{ event.title }}">
+        {% else %}
+          <img src="/static/images/default_food.jpg" alt="{{ event.title }}">
+        {% endif %}
+      </div>
+
+      <!-- Badges Bar -->
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-          <span class="badge badge-type" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+        <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+          <span class="badge badge-type" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
             {{ event.get_event_type_display }}
           </span>
-          <!-- Dietary Preference Badge (Future Scope Item 4) -->
-          <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem; font-weight: 700;">
+          <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
             {{ event.dietary_badge_info.label }}
           </span>
-          <!-- Verified Organizer Badge (Future Scope Item 2) -->
           {% if event.has_verified_organizer %}
-            <span class="badge" style="background-color: #0284c7; color: #ffffff; font-size: 0.85rem; padding: 0.35rem 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            <span class="badge badge-verified" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
               {{ event.verified_organizer_badge.label }}
             </span>
           {% endif %}
         </div>
 
-        <span class="badge {{ event.availability_status.css_class }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">
+        <span class="badge {{ event.availability_status.css_class }}" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
           {{ event.availability_status.label }}
         </span>
       </div>
 
-      <h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1.25; margin-bottom: 0.5rem;">
+      <!-- Title -->
+      <h1 style="font-size: clamp(1.6rem, 3.5vw, 2.25rem); font-weight: 800; color: #111827; line-height: 1.25; margin-bottom: 0.5rem; letter-spacing: -0.02em;">
         {{ event.title }}
       </h1>
 
       {% if event.has_verified_organizer and event.verified_organizer_badge.name %}
-        <div style="font-size: 0.95rem; color: #0284c7; font-weight: 600; margin-bottom: 1rem;">
-          Organized by: {{ event.verified_organizer_badge.name }} (Verified Partner)
+        <div style="font-size: 0.925rem; color: #0284c7; font-weight: 600; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.35rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          <span>Organized by: {{ event.verified_organizer_badge.name }} (Verified Partner)</span>
         </div>
       {% endif %}
 
-      <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
-        <div>Date: <strong>{{ event.event_date|date:"l, F d, Y" }}</strong></div>
-        <div>Time: <strong>{{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</strong></div>
-        <div>Venue: <strong>{{ event.venue_name }}</strong></div>
+      <!-- Key Metadata Info Rows (Clean icons) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem; padding: 1rem; background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-input); margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <div>
+            <div style="font-size: 0.725rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Date</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">{{ event.event_date|date:"l, M d, Y" }}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div>
+            <div style="font-size: 0.725rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Serving Time</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">{{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          </div>
+          <div>
+            <div style="font-size: 0.725rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Venue</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">{{ event.venue_name }}</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Real-Time Community Live Status (Future Scope Item 1) -->
-      <div id="liveStatusContainer" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+      <!-- Community Real-Time Live Status Panel -->
+      <div id="liveStatusContainer" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: var(--radius-input); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
           <div>
-            <span style="font-size: 0.8rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; color: #64748b;">Community Live Status</span>
-            <div id="liveStatusLabel" style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">
+            <span style="font-size: 0.725rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; color: var(--text-secondary);">Real-Time Serving Verification</span>
+            <div id="liveStatusLabel" style="font-size: 1.1rem; font-weight: 800; color: #111827; margin-top: 0.15rem;">
               {{ live_status.status_label }}
             </div>
           </div>
           <div style="display: flex; gap: 0.5rem;">
-            <span id="liveServingBadge" class="badge" style="background: #10b981; color: #fff; font-size: 0.8rem;">
+            <span id="liveServingBadge" class="badge badge-success">
               Serving: <strong id="liveServingCount">{{ live_status.serving_count }}</strong>
             </span>
-            <span id="liveFinishedBadge" class="badge" style="background: #ef4444; color: #fff; font-size: 0.8rem;">
+            <span id="liveFinishedBadge" class="badge badge-danger">
               Finished: <strong id="liveFinishedCount">{{ live_status.finished_count }}</strong>
             </span>
           </div>
         </div>
 
-        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
           Are you at this venue right now? Confirm the serving status to help community members:
         </p>
 
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
           {% csrf_token %}
-          <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="SERVING" style="color: #059669; border-color: #10b981; font-weight: 700; background: #ecfdf5;">
-            Confirm: Food is Serving Now
+          <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="SERVING" style="color: #15803d; border-color: #86efac; background: #f0fdf4; font-weight: 700;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Confirm: Food is Serving Now</span>
           </button>
-          <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="FINISHED" style="color: #dc2626; border-color: #f87171; font-weight: 700; background: #fef2f2;">
-            Report: Food Finished
+          <button type="button" class="btn btn-outline btn-sm live-vote-btn" data-status="FINISHED" style="color: #b91c1c; border-color: #fca5a5; background: #fef2f2; font-weight: 700;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span>Report: Food Finished</span>
           </button>
         </div>
         <div id="liveStatusFeedback" style="display: none; margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600;"></div>
       </div>
 
-      <!-- Surplus Food Recovery Banner (Future Scope Item 5) -->
+      <!-- Surplus Food Recovery Banner -->
       {% if event.is_surplus_food %}
-        <div style="background: #fff7ed; border: 2px solid #fb923c; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="background: #fff7ed; border: 1.5px solid #fb923c; border-radius: var(--radius-input); padding: 1.25rem; margin-bottom: 1.5rem;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="badge" style="background: #ea580c; color: #ffffff; font-weight: 800; font-size: 0.85rem;">
-                SURPLUS FOOD RESCUE
+              <span class="badge" style="background: #ea580c; color: #ffffff; font-weight: 800; font-size: 0.8rem;">
+                SURPLUS RESCUE
               </span>
-              <span style="font-weight: 700; color: #9a3412;">
+              <span style="font-weight: 700; color: #9a3412; font-size: 0.9rem;">
                 Status: {{ event.get_rescue_status_display }}
               </span>
             </div>
@@ -133,14 +208,14 @@
         </div>
       {% endif %}
 
-      <!-- Food Details Callout -->
+      <!-- Food Served & Dietary Information -->
       <div class="detail-section" style="margin-top: 0; padding-top: 0; border-top: none;">
         <h2 class="detail-section-title">Food Served & Dietary Information</h2>
-        <div style="margin-bottom: 0.75rem;">
-          <span style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">Dietary Category:</span>
-          <span style="font-size: 0.9rem; color: #475569;">{{ event.get_dietary_type_display }}</span>
+        <div style="margin-bottom: 0.75rem; font-size: 0.9rem;">
+          <span style="font-weight: 700; color: #111827;">Dietary Category:</span>
+          <span style="color: #475569;">{{ event.get_dietary_type_display }}</span>
           {% if event.allergens_info %}
-            <span style="margin-left: 1rem; font-size: 0.85rem; color: #64748b;">(Allergens: {{ event.allergens_info }})</span>
+            <span style="margin-left: 0.75rem; color: #64748b;">(Allergens: {{ event.allergens_info }})</span>
           {% endif %}
         </div>
         <div class="food-details-box">
@@ -151,61 +226,66 @@
       <!-- Description -->
       <div class="detail-section">
         <h2 class="detail-section-title">Event Description & Community Context</h2>
-        <p style="color: #334155; line-height: 1.7; font-size: 1rem;">
+        <p style="color: #334155; line-height: 1.7; font-size: 0.95rem;">
           {{ event.description|linebreaks }}
         </p>
       </div>
 
-      <!-- Location and Interactive Map -->
+      <!-- Location & Interactive Map -->
       <div class="detail-section">
         <h2 class="detail-section-title">Location & Venue Details</h2>
         <p style="color: #475569; margin-bottom: 1rem; font-size: 0.95rem;">
-          <strong>{{ event.venue_name }}</strong><br>
+          <strong style="color: #111827;">{{ event.venue_name }}</strong><br>
           {{ event.address }}
         </p>
-        <div id="eventDetailMap" style="height: 350px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;"></div>
-        <a href="{{ directions_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-block">
-          Open in Google Maps (Get Turn-by-Turn Directions)
+        <div id="eventDetailMap" style="height: 320px; border-radius: var(--radius-input); border: 1px solid var(--border-color); margin-bottom: 1rem;"></div>
+        <a href="{{ directions_url }}" target="_blank" rel="noopener" class="btn btn-secondary btn-block">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+          <span>Open in Google Maps (Turn-by-Turn Directions)</span>
         </a>
       </div>
     </div>
 
-    <!-- Sidebar Column -->
+    <!-- Sidebar Column (Desktop) -->
     <div>
       <div class="event-sidebar-card">
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">Event Actions</h3>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #111827; margin: 0 0 0.5rem;">Event Actions</h3>
 
         <a href="{{ directions_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-block">
-          Get Directions
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+          <span>Get Directions</span>
         </a>
 
         <button type="button" class="btn btn-secondary btn-block share-event-btn"
                 data-share-title="{{ event.title|escape }}"
                 data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Dona.Com"
                 aria-label="Share {{ event.title }}">
-          Share This Event
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <span>Share This Event</span>
         </button>
 
         {% if user.is_authenticated %}
           <button type="button" class="btn btn-secondary btn-block fav-btn {% if is_favorited %}is-favorited{% endif %}" 
                   data-event-id="{{ event.id }}" style="justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
             <span class="fav-text">{% if is_favorited %}Saved in Favorites{% else %}Save to Favorites{% endif %}</span>
           </button>
 
-          <button type="button" class="btn btn-outline btn-block" onclick="openModal('reportModal')" style="color: #dc2626; border-color: #fca5a5;">
-            Report Incorrect Listing
+          <button type="button" class="btn btn-ghost btn-block" onclick="openModal('reportModal')" style="color: #dc2626;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+            <span>Report Incorrect Listing</span>
           </button>
         {% else %}
-          <div style="background-color: #f8fafc; border-radius: 8px; padding: 1rem; text-align: center; font-size: 0.85rem; color: #64748b;">
-            <a href="{% url 'accounts:login' %}" style="font-weight: 600; color: #dc2626;">Sign in</a> to save this event to your favorites or submit updates.
+          <div style="background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; text-align: center; font-size: 0.85rem; color: #64748b;">
+            <a href="{% url 'accounts:login' %}" style="font-weight: 700; color: #dc2626;">Sign in</a> to save this event to your favorites or submit updates.
           </div>
         {% endif %}
 
-        <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; font-size: 0.825rem; color: #64748b;">
+        <div style="border-top: 1px solid var(--border-color); padding-top: 0.85rem; font-size: 0.825rem; color: #64748b; line-height: 1.5;">
           <div><strong>Listing Status:</strong> {{ event.get_status_display }}</div>
-          <div style="margin-top: 0.35rem;"><strong>Submitted:</strong> {{ event.created_at|date:"M d, Y" }}</div>
+          <div style="margin-top: 0.25rem;"><strong>Submitted:</strong> {{ event.created_at|date:"M d, Y" }}</div>
           {% if event.approved_at %}
-            <div style="margin-top: 0.35rem;"><strong>Dona Verified:</strong> {{ event.approved_at|timesince }} ago</div>
+            <div style="margin-top: 0.25rem;"><strong>Dona Verified:</strong> {{ event.approved_at|timesince }} ago</div>
           {% endif %}
         </div>
       </div>
@@ -213,12 +293,32 @@
   </div>
 </div>
 
+<!-- Mobile Sticky Bottom Action Bar -->
+<div class="detail-sticky-bar">
+  <a href="{{ directions_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+    <span>Directions</span>
+  </a>
+  <button type="button" class="btn btn-secondary btn-sm share-event-btn"
+          data-share-title="{{ event.title|escape }}"
+          data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Dona.Com">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+    <span>Share</span>
+  </button>
+  {% if user.is_authenticated %}
+    <button type="button" class="btn btn-secondary btn-sm fav-btn {% if is_favorited %}is-favorited{% endif %}" data-event-id="{{ event.id }}" style="flex: 0 0 44px; padding: 0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+    </button>
+  {% endif %}
+</div>
+
 <!-- Report Modal -->
 {% if user.is_authenticated %}
   <div class="modal-overlay" id="reportModal">
     <div class="modal-card">
+      <div class="modal-sheet-handle"></div>
       <div class="modal-header">
-        <h3>Report This Listing</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #111827;">Report This Listing</h3>
         <button type="button" class="alert-close" onclick="closeModal('reportModal')">&times;</button>
       </div>
       <form action="{% url 'food:event_report' event.id %}" method="POST">
@@ -239,11 +339,12 @@
     </div>
   </div>
 
-  <!-- Surplus Food Rescue Claim Modal (Future Scope Item 5) -->
+  <!-- Surplus Food Rescue Claim Modal -->
   <div class="modal-overlay" id="rescueClaimModal">
     <div class="modal-card">
+      <div class="modal-sheet-handle"></div>
       <div class="modal-header">
-        <h3 style="color: #ea580c;">Claim Food for Rescue Pickup</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #ea580c;">Claim Food for Rescue Pickup</h3>
         <button type="button" class="alert-close" onclick="closeModal('rescueClaimModal')">&times;</button>
       </div>
       <form action="{% url 'food:claim_food_rescue' event.id %}" method="POST">
@@ -311,7 +412,6 @@
         const formData = new FormData();
         formData.append('status', statusVal);
 
-        // Get CSRF cookie or token
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
         try {
@@ -335,13 +435,13 @@
 
             if (feedbackEl) {
               feedbackEl.style.display = 'block';
-              feedbackEl.style.color = '#15803d';
+              feedbackEl.style.color = '#16a34a';
               feedbackEl.textContent = data.message;
             }
           } else {
             if (feedbackEl) {
               feedbackEl.style.display = 'block';
-              feedbackEl.style.color = '#b91c1c';
+              feedbackEl.style.color = '#dc2626';
               feedbackEl.textContent = data.message || 'Unable to update status.';
             }
           }

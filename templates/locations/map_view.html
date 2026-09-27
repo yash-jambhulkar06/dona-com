@@ -16,22 +16,22 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 0.45rem 0.75rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    transition: border-color 0.2s;
+    background: #ffffff;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-input);
+    padding: 0.5rem 0.85rem;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
   }
 
   .map-search-bar:focus-within {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
   }
 
   .map-search-bar svg {
     flex-shrink: 0;
-    color: #94a3b8;
+    color: var(--primary);
   }
 
   #mapLocationSearchInput {
@@ -39,13 +39,13 @@
     border: none;
     outline: none;
     font-size: 0.9rem;
-    color: #0f172a;
+    color: var(--text-main);
     background: transparent;
     min-width: 0;
   }
 
   #mapLocationSearchInput::placeholder {
-    color: #94a3b8;
+    color: var(--text-muted);
   }
 
   #mapLocationSearchResults {
@@ -54,10 +54,10 @@
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-input);
+    box-shadow: var(--shadow-elevated);
     z-index: 1001;
     max-height: 280px;
     overflow-y: auto;
@@ -72,33 +72,50 @@
 
   .map-search-item:last-child { border-bottom: none; }
   .map-search-item:hover { background: #fef2f2; }
-  .map-search-item-name { font-weight: 700; font-size: 0.92rem; color: #0f172a; }
+  .map-search-item-name { font-weight: 700; font-size: 0.92rem; color: #111827; }
   .map-search-item-sub  { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
   .map-search-empty     { font-size: 0.875rem; color: #64748b; cursor: default; }
   .map-search-empty:hover { background: transparent; }
+
+  .discovery-map-frame {
+    height: 540px;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .discovery-map-frame {
+      height: 400px;
+      border-radius: 14px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 2rem;">
-  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
-    <div>
-      <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Free Food Map Discovery</h1>
-      <p style="color: #64748b; font-size: 0.95rem;">Locate active and upcoming community meals and food distributions near you.</p>
+<div class="container" style="padding-top: 1.5rem; padding-bottom: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+    <div class="page-heading" style="margin-bottom: 0;">
+      <h1>Free Food Map Discovery</h1>
+      <p>Locate active and upcoming community meals and food distributions near you.</p>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
       <!-- Inline Location Search Bar -->
       <div class="map-search-wrapper">
         <div class="map-search-bar">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <input
             type="text"
             id="mapLocationSearchInput"
-            placeholder="Search town, city or village (e.g. Palandur, Nagpur)..."
+            placeholder="Search town, city or village (e.g. Sakoli, Nagpur)..."
             autocomplete="off"
             aria-label="Search location"
           >
@@ -107,16 +124,16 @@
       </div>
 
       <button type="button" class="btn btn-primary btn-sm btn-near-me">
-        Center on My Location
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+        <span>Center on My Location</span>
       </button>
       <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('manualLocationModal')">
-        Search City or Area
+        <span>Change Area</span>
       </button>
     </div>
   </div>
 
-
-  <div id="fullDiscoveryMap" class="map-container" style="position: relative;">
+  <div id="fullDiscoveryMap" class="discovery-map-frame">
     <div class="skeleton-map-wrapper">
       <div class="skeleton-map-grid"></div>
       <div class="skeleton-map-radar">
@@ -128,14 +145,14 @@
     </div>
   </div>
 
-  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: #64748b; margin-top: -1rem; margin-bottom: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: #64748b;">
     <div>Showing <strong>{{ total_pins }}</strong> verified location{{ total_pins|pluralize }} on the map.</div>
     <div style="display: flex; gap: 1rem; align-items: center;">
-      <span style="display: flex; align-items: center; gap: 5px;">
+      <span style="display: flex; align-items: center; gap: 6px;">
         <span style="width: 12px; height: 12px; border-radius: 50%; background: #dc2626; display: inline-block; border: 2px solid #fff; box-shadow: 0 0 0 1.5px #dc2626;"></span>
         Event Pins
       </span>
-      <span style="display: flex; align-items: center; gap: 5px;">
+      <span style="display: flex; align-items: center; gap: 6px;">
         <span style="width: 12px; height: 12px; border-radius: 50%; background: #2563eb; display: inline-block; border: 2px solid #fff; box-shadow: 0 0 0 1.5px #2563eb;"></span>
         Your Location
       </span>

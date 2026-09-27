@@ -3,10 +3,15 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>{% block title %}Dona.Com — Community Free Food Discovery{% endblock %}</title>
   <meta name="description"
     content="{% block meta_description %}Discover nearby locations offering free food including community kitchens, langars, mahaprasad, celebrations, and NGO distributions on Dona.Com.{% endblock %}">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- OpenStreetMap Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -27,20 +32,29 @@
   <header class="site-header">
     <div class="container header-inner">
       <a href="{% url 'food:home' %}" class="brand-logo" aria-label="Dona.Com home">
-        <span>Dona.Com</span>
+        <span class="brand-icon-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path>
+            <circle cx="12" cy="10" r="2.5"></circle>
+          </svg>
+        </span>
+        <div class="brand-logo-text">
+          <span class="brand-name">Dona</span><span class="brand-tld">.Com</span>
+        </div>
       </a>
 
+      <!-- Desktop Navigation Links -->
       <nav class="desktop-nav" aria-label="Main Navigation">
         <ul class="nav-links" id="navLinks">
-          <li><a href="{% url 'food:home' %}" class="nav-link">Home</a></li>
-          <li><a href="{% url 'food:event_list' %}" class="nav-link">Explore</a></li>
-          <li><a href="{% url 'locations:map_view' %}" class="nav-link">Map</a></li>
-          <li><a href="{% url 'food:surplus_recovery' %}" class="nav-link rescue-link">Food Rescue</a></li>
+          <li><a href="{% url 'food:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+          <li><a href="{% url 'food:event_list' %}" class="nav-link {% if request.resolver_match.url_name == 'event_list' %}active{% endif %}">Explore</a></li>
+          <li><a href="{% url 'locations:map_view' %}" class="nav-link {% if request.resolver_match.url_name == 'map_view' %}active{% endif %}">Map</a></li>
+          <li><a href="{% url 'food:surplus_recovery' %}" class="nav-link rescue-link {% if request.resolver_match.url_name == 'surplus_recovery' %}active{% endif %}">Food Rescue</a></li>
           {% if user.is_authenticated %}
-          <li><a href="{% url 'food:favorites' %}" class="nav-link">Saved</a></li>
+          <li><a href="{% url 'food:favorites' %}" class="nav-link {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">Saved</a></li>
           {% endif %}
           {% if user.is_authenticated and user.is_staff %}
-          <li><a href="{% url 'moderation:dashboard' %}" class="nav-link admin-link">Admin</a></li>
+          <li><a href="{% url 'moderation:dashboard' %}" class="nav-link admin-link {% if 'moderation' in request.resolver_match.namespace %}active{% endif %}">Admin</a></li>
           {% endif %}
         </ul>
       </nav>
@@ -71,7 +85,7 @@
               <div class="notif-tabs"><button type="button" class="notif-tab active" id="notifTabAll">All</button><button type="button" class="notif-tab" id="notifTabUnread">Unread</button></div>
               <div id="proximityAlertBanner" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem;">
                 <span style="color: #475569; font-weight: 600;">5 km Browser Food Alerts</span>
-                <button type="button" id="btnEnableProximityAlerts" class="btn btn-sm" style="background: #dc2626; color: #fff; padding: 0.25rem 0.6rem; font-size: 0.72rem; border-radius: 4px; border: none; font-weight: 700;">Enable Alerts</button>
+                <button type="button" id="btnEnableProximityAlerts" class="btn btn-sm btn-primary" style="padding: 0.25rem 0.65rem; font-size: 0.72rem; font-weight: 700;">Enable Alerts</button>
               </div>
             </div>
             <div class="notif-tray-body" id="notifTrayBody">
@@ -87,44 +101,104 @@
         </div>
         {% endif %}
 
+        <!-- Desktop Action Buttons -->
         <div class="desktop-actions">
-          <a href="{% url 'food:event_add' %}" class="btn btn-primary btn-sm">Submit Event</a>
+          <a href="{% url 'food:event_add' %}" class="btn btn-primary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Submit Event</span>
+          </a>
           {% if user.is_authenticated %}
           <a href="{% url 'accounts:profile' %}" class="btn btn-secondary btn-sm">Profile</a>
-          <a href="{% url 'accounts:logout' %}" class="btn btn-outline btn-sm">Logout</a>
+          <a href="{% url 'accounts:logout' %}" class="btn btn-ghost btn-sm">Logout</a>
           {% else %}
-          <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-sm">Sign In</a>
+          <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-sm">Sign In</a>
           <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Register</a>
           {% endif %}
         </div>
 
+        <!-- Mobile Drawer Hamburger Button -->
         <button class="hamburger-btn" id="mobileMenuBtn" aria-label="Toggle Navigation" aria-expanded="false" type="button">
           <span class="hamburger-bar"></span><span class="hamburger-bar"></span><span class="hamburger-bar"></span>
         </button>
       </div>
     </div>
 
+    <!-- Mobile Menu Drawer (Slide down) -->
     <div class="mobile-menu-drawer" id="mobileMenuDrawer" aria-hidden="true">
       <div class="mobile-menu-inner">
         <ul class="mobile-nav-list">
-          <li><a href="{% url 'food:home' %}" class="mobile-nav-link">Home</a></li>
-          <li><a href="{% url 'food:event_list' %}" class="mobile-nav-link">Explore</a></li>
-          <li><a href="{% url 'locations:map_view' %}" class="mobile-nav-link">Map</a></li>
-          <li><a href="{% url 'food:surplus_recovery' %}" class="mobile-nav-link rescue-link">Food Rescue Network</a></li>
+          <li>
+            <a href="{% url 'food:home' %}" class="mobile-nav-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'food:event_list' %}" class="mobile-nav-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>Explore Events</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'locations:map_view' %}" class="mobile-nav-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+              <span>Interactive Map</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'food:surplus_recovery' %}" class="mobile-nav-link rescue-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              <span>Food Rescue Network</span>
+            </a>
+          </li>
           {% if user.is_authenticated %}
-          <li><a href="{% url 'food:favorites' %}" class="mobile-nav-link">Saved Events</a></li>
-          <li><a href="{% url 'notifications:list_page' %}" class="mobile-nav-link">Notifications</a></li>
-          <li><a href="{% url 'food:my_submissions' %}" class="mobile-nav-link">My Submissions</a></li>
-          {% if user.is_staff %}<li><a href="{% url 'moderation:dashboard' %}" class="mobile-nav-link admin-link">Admin Panel</a></li>{% endif %}
+          <li>
+            <a href="{% url 'food:favorites' %}" class="mobile-nav-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+              <span>Saved Events</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'notifications:list_page' %}" class="mobile-nav-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <span>Notifications</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'food:my_submissions' %}" class="mobile-nav-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>My Submissions</span>
+            </a>
+          </li>
+          {% if user.is_staff %}
+          <li>
+            <a href="{% url 'moderation:dashboard' %}" class="mobile-nav-link admin-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Moderator Dashboard</span>
+            </a>
+          </li>
+          {% endif %}
           {% endif %}
         </ul>
         <div class="mobile-menu-actions">
-          <a href="{% url 'food:event_add' %}" class="btn btn-primary btn-block">Submit Free Food Event</a>
+          <a href="{% url 'food:event_add' %}" class="btn btn-primary btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Submit Free Food Event</span>
+          </a>
           {% if user.is_authenticated %}
-          <div class="mobile-user-card"><div class="mobile-user-label">Signed in as</div><div class="mobile-user-name">{{ user.full_name|default:user.email }}</div></div>
-          <div class="mobile-action-buttons"><a href="{% url 'accounts:profile' %}" class="btn btn-secondary btn-block">Profile</a><a href="{% url 'accounts:logout' %}" class="btn btn-outline btn-block">Logout</a></div>
+          <div class="mobile-user-card">
+            <div class="mobile-user-label">Signed in as</div>
+            <div class="mobile-user-name">{{ user.full_name|default:user.email }}</div>
+          </div>
+          <div class="mobile-action-buttons">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-secondary btn-block">Profile</a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-outline btn-block">Logout</a>
+          </div>
           {% else %}
-          <div class="mobile-action-buttons"><a href="{% url 'accounts:login' %}" class="btn btn-outline btn-block">Sign In</a><a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-block">Create Account</a></div>
+          <div class="mobile-action-buttons">
+            <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-block">Sign In</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-block">Create Account</a>
+          </div>
           {% endif %}
         </div>
       </div>
@@ -168,11 +242,10 @@
   </div>
   {% endif %}
 
-
   <!-- Main Body Content -->
   <main class="main-content">
     {% if messages %}
-    <div class="container alerts-container" style="margin-top: 1.5rem;">
+    <div class="container alerts-container" style="margin-top: 1.25rem;">
       {% for message in messages %}
       <div class="alert alert-{{ message.tags }}">
         <span>{{ message }}</span>
@@ -185,33 +258,49 @@
     {% block content %}{% endblock %}
   </main>
 
+  <!-- Mobile Fixed Bottom Navigation (5 Destinations with Center Add Button) -->
   <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-    <a href="{% url 'food:home' %}" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V20h14V9.5"></path></svg>
+    <a href="{% url 'food:home' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
       <span>Home</span>
     </a>
-    <a href="{% url 'food:event_list' %}" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+    <a href="{% url 'food:event_list' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'event_list' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
       <span>Explore</span>
     </a>
-    <a href="{% url 'food:event_add' %}" class="bottom-nav-center" aria-label="Submit free food event">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+    <a href="{% url 'food:event_add' %}" class="bottom-nav-center" aria-label="Submit free food event" title="Submit Free Food Event">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
     </a>
-    <a href="{% url 'food:favorites' %}" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 21-1.45-1.32C5.4 15.36 2 12.28 2 8.5A4.5 4.5 0 0 1 6.5 4c1.74 0 3.41.81 4.5 2.09A6.02 6.02 0 0 1 17.5 4 4.5 4.5 0 0 1 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21Z"></path></svg>
+    <a href="{% if user.is_authenticated %}{% url 'food:favorites' %}{% else %}{% url 'accounts:login' %}?next={% url 'food:favorites' %}{% endif %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+      </svg>
       <span>Saved</span>
     </a>
-    <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="bottom-nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="bottom-nav-item {% if 'accounts' in request.resolver_match.namespace %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
       <span>Menu</span>
     </a>
   </nav>
 
-  <!-- Manual Location Fallback Modal -->
+  <!-- Manual Location Fallback Modal / Mobile Bottom Sheet -->
   <div class="modal-overlay" id="manualLocationModal">
     <div class="modal-card">
+      <div class="modal-sheet-handle"></div>
       <div class="modal-header">
-        <h3>Search Location Manually</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #111827;">Select Location</h3>
         <button type="button" class="alert-close" onclick="closeModal('manualLocationModal')">&times;</button>
       </div>
       <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 1rem;">
@@ -219,11 +308,11 @@
       </p>
       <div class="form-group">
         <input type="text" id="manualLocationInput" class="form-input"
-          placeholder="Type city or area name (e.g. Nagpur, Sitabuldi, Mumbai)..." autofocus>
+          placeholder="Type city or area name (e.g. Sakoli, Bhandara, Nagpur)..." autofocus>
       </div>
       <div id="manualSearchResults"
-        style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
-      <div style="margin-top: 1rem; text-align: right;">
+        style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 1rem;"></div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
         <button type="button" class="btn btn-secondary btn-sm"
           onclick="closeModal('manualLocationModal')">Close</button>
       </div>
@@ -235,11 +324,10 @@
     <div class="container">
       <div class="footer-inner">
         <div class="footer-brand">
-          <h3>Dona.Com</h3>
+          <h3>Dona<span>.Com</span></h3>
           <p>
             A community-driven platform to discover and share free food distributions, langars, mahaprasad, and
-            charitable food programs.
-            Every listing is reviewed by community moderators before publication.
+            charitable food programs. Every listing is reviewed by community moderators before publication.
           </p>
         </div>
         <div class="footer-col">
@@ -249,6 +337,7 @@
             <li><a href="{% url 'food:nearby_events' %}">Free Food Near Me</a></li>
             <li><a href="{% url 'locations:map_view' %}">Interactive Map</a></li>
             <li><a href="{% url 'food:event_add' %}">Submit an Event</a></li>
+            <li><a href="{% url 'food:surplus_recovery' %}">Surplus Food Rescue</a></li>
           </ul>
         </div>
         <div class="footer-col">

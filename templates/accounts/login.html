@@ -6,12 +6,20 @@
 <div class="container auth-shell">
   <div class="auth-card-shell">
     <div class="auth-card">
-      <div class="auth-brand">Dona.Com</div>
-      <h1 class="auth-title">Sign In to Your Account</h1>
-      <p class="auth-subtitle">Sign in with your email and password to submit food events, track listings, and save favorites.</p>
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div class="brand-icon-mark" style="width: 44px; height: 44px; margin: 0 auto 0.75rem auto;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path>
+            <circle cx="12" cy="10" r="2.5"></circle>
+          </svg>
+        </div>
+        <div class="auth-brand" style="justify-content: center; margin-bottom: 0.25rem;">Dona<span>.Com</span></div>
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to submit free food listings, track community events, and save your favorites.</p>
+      </div>
 
       {% if form.non_field_errors %}
-        <div class="alert alert-danger" style="text-align: left; font-size: 0.875rem; margin-bottom: 1.25rem;">
+        <div class="alert alert-danger" style="text-align: left; font-size: 0.85rem; margin-bottom: 1.25rem;">
           {% for error in form.non_field_errors %}
             <div>{{ error }}</div>
           {% endfor %}
@@ -28,7 +36,7 @@
           <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
           {{ form.email }}
           {% if form.email.errors %}
-            <div class="form-error" style="margin-top: 0.35rem;">{{ form.email.errors.0 }}</div>
+            <div class="form-error">{{ form.email.errors.0 }}</div>
           {% endif %}
         </div>
 
@@ -39,11 +47,11 @@
           </div>
           {{ form.password }}
           {% if form.password.errors %}
-            <div class="form-error" style="margin-top: 0.35rem;">{{ form.password.errors.0 }}</div>
+            <div class="form-error">{{ form.password.errors.0 }}</div>
           {% endif %}
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem 1rem; font-size: 1rem; margin-top: 1rem;">
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1rem;">
           Sign In
         </button>
       </form>

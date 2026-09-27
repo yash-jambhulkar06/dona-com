@@ -3,18 +3,18 @@
 {% block title %}Submit a Free Food Event — Dona.Com{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 780px; padding-top: 2rem;">
-  <div style="margin-bottom: 2rem;">
-    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Submit Free Food Event</h1>
-    <p style="color: #64748b; font-size: 0.95rem;">
-      Share information about free food being served in your community.
-    </p>
-    <div class="alert alert-info" style="margin-top: 1rem;">
-      <strong>Moderation Notice:</strong> Every submission is reviewed by an administrator before it becomes publicly visible on the platform.
-    </div>
+<div class="container" style="max-width: 780px; padding-top: 1.5rem; padding-bottom: 2rem;">
+  <div class="page-heading">
+    <h1>Submit Free Food Event</h1>
+    <p>Share information about free food being served in your community.</p>
   </div>
 
-  <div style="background-color: white; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+  <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    <span><strong>Community Notice:</strong> Every submission is reviewed by moderators before appearing publicly to keep the platform reliable.</span>
+  </div>
+
+  <div style="background-color: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-card); padding: clamp(1.25rem, 3.5vw, 2rem); box-shadow: var(--shadow-card);">
     <form method="POST" action="{% url 'food:event_add' %}">
       {% csrf_token %}
 
@@ -27,12 +27,13 @@
       <div class="form-group">
         <label class="form-label">Event Title *</label>
         {{ form.title }}
+        <div class="form-help">e.g. Mahaprasad at Hanuman Temple, Gurudwara Community Langar</div>
         {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
         <div class="form-group">
-          <label class="form-label">Event Type *</label>
+          <label class="form-label">Event Category *</label>
           {{ form.event_type }}
           {% if form.event_type.errors %}<div class="form-error">{{ form.event_type.errors.0 }}</div>{% endif %}
         </div>
@@ -44,7 +45,7 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
         <div class="form-group">
           <label class="form-label">Start Time *</label>
           {{ form.start_time }}
@@ -58,18 +59,18 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
         <div class="form-group">
           <label class="form-label">Dietary Preference *</label>
           {{ form.dietary_type }}
-          <div class="form-help">Filter suitability (Pure Veg, Vegan, Jain, Halal, etc.)</div>
+          <div class="form-help">Pure Veg, Vegan, Jain, Halal, etc.</div>
           {% if form.dietary_type.errors %}<div class="form-error">{{ form.dietary_type.errors.0 }}</div>{% endif %}
         </div>
 
         <div class="form-group">
           <label class="form-label">Allergens / Dietary Notes</label>
           {{ form.allergens_info }}
-          <div class="form-help">e.g. Nut-Free, Gluten-Free, Dairy-Free available</div>
+          <div class="form-help">e.g. Nut-Free, Gluten-Free, Dairy-Free</div>
           {% if form.allergens_info.errors %}<div class="form-error">{{ form.allergens_info.errors.0 }}</div>{% endif %}
         </div>
       </div>
@@ -77,27 +78,27 @@
       <div class="form-group">
         <label class="form-label">Food Details *</label>
         {{ form.food_details }}
-        <div class="form-help">Mention food items (e.g. Rice, Dal, Sabzi, Puri, Kheer), veg/non-veg, and packaging.</div>
+        <div class="form-help">Mention food items (e.g. Puri, Bhaji, Dal, Rice, Kheer), meal type, packaging, etc.</div>
         {% if form.food_details.errors %}<div class="form-error">{{ form.food_details.errors.0 }}</div>{% endif %}
       </div>
 
-      <!-- Surplus Food Recovery Option (Future Scope Item 5) -->
-      <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
-        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-weight: 700; color: #9a3412; font-size: 0.95rem; margin-bottom: 0.5rem;">
+      <!-- Surplus Food Recovery Option -->
+      <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: var(--radius-input); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <label style="display: flex; align-items: flex-start; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #9a3412; font-size: 0.95rem; line-height: 1.45; margin-bottom: 0.5rem;">
           {{ form.is_surplus_food }}
-          Surplus Food Rescue: Excess celebration food available for volunteer pickup
+          <span>Surplus Food Rescue: Excess celebration food available for volunteer pickup</span>
         </label>
-        <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.75rem;">
+        <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.85rem; line-height: 1.5;">
           If this is a wedding, banquet, or large gathering with surplus prepared meals, volunteer food rescue networks will be alerted for immediate pickup to prevent food waste.
         </p>
-        <div id="surplusFields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div id="surplusFields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.85rem; color: #9a3412;">Estimated Surplus Quantity</label>
+            <label class="form-label" style="font-size: 0.825rem; color: #9a3412;">Estimated Surplus Quantity</label>
             {{ form.surplus_quantity }}
             {% if form.surplus_quantity.errors %}<div class="form-error">{{ form.surplus_quantity.errors.0 }}</div>{% endif %}
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.85rem; color: #9a3412;">Pickup Coordinator Phone</label>
+            <label class="form-label" style="font-size: 0.825rem; color: #9a3412;">Pickup Coordinator Phone</label>
             {{ form.rescue_contact_phone }}
             {% if form.rescue_contact_phone.errors %}<div class="form-error">{{ form.rescue_contact_phone.errors.0 }}</div>{% endif %}
           </div>
@@ -105,7 +106,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Description & Context *</label>
+        <label class="form-label">Description & Community Context *</label>
         {{ form.description }}
         <div class="form-help">Provide organizer details, occasion, or special guidelines for visitors.</div>
         {% if form.description.errors %}<div class="form-error">{{ form.description.errors.0 }}</div>{% endif %}
@@ -125,13 +126,14 @@
 
       <!-- Map Pin Picker -->
       <div class="form-group">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
           <label class="form-label" style="margin-bottom: 0;">Pin Exact Location on Map *</label>
           <button type="button" class="btn btn-outline btn-sm" id="btnPickerLocateMe">
-            Use My Current Location
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+            <span>Use My Location</span>
           </button>
         </div>
-        <p style="font-size: 0.8rem; color: #64748b;">
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.65rem;">
           Click on the map or drag the pin to set the exact coordinates of where food is being served.
         </p>
 
@@ -141,10 +143,10 @@
             type="text"
             id="pickerSearchInput"
             class="form-input"
-            placeholder="Search city, town, or village to move pin (e.g. Palandur, Bhandara, Nagpur)..."
+            placeholder="Search city, town, or village to move pin (e.g. Sakoli, Bhandara, Nagpur)..."
             autocomplete="off"
           >
-          <div id="pickerSearchResults" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; z-index: 1000; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.1);"></div>
+          <div id="pickerSearchResults" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; z-index: 1000; max-height: 200px; overflow-y: auto; box-shadow: var(--shadow-elevated);"></div>
         </div>
 
         <div id="pickerMap" class="map-picker" style="position: relative;">
@@ -159,22 +161,21 @@
           </div>
         </div>
 
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
           <div>
-            <label class="form-label" style="font-size: 0.8rem;">Latitude</label>
+            <label class="form-label" style="font-size: 0.775rem;">Latitude</label>
             {{ form.latitude }}
             {% if form.latitude.errors %}<div class="form-error">{{ form.latitude.errors.0 }}</div>{% endif %}
           </div>
           <div>
-            <label class="form-label" style="font-size: 0.8rem;">Longitude</label>
+            <label class="form-label" style="font-size: 0.775rem;">Longitude</label>
             {{ form.longitude }}
             {% if form.longitude.errors %}<div class="form-error">{{ form.longitude.errors.0 }}</div>{% endif %}
           </div>
         </div>
       </div>
 
-      <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+      <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem; flex-wrap: wrap;">
         <a href="{% url 'food:home' %}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary btn-lg">Submit for Verification</button>
       </div>
@@ -186,7 +187,6 @@
 {% block extra_scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Initialize coordinate picker
     FoodMap.initLocationPicker('pickerMap', 'id_latitude', 'id_longitude', 'id_address');
   });
 </script>

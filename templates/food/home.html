@@ -5,104 +5,197 @@
 {% block content %}
 <section class="page-shell">
   <div class="container">
-    <div class="location-bar mobile-stack">
+    <!-- Location Context Bar -->
+    <div class="location-bar">
       <div class="location-meta">
         <span class="location-pin" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path>
+            <circle cx="12" cy="10" r="2.5"></circle>
+          </svg>
         </span>
         <div class="location-copy">
           <small>Current location</small>
-          <strong>Sakoli, Maharashtra</strong>
+          <strong id="heroLocationName">Sakoli, Maharashtra</strong>
         </div>
       </div>
       <button type="button" class="location-change" onclick="openModal('manualLocationModal')">Change</button>
     </div>
 
+    <!-- Contained Dona Red Hero Component -->
     <div class="hero-panel">
       <div class="hero-panel-inner">
-        <span class="hero-kicker">Verified community platform</span>
+        <span class="hero-kicker">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          Verified Community Platform
+        </span>
         <h1>Find Free Food Near You</h1>
-        <p>Discover verified community meals, temple prasad, gurudwara langar, celebrations and NGO food distributions happening around you.</p>
+        <p>Discover verified community meals, temple mahaprasad, gurudwara langar, celebrations and NGO food distributions happening around you.</p>
 
+        <!-- Large Modern Search Component -->
         <div class="hero-search">
-          <label class="search-box" aria-label="Search food or place">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-            <input type="text" placeholder="Search food, place or event..." aria-label="Search food, place or event">
-          </label>
-          <a href="{% url 'food:nearby_events' %}" class="btn btn-primary btn-lg">Find Food Near Me</a>
-          <button type="button" class="btn btn-secondary btn-lg" onclick="openModal('manualLocationModal')">Search Location Manually</button>
+          <form method="GET" action="{% url 'food:event_list' %}" class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" name="q" placeholder="Search food, venue, langar, or place..." aria-label="Search free food listings">
+          </form>
+          <div class="hero-search-actions">
+            <a href="{% url 'food:nearby_events' %}" class="btn btn-secondary btn-lg" style="color: #dc2626; font-weight: 700;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+              <span>Find Food Near Me</span>
+            </a>
+            <button type="button" class="btn btn-outline btn-lg" onclick="openModal('manualLocationModal')" style="color: #ffffff; border-color: rgba(255, 255, 255, 0.5);">
+              <span>Search Location Manually</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="account-grid-two section-space">
-      <div class="stat-card"><strong>{{ active_now_count }}</strong><span>Available now</span></div>
-      <div class="stat-card"><strong>{{ total_approved }}</strong><span>Upcoming listings</span></div>
-      <div class="stat-card"><strong>{{ surplus_count }}</strong><span>Rescue alerts</span></div>
-      <div class="stat-card"><strong>{{ recommended_results|length }}</strong><span>Nearby picks</span></div>
+    <!-- Platform Transparency & Discovery Metrics -->
+    <div class="account-grid-two">
+      <div class="stat-card">
+        <strong>{{ active_now_count }}</strong>
+        <span>Available Now</span>
+      </div>
+      <div class="stat-card">
+        <strong>{{ total_approved }}</strong>
+        <span>Upcoming Listings</span>
+      </div>
+      <div class="stat-card">
+        <strong>{{ surplus_count }}</strong>
+        <span>Rescue Alerts</span>
+      </div>
+      <div class="stat-card">
+        <strong>{{ recommended_results|length }}</strong>
+        <span>Nearby Picks</span>
+      </div>
     </div>
 
+    <!-- Section Header -->
     <div class="section-header section-space">
       <h2>Available Near You</h2>
-      <a href="{% url 'food:event_list' %}" class="inline-link">View All</a>
+      <a href="{% url 'food:event_list' %}" class="inline-link">
+        <span>View All</span>
+        <span>&rarr;</span>
+      </a>
     </div>
 
-    <div class="dietary-filter-bar">
+    <!-- Horizontal Scrollable Filter Chips -->
+    <div class="dietary-filter-bar" aria-label="Dietary and category filters">
       <a href="{% url 'food:home' %}" class="filter-chip {% if not selected_dietary %}is-active{% endif %}">All</a>
       <a href="?dietary=PURE_VEG" class="filter-chip {% if selected_dietary == 'PURE_VEG' %}is-active{% endif %}">Pure Veg</a>
       <a href="?dietary=JAIN" class="filter-chip {% if selected_dietary == 'JAIN' %}is-active{% endif %}">Jain</a>
       <a href="?dietary=VEGAN" class="filter-chip {% if selected_dietary == 'VEGAN' %}is-active{% endif %}">Vegan</a>
       <a href="?dietary=HALAL" class="filter-chip {% if selected_dietary == 'HALAL' %}is-active{% endif %}">Halal</a>
-      <a href="{% url 'food:surplus_recovery' %}" class="filter-chip rescue-link">Rescue</a>
+      <a href="{% url 'food:surplus_recovery' %}" class="filter-chip rescue-link">Food Rescue</a>
     </div>
 
+    <!-- Event Cards Grid -->
     {% if recommended_results %}
-      <div class="cards-grid section-space-sm">
+      <div class="cards-grid">
         {% for item in recommended_results %}
           {% with event=item.event dist=item.distance_km %}
             <article class="event-card">
+              <!-- Food Image Header with Curated Imagery & Overlays -->
               <div class="event-card-media">
-                <div class="event-card-media-content">
-                  <span class="event-card-media-label">{{ event.get_event_type_display }}</span>
-                  {% if event.has_verified_organizer %}
-                    <span class="event-card-media-icon" title="Verified">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                {% if event.is_surplus_food %}
+                  <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                {% elif event.event_type == 'Langar' %}
+                  <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                {% elif event.event_type == 'Mahaprasad' %}
+                  <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                {% elif event.event_type == 'Wedding' or event.event_type == 'Birthday' %}
+                  <img src="/static/images/celebration.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                {% else %}
+                  <img src="/static/images/default_food.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                {% endif %}
+                <div class="event-card-media-overlay">
+                  <div class="event-card-media-top">
+                    <span class="badge badge-type" style="background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);">
+                      {{ event.get_event_type_display }}
                     </span>
-                  {% endif %}
+                    {% if user.is_authenticated %}
+                      <button type="button" class="card-fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %} fav-btn" data-event-id="{{ event.id }}" aria-label="Save to favorites">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+                      </button>
+                    {% else %}
+                      <a href="{% url 'accounts:login' %}?next={% url 'food:home' %}" class="card-fav-btn" aria-label="Sign in to save">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
+                      </a>
+                    {% endif %}
+                  </div>
+                  <div class="event-card-media-bottom">
+                    {% if event.has_verified_organizer %}
+                      <span class="badge badge-verified">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                        Verified
+                      </span>
+                    {% endif %}
+                    <span class="badge {{ event.availability_status.css_class }}" style="margin-left: auto;">
+                      {{ event.availability_status.label }}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div class="event-card-header">
-                <span class="badge badge-type">{{ event.get_event_type_display }}</span>
-                <div class="event-card-actions">
-                  {% if event.has_verified_organizer %}<span class="badge badge-info">Verified</span>{% endif %}
-                  {% if user.is_authenticated %}
-                    <button type="button" class="fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}" data-event-id="{{ event.id }}">{% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}</button>
-                  {% else %}
-                    <a href="{% url 'accounts:login' %}?next={% url 'food:home' %}" class="fav-btn">Save</a>
-                  {% endif %}
-                </div>
-              </div>
+
+              <!-- Card Body -->
               <div class="event-card-body">
-                <h3 class="event-card-title"><a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a></h3>
-                <div class="event-card-row"><span>{% if dist %}<strong>{{ dist }} km</strong>{% endif %}</span><span>•</span><span>{{ event.venue_name }}</span></div>
-                <div class="event-card-row"><span>{{ event.event_date|date:"D, M d" }}</span><span>•</span><span>{{ event.start_time|time:"g:i A" }}</span></div>
-                <div class="event-card-row"><span>{{ event.address|truncatechars:48 }}</span></div>
-                <div class="event-food-summary">{{ event.food_details|truncatechars:120 }}</div>
+                <h3 class="event-card-title">
+                  <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
+                </h3>
+
+                <!-- Location & Distance -->
+                <div class="event-card-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                  <span>
+                    {% if dist %}<strong class="highlight-dist">{{ dist }} km away</strong> &bull; {% endif %}
+                    {{ event.venue_name }}
+                  </span>
+                </div>
+
+                <!-- Date & Time -->
+                <div class="event-card-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span>{{ event.event_date|date:"D, M d" }} &bull; {{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
+                </div>
+
+                <!-- Food Details Preview -->
+                <div class="event-food-summary">
+                  {{ event.food_details|truncatechars:115 }}
+                </div>
               </div>
+
+              <!-- Card Footer -->
               <div class="event-card-footer">
-                <span class="distance-pill">{% if dist %}{{ dist }} km away{% else %}Nearby{% endif %}</span>
-                <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">View</a>
+                <span class="distance-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                  {% if dist %}{{ dist }} km away{% else %}Community Meal{% endif %}
+                </span>
+                <div style="display: flex; gap: 0.5rem;">
+                  <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">
+                    View Details
+                  </a>
+                </div>
               </div>
             </article>
           {% endwith %}
         {% endfor %}
       </div>
     {% else %}
-      <div class="empty-state section-space-sm">
-        <div class="empty-state-tag">Status</div>
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <div class="empty-state-tag">Discovery Status</div>
         <h3>No free food events currently scheduled</h3>
-        <p>There are no active or upcoming listings right now.</p>
-        <a href="{% url 'food:event_add' %}" class="btn btn-primary">Submit Free Food Event</a>
+        <p>There are no active or upcoming listings right now. Be the first to share a community food distribution!</p>
+        <a href="{% url 'food:event_add' %}" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Submit Free Food Event</span>
+        </a>
       </div>
     {% endif %}
   </div>
