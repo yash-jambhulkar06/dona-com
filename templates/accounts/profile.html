@@ -3,55 +3,53 @@
 {% block title %}User Profile — Dona.Com{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 640px; padding-top: 2rem;">
-  <div style="background-color: white; border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: 2rem; box-shadow: var(--shadow-sm);">
-    
-    <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
-      <div style="width: 4rem; height: 4rem; border-radius: 50%; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 700;">
+<div class="container profile-shell">
+  <div class="profile-card" style="max-width: 640px; margin: 0 auto;">
+    <div class="profile-header">
+      <div class="profile-avatar">
         {% if user.profile_image %}
-          <img src="{{ user.profile_image }}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+          <img src="{{ user.profile_image }}" alt="Profile">
         {% else %}
           {{ user.first_name|default:user.email|default:"U"|slice:":1"|upper }}
         {% endif %}
       </div>
       <div>
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a;">{{ user.full_name }}</h1>
-        <p style="color: #64748b; font-size: 0.9rem;">
+        <h1 class="profile-name">{{ user.full_name }}</h1>
+        <div class="profile-meta">
           {% if user.email %}Email: {{ user.email }}{% endif %}
-          {% if user.mobile %}Mobile: {{ user.mobile }}{% endif %}
-        </p>
-        {% if user.is_staff %}
-          <span class="badge badge-warning" style="margin-top: 0.25rem;">Moderator / Staff</span>
-        {% endif %}
-        {% if user.is_verified_organizer %}
-          <span class="badge" style="background: #0284c7; color: #fff; margin-top: 0.25rem; font-weight: 700;">
-            {{ user.organizer_badge_label }} {% if user.organization_name %}({{ user.organization_name }}){% endif %}
-          </span>
-        {% endif %}
+          {% if user.mobile %}<br>Mobile: {{ user.mobile }}{% endif %}
+        </div>
+        <div class="profile-badges">
+          {% if user.is_staff %}
+            <span class="badge badge-warning">Moderator / Staff</span>
+          {% endif %}
+          {% if user.is_verified_organizer %}
+            <span class="badge badge-info">
+              {{ user.organizer_badge_label }} {% if user.organization_name %}({{ user.organization_name }}){% endif %}
+            </span>
+          {% endif %}
+        </div>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-      <div style="background-color: #f8fafc; border-radius: 10px; padding: 1.25rem; text-align: center; border: 1px solid #e2e8f0;">
-        <div style="font-size: 1.85rem; font-weight: 800; color: #dc2626;">{{ submissions_count }}</div>
-        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Submissions</div>
-        <a href="{% url 'food:my_submissions' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none;">View All &rarr;</a>
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <strong>{{ submissions_count }}</strong>
+        <span>Submissions</span>
+        <a href="{% url 'food:my_submissions' %}">View All →</a>
       </div>
 
-      <div style="background-color: #f8fafc; border-radius: 10px; padding: 1.25rem; text-align: center; border: 1px solid #e2e8f0;">
-        <div style="font-size: 1.85rem; font-weight: 800; color: #dc2626;">{{ favorites_count }}</div>
-        <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Saved Favorites</div>
-        <a href="{% url 'food:favorites' %}" style="display: inline-block; margin-top: 0.5rem; font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none;">View All &rarr;</a>
+      <div class="profile-stat">
+        <strong>{{ favorites_count }}</strong>
+        <span>Saved Favorites</span>
+        <a href="{% url 'food:favorites' %}">View All →</a>
       </div>
     </div>
 
-    <div style="border-top: 1px solid #e2e8f0; padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-      <div style="font-size: 0.85rem; color: #64748b;">
-        Member since {{ user.date_joined|date:"F Y" }}
-      </div>
+    <div class="profile-footer">
+      <div>Member since {{ user.date_joined|date:"F Y" }}</div>
       <a href="{% url 'accounts:logout' %}" class="btn btn-outline btn-sm">Sign Out</a>
     </div>
-
   </div>
 </div>
 {% endblock %}
