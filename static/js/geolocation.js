@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnDetectGPSInModal) {
     btnDetectGPSInModal.addEventListener('click', () => {
       if (window.InteractionFeedback) {
-        window.InteractionFeedback.setButtonLoading(btnDetectGPSInModal, 'Detecting GPS location...');
+        window.InteractionFeedback.setButtonLoading(btnDetectGPSInModal, 'Detecting location...');
       } else {
         btnDetectGPSInModal.disabled = true;
       }

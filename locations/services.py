@@ -26,6 +26,20 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return round(R * c, 2)
 
 
+def format_distance(km: Optional[float]) -> Optional[str]:
+    """
+    Formats distance for clean consumer display:
+    - Under 1 km: '500 m away'
+    - 1 km or more: '1.2 km away', '3.4 km away'
+    """
+    if km is None:
+        return None
+    if km < 1.0:
+        meters = max(10, int(round(km * 1000)))
+        return f"{meters} m away"
+    return f"{km:.1f} km away"
+
+
 def get_recommended_events(
     user_lat: Optional[float] = None,
     user_lng: Optional[float] = None,
@@ -107,11 +121,11 @@ def get_recommended_events(
         is_soon = event.is_starting_soon()
         
         # Availability filtering
-        if availability == 'now' and not is_active:
+        if availability in ('now', 'available_now') and not is_active:
             continue
-        if availability == 'soon' and not is_soon:
+        if availability in ('soon', 'starting_soon') and not is_soon:
             continue
-        if availability == 'today' and event.event_date != today:
+        if availability in ('today', 'available_today') and (event.event_date != today or event.is_expired()):
             continue
 
         # Distance calculation
@@ -156,13 +170,19 @@ def get_recommended_events(
         # Rank score
         rank_score = tier_offset + distance_factor
 
+        dist_display = format_distance(dist)
+        directions_url = f"https://www.google.com/maps/dir/?api=1&destination={event.latitude},{event.longitude}"
+
         results.append({
             'event': event,
             'distance_km': dist,
+            'distance_display': dist_display,
             'is_active_now': is_active,
             'is_starting_soon': is_soon,
             'rank_score': rank_score,
             'tier': tier,
+            'last_verified': event.get_last_verified(),
+            'directions_url': directions_url,
         })
 
     # Sort results by rule-based rank score

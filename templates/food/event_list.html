@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load food_tags %}
 
 {% block title %}Browse Free Food Events — Free Food{% endblock %}
 
@@ -7,6 +8,22 @@
   <div class="page-heading">
     <h1>All Free Food Events</h1>
     <p>Browse verified community meals, langars, celebrations, and food programs.</p>
+  </div>
+
+  <!-- Quick Status Discovery Bar -->
+  <div class="dietary-filter-bar" style="margin-bottom: 1.25rem;" aria-label="Quick availability status filter">
+    <a href="{% url 'food:event_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="filter-chip {% if not selected_availability %}is-active{% endif %}">
+      All Statuses
+    </a>
+    <a href="?availability=now{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_dietary %}&dietary={{ selected_dietary }}{% endif %}" class="filter-chip {% if selected_availability == 'now' %}is-active{% endif %}" style="font-weight: 700; {% if selected_availability != 'now' %}color: #15803d; border-color: #86efac; background-color: #f0fdf4;{% endif %}">
+      ⚡ Available Now
+    </a>
+    <a href="?availability=soon{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_dietary %}&dietary={{ selected_dietary }}{% endif %}" class="filter-chip {% if selected_availability == 'soon' %}is-active{% endif %}">
+      Starting Soon
+    </a>
+    <a href="?availability=today{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_dietary %}&dietary={{ selected_dietary }}{% endif %}" class="filter-chip {% if selected_availability == 'today' %}is-active{% endif %}">
+      Available Today
+    </a>
   </div>
 
   <!-- Modern Filter Card -->
@@ -53,7 +70,8 @@
         <select name="availability" class="form-select">
           <option value="">All Statuses</option>
           <option value="now" {% if selected_availability == 'now' %}selected{% endif %}>Available Now</option>
-          <option value="soon" {% if selected_availability == 'soon' %}selected{% endif %}>Starts Soon</option>
+          <option value="soon" {% if selected_availability == 'soon' %}selected{% endif %}>Starting Soon</option>
+          <option value="today" {% if selected_availability == 'today' %}selected{% endif %}>Available Today</option>
         </select>
       </div>
 
@@ -88,25 +106,25 @@
   {% if page_obj %}
     <div class="cards-grid">
       {% for item in page_obj %}
-        {% with event=item.event dist=item.distance_km %}
-          <article class="event-card">
-            <!-- Food Image Header with Curated Imagery & Overlays -->
+        {% with event=item.event dist=item.distance_km dist_display=item.distance_display last_verified=item.last_verified directions_url=item.directions_url %}
+          <article class="event-card" id="event-card-{{ event.id }}">
+            <!-- Food Image Header with Overlays -->
             <div class="event-card-media">
               {% if event.is_surplus_food %}
-                <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
               {% elif event.event_type == 'Langar' %}
-                <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
               {% elif event.event_type == 'Mahaprasad' %}
-                <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
               {% elif event.event_type == 'Wedding' or event.event_type == 'Birthday' %}
-                <img src="/static/images/celebration.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                <img src="/static/images/celebration.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
               {% else %}
-                <img src="/static/images/default_food.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                <img src="/static/images/default_food.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
               {% endif %}
               <div class="event-card-media-overlay">
                 <div class="event-card-media-top">
                   <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
-                    <span class="badge badge-type" style="background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);">
+                    <span class="badge badge-type" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);">
                       {{ event.get_event_type_display }}
                     </span>
                     <span class="badge {{ event.dietary_badge_info.css_class }}">
@@ -114,13 +132,13 @@
                     </span>
                   </div>
                   {% if user.is_authenticated %}
-                    <button type="button" class="card-fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %} fav-btn" 
+                    <button type="button" class="card-fav-btn fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}" 
                             data-event-id="{{ event.id }}" 
-                            title="Save favorite" aria-label="Save to favorites">
+                            title="{% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}" aria-label="Save to favorites">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
                     </button>
                   {% else %}
-                    <a href="{% url 'accounts:login' %}?next={% url 'food:event_list' %}" class="card-fav-btn" aria-label="Sign in to save">
+                    <a href="{% url 'accounts:login' %}?next={% url 'food:event_list' %}" class="card-fav-btn" aria-label="Sign in to save" title="Save">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
                     </a>
                   {% endif %}
@@ -144,7 +162,7 @@
               </div>
             </div>
 
-            <!-- Card Body -->
+            <!-- Card Body: Clear Hierarchy -->
             <div class="event-card-body">
               <h3 class="event-card-title">
                 <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
@@ -153,7 +171,13 @@
               <div class="event-card-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
                 <span>
-                  {% if dist %}<strong class="highlight-dist">{{ dist }} km away</strong> &bull; {% endif %}
+                  {% if dist_display %}
+                    <strong class="highlight-dist">{{ dist_display }}</strong> &bull;
+                  {% elif dist %}
+                    <strong class="highlight-dist">{{ dist|format_distance }}</strong> &bull;
+                  {% else %}
+                    <span onclick="openModal('manualLocationModal')" style="cursor: pointer; color: #dc2626; font-weight: 600;" title="Tap to detect distance">Search your area</span> &bull;
+                  {% endif %}
                   {{ event.venue_name }}
                   {% if event.has_verified_organizer and event.verified_organizer_badge.name %}
                     <span style="color: #0284c7; font-weight: 600;">({{ event.verified_organizer_badge.name }})</span>
@@ -166,9 +190,16 @@
                 <span>{{ event.event_date|date:"D, M d" }} &bull; {{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
               </div>
 
-              {% if event.approved_at %}
-                <div style="font-size: 0.775rem; color: #0284c7; font-weight: 600;">
-                  Free Food Verified {{ event.approved_at|timesince }} ago
+              <!-- Trust Indicator: Last Verified -->
+              {% if last_verified %}
+                <div class="card-trust-indicator {% if last_verified.source == 'community' %}is-recent{% endif %}" title="Confirmed availability">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                  <span>{{ last_verified.text }}</span>
+                </div>
+              {% elif event.get_last_verified %}
+                <div class="card-trust-indicator" title="Confirmed availability">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                  <span>{{ event.get_last_verified.text }}</span>
                 </div>
               {% endif %}
 
@@ -177,20 +208,44 @@
               </div>
             </div>
 
-            <!-- Card Footer -->
+            <!-- Card Footer: Directions, Details, Share, Save, Report -->
             <div class="event-card-footer">
               <span class="distance-pill">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
-                {% if dist %}{{ dist }} km away{% else %}{{ event.address|truncatechars:24 }}{% endif %}
+                {% if dist_display %}{{ dist_display }}{% elif dist %}{{ dist|format_distance }}{% else %}{{ event.address|truncatechars:24 }}{% endif %}
               </span>
-              <div style="display: flex; gap: 0.5rem;">
+
+              <div class="card-action-bar">
                 <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}" 
-                   target="_blank" rel="noopener" class="btn btn-secondary btn-sm" title="Directions">
-                  Directions
+                   target="_blank" rel="noopener" class="btn btn-secondary btn-sm btn-directions" title="Directions">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                  <span>Directions</span>
                 </a>
+
                 <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">
                   Details
                 </a>
+
+                <!-- Quick Native Share -->
+                <button type="button" class="btn-card-action share-event-btn"
+                        data-share-title="{{ event.title|escape }}"
+                        data-share-occasion="{{ event.get_event_type_display|escape }}"
+                        data-share-location="{{ event.venue_name|escape }}, {{ event.address|escape }}"
+                        data-share-time="{{ event.event_date|date:'D, M d' }} &bull; {{ event.start_time|time:'g:i A' }} - {{ event.end_time|time:'g:i A' }}"
+                        data-share-availability="{{ event.availability_status.label|escape }}"
+                        data-share-url="{% url 'food:event_detail' event.id %}"
+                        data-directions-url="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}"
+                        aria-label="Share {{ event.title }}" title="Share">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                </button>
+
+                <!-- Quick Report Modal Trigger -->
+                <button type="button" class="btn-card-action btn-card-report"
+                        data-event-id="{{ event.id }}"
+                        data-event-title="{{ event.title|escape }}"
+                        aria-label="Report listing" title="Report incorrect info">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                </button>
               </div>
             </div>
           </article>
@@ -216,14 +271,19 @@
     {% endif %}
 
   {% else %}
+    <!-- Clean Empty State -->
     <div class="empty-state">
       <div class="empty-state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       </div>
       <div class="empty-state-tag">Filter Results</div>
-      <h3>No free food events match your criteria</h3>
-      <p>Try clearing your search query or broadening the date and category filters.</p>
-      <a href="{% url 'food:event_list' %}" class="btn btn-secondary">Clear All Filters</a>
+      <h3>No food locations found</h3>
+      <p>No food locations match your current filters. You can clear your filters, search another area, or view food scheduled for today.</p>
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'food:event_list' %}" class="btn btn-secondary">Clear All Filters</a>
+        <button type="button" class="btn btn-primary" onclick="openModal('manualLocationModal')">Search Another Area</button>
+        <a href="{% url 'food:event_list' %}?date=today" class="btn btn-outline">View Today's Food</a>
+      </div>
     </div>
   {% endif %}
 </div>

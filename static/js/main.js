@@ -83,26 +83,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const csrfToken = getCookie('csrftoken');
       if (!csrfToken) {
         if (window.InteractionFeedback) window.InteractionFeedback.startTopProgress();
-        window.location.href = '/login/';
+        window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
         return;
       }
 
       // Prevent repeated clicks during processing
       btn.style.pointerEvents = 'none';
       btn.style.opacity = '0.75';
+      const labelSpan = btn.querySelector('.fav-btn-label, .fav-text');
+      const origText = labelSpan ? labelSpan.textContent : (btn.querySelector('svg') ? null : btn.textContent);
+      if (labelSpan) {
+        labelSpan.textContent = 'Saving...';
+      }
 
       try {
         const response = await fetch(`/food/${eventId}/favorite/`, {
           method: 'POST',
           headers: {
             'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
           }
         });
 
         if (response.status === 403 || response.status === 401 || response.redirected) {
           if (window.InteractionFeedback) window.InteractionFeedback.startTopProgress();
-          window.location.href = '/login/';
+          window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
           return;
         }
 
@@ -113,21 +119,22 @@ document.addEventListener('DOMContentLoaded', () => {
           void btn.offsetWidth; // Force reflow to retrigger animation
           btn.classList.add('is-pop');
 
-          // Update text label if present (without removing icon)
-          const textSpan = btn.querySelector('.fav-btn-label');
-          if (textSpan) {
-            textSpan.textContent = data.favorited ? 'Saved' : 'Save';
+          // Update text label: Save / Saved
+          if (labelSpan) {
+            labelSpan.textContent = data.favorited ? 'Saved' : 'Save';
           } else if (!btn.querySelector('svg')) {
             btn.textContent = data.favorited ? 'Saved' : 'Save';
           }
           showToast(data.message, 'success');
         } else {
+          if (labelSpan && origText) labelSpan.textContent = origText;
           btn.classList.add('is-error');
           setTimeout(() => btn.classList.remove('is-error'), 1200);
           showToast(data.message || 'Error updating favorite', 'error');
         }
       } catch (err) {
         console.error('Favorite error:', err);
+        if (labelSpan && origText) labelSpan.textContent = origText;
         btn.classList.add('is-error');
         setTimeout(() => btn.classList.remove('is-error'), 1200);
         showToast('Unable to update favorite right now.', 'error');
@@ -138,28 +145,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Share verified event pages with native share or clipboard fallback
+  // Rich Share Event handler with native share or clipboard fallback
   document.querySelectorAll('.share-event-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const shareData = {
-        title: btn.dataset.shareTitle || document.title,
-        text: btn.dataset.shareText || document.title,
-        url: window.location.href
-      };
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const title = btn.dataset.shareTitle || document.title;
+      const occasion = btn.dataset.shareOccasion || '';
+      const location = btn.dataset.shareLocation || '';
+      const time = btn.dataset.shareTime || '';
+      const availability = btn.dataset.shareAvailability || '';
+      const directions = btn.dataset.shareDirections || '';
+      const url = btn.dataset.shareUrl || window.location.href;
+
+      let shareText = `🍲 Free Food: ${title}\n`;
+      if (occasion) shareText += `✨ Occasion: ${occasion}\n`;
+      if (availability) shareText += `⚡ Availability: ${availability}\n`;
+      if (time) shareText += `⏰ Time: ${time}\n`;
+      if (location) shareText += `📍 Location: ${location}\n`;
+      if (directions) shareText += `🗺️ Directions: ${directions}\n`;
+      shareText += `🔗 View on Free Food: ${url}`;
+
+      // Immediate button tap feedback
+      btn.classList.add('is-active-feedback');
+      setTimeout(() => btn.classList.remove('is-active-feedback'), 300);
 
       try {
         if (navigator.share) {
-          await navigator.share(shareData);
+          await navigator.share({
+            title: title,
+            text: shareText,
+            url: url
+          });
           return;
         }
 
-        await copyTextToClipboard(shareData.url);
-        showToast('Event link copied. Share it with someone who needs it.', 'success');
+        await copyTextToClipboard(shareText);
+        showToast('Event details copied! Ready to share.', 'success');
       } catch (err) {
         if (err && err.name !== 'AbortError') {
           showToast('Unable to share this event right now.', 'error');
         }
       }
+    });
+  });
+
+  // Directions button immediate interaction feedback
+  document.querySelectorAll('.btn-directions').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.style.transform = 'scale(0.96)';
+      btn.style.opacity = '0.75';
+      const label = btn.querySelector('span');
+      const origText = label ? label.textContent : null;
+      if (label && origText && !origText.includes('Opening')) {
+        label.textContent = 'Opening directions...';
+      }
+      setTimeout(() => {
+        btn.style.transform = '';
+        btn.style.opacity = '';
+        if (label && origText) label.textContent = origText;
+      }, 1200);
     });
   });
 
@@ -206,7 +252,106 @@ document.addEventListener('DOMContentLoaded', () => {
       parent.appendChild(feedback);
     });
   });
+
+  // Global Community Report Modal Form Handler
+  const globalReportForm = document.getElementById('globalReportForm');
+  if (globalReportForm) {
+    globalReportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btnGlobalReportSubmit');
+      if (window.InteractionFeedback) {
+        window.InteractionFeedback.setButtonLoading(submitBtn, 'Submitting report...');
+      } else {
+        submitBtn.disabled = true;
+      }
+
+      try {
+        const res = await fetch(globalReportForm.action, {
+          method: 'POST',
+          body: new FormData(globalReportForm),
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonSuccess(submitBtn, 'Report submitted');
+          }
+          if (typeof showToast === 'function') {
+            showToast(data.message || 'Report submitted', 'success');
+          }
+          setTimeout(() => {
+            closeModal('globalReportModal');
+            globalReportForm.reset();
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.restoreButton(submitBtn);
+            }
+          }, 600);
+        } else {
+          if (data.require_login) {
+            window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+          }
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonError(submitBtn, 'Failed');
+          }
+          if (typeof showToast === 'function') {
+            showToast(data.message || 'Unable to submit report.', 'error');
+          }
+        }
+      } catch (err) {
+        console.error('Report submission error:', err);
+        if (window.InteractionFeedback) {
+          window.InteractionFeedback.setButtonError(submitBtn, 'Error');
+        }
+        if (typeof showToast === 'function') {
+          showToast('Unable to submit report at this time.', 'error');
+        }
+      }
+    });
+  }
+
+  // Close modals when clicking backdrop
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('modal-backdrop')) {
+      e.target.classList.remove('is-active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Close modals on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.is-active, .modal-backdrop.is-active').forEach(modal => {
+        modal.classList.remove('is-active');
+      });
+      document.body.style.overflow = '';
+    }
+  });
 });
+
+/**
+ * Global Report Modal Opener
+ */
+window.openReportModal = function(eventId, eventTitle) {
+  const modal = document.getElementById('globalReportModal');
+  if (!modal) return;
+  const titleEl = document.getElementById('globalReportEventTitle');
+  if (titleEl) {
+    titleEl.textContent = eventTitle || 'Event';
+  }
+  const form = document.getElementById('globalReportForm');
+  if (form) {
+    form.action = `/food/${eventId}/report/`;
+    form.reset();
+  }
+  const signInBtn = document.getElementById('globalReportSignInBtn');
+  if (signInBtn) {
+    signInBtn.href = `/login/?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  }
+  openModal('globalReportModal');
+};
 
 /* ==========================================================================
    Interaction Feedback Engine (Tap, Loading States, Spinners & Progress Bar)
@@ -394,22 +539,28 @@ document.addEventListener('submit', (e) => {
     loadingText = 'Signing in...';
   } else if (btnText.includes('create') || btnText.includes('register') || formAction.includes('register')) {
     loadingText = 'Creating account...';
-  } else if (btnText.includes('submit for verification') || formAction.includes('event_add') || formAction.includes('add')) {
-    loadingText = 'Submitting event...';
+  } else if (btnText.includes('submit') || formAction.includes('event_add') || formAction.includes('add')) {
+    loadingText = 'Submitting...';
+  } else if (btnText.includes('find food') || btnText.includes('near me')) {
+    loadingText = 'Finding food...';
+  } else if (btnText.includes('search') || formAction.includes('search')) {
+    loadingText = 'Searching...';
+  } else if (btnText.includes('detect') || formAction.includes('location')) {
+    loadingText = 'Detecting location...';
+  } else if (btnText.includes('report') || formAction.includes('report')) {
+    loadingText = 'Submitting report...';
+  } else if (btnText.includes('save') || btnText.includes('saved')) {
+    loadingText = 'Saving...';
   } else if (btnText.includes('filter') || formAction.includes('event_list')) {
-    loadingText = 'Filtering events...';
+    loadingText = 'Filtering...';
   } else if (btnText.includes('reset') || formAction.includes('password_reset')) {
     loadingText = 'Sending instructions...';
   } else if (btnText.includes('claim')) {
     loadingText = 'Confirming claim...';
-  } else if (btnText.includes('report')) {
-    loadingText = 'Submitting report...';
   } else if (btnText.includes('approve')) {
     loadingText = 'Approving...';
   } else if (btnText.includes('reject')) {
     loadingText = 'Rejecting...';
-  } else if (btnText.includes('save')) {
-    loadingText = 'Saving...';
   }
 
   InteractionFeedback.setButtonLoading(submitBtn, loadingText);
@@ -418,7 +569,7 @@ document.addEventListener('submit', (e) => {
 
 // 2. Universal Click & Navigation Feedback
 document.addEventListener('click', (e) => {
-  const clickable = e.target.closest('.btn, button, .fav-btn, .location-change, .alert-close, .lang-btn, .pill-tab');
+  const clickable = e.target.closest('.btn, button, .fav-btn, .location-change, .alert-close, .lang-btn, .pill-tab, .btn-card-action');
   if (clickable) {
     InteractionFeedback.addTapFlash(clickable, e);
   }
@@ -447,6 +598,8 @@ document.addEventListener('click', (e) => {
       loadingMsg = 'Opening event...';
     } else if (text.includes('map')) {
       loadingMsg = 'Opening map...';
+    } else if (text.includes('sign in') || text.includes('log in')) {
+      loadingMsg = 'Signing in...';
     }
     InteractionFeedback.setButtonLoading(link, loadingMsg);
   }
@@ -552,10 +705,16 @@ function showToast(message, type = 'info') {
  */
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) modal.classList.add('is-active');
+  if (modal) {
+    modal.classList.add('is-active');
+    document.body.style.overflow = 'hidden';
+  }
 }
 
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) modal.classList.remove('is-active');
+  if (modal) {
+    modal.classList.remove('is-active');
+    document.body.style.overflow = '';
+  }
 }

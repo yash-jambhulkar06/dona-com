@@ -669,6 +669,121 @@
   height: 14px;
 }
 
+/* Trust Indicator (Verified X min ago / Last confirmed X min ago) */
+.card-trust-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #0369a1;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.55rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+  width: fit-content;
+}
+
+.card-trust-indicator.is-recent {
+  color: #15803d;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.card-trust-indicator svg {
+  flex-shrink: 0;
+}
+
+/* Card Action Bar & Micro-Buttons */
+.card-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-card-action {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  background-color: #ffffff;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-card-action:hover {
+  background-color: var(--bg-subtle);
+  color: var(--primary);
+  border-color: #cbd5e1;
+}
+
+.btn-card-action:active {
+  transform: scale(0.92);
+}
+
+.btn-card-action.is-favorited {
+  color: var(--primary);
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+
+/* Form Steps */
+.form-step-section {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+}
+
+.form-step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.form-step-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.form-required-badge {
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--danger);
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* --------------------------------------------------------------------------
    Forms System (48px–52px height, 12px radius, Free Food Red focus ring)
    -------------------------------------------------------------------------- */

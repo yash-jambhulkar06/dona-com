@@ -459,6 +459,52 @@
     </div>
   </div>
 
+  <!-- Global Community Report Modal -->
+  <div class="modal-overlay" id="globalReportModal">
+    <div class="modal-card">
+      <div class="modal-sheet-handle"></div>
+      <div class="modal-header">
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #111827;">Report Incorrect Information</h3>
+        <button type="button" class="alert-close" onclick="closeModal('globalReportModal')">&times;</button>
+      </div>
+      <div id="globalReportNotice" style="font-size: 0.9rem; color: #64748b; margin-bottom: 1rem;">
+        Reporting: <strong id="globalReportEventTitle" style="color: #0f172a;">Event</strong>
+      </div>
+      {% if user.is_authenticated %}
+        <form id="globalReportForm" method="POST" action="">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label">What is incorrect or outdated? *</label>
+            <select name="reason" class="form-select" required>
+              <option value="">Select a reason...</option>
+              <option value="FOOD_FINISHED">Food Finished</option>
+              <option value="WRONG_LOCATION">Wrong Location</option>
+              <option value="WRONG_TIME">Wrong Time</option>
+              <option value="DUPLICATE">Duplicate</option>
+              <option value="INCORRECT_INFO">Incorrect Information</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Additional Details (Optional)</label>
+            <textarea name="details" class="form-textarea" rows="3" placeholder="Explain what is incorrect or why this listing should be reviewed"></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('globalReportModal')">Cancel</button>
+            <button type="submit" class="btn btn-danger" id="btnGlobalReportSubmit">Submit Report</button>
+          </div>
+        </form>
+      {% else %}
+        <div style="background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; text-align: center;">
+          <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.925rem;">
+            Please sign in to submit a report against this listing.
+          </p>
+          <a href="{% url 'accounts:login' %}" class="btn btn-primary" id="globalReportSignInBtn">Sign In to Report</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- Leaflet Map JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

@@ -154,9 +154,16 @@ class FreeFoodEvent(models.Model):
     def is_active_now(self) -> bool:
         """Checks if food is actively available right now."""
         now = timezone.localtime()
+        if self.status != self.STATUS_APPROVED:
+            return False
+        if self.is_expired():
+            return False
+        # If community recently reported food finished, it is no longer available now
+        community_status = self.get_community_live_status()
+        if community_status.get('status_code') == 'FINISHED':
+            return False
         return (
-            self.status == self.STATUS_APPROVED
-            and self.event_date == now.date()
+            self.event_date == now.date()
             and self.start_time <= now.time() <= self.end_time
         )
 
@@ -254,16 +261,88 @@ class FreeFoodEvent(models.Model):
 
     @property
     def availability_status(self) -> dict:
-        """Returns visual status information for template rendering."""
+        """
+        Returns visual status information for template rendering.
+        Statuses: 'Available Now', 'Starting Soon', 'Available Today', 'Ended'.
+        Expired events must not appear as currently available.
+        """
         if self.status != self.STATUS_APPROVED:
-            return {'label': self.get_status_display(), 'css_class': 'badge-warning' if self.status == self.STATUS_PENDING else 'badge-danger'}
+            return {
+                'label': self.get_status_display(),
+                'css_class': 'badge-warning' if self.status == self.STATUS_PENDING else 'badge-danger',
+                'code': self.status
+            }
+        
+        # Expired events must not appear as currently available
         if self.is_expired():
-            return {'label': 'Expired', 'css_class': 'badge-expired'}
+            return {'label': 'Ended', 'css_class': 'badge-expired', 'code': 'ENDED'}
+
+        # If community confirmed food finished, treat as Ended
+        community_status = self.get_community_live_status()
+        if community_status.get('status_code') == 'FINISHED':
+            return {'label': 'Ended', 'css_class': 'badge-expired', 'code': 'ENDED'}
+
         if self.is_active_now():
-            return {'label': 'Available Now', 'css_class': 'badge-success'}
+            return {'label': 'Available Now', 'css_class': 'badge-success', 'code': 'AVAILABLE_NOW'}
+
         if self.is_starting_soon():
-            return {'label': 'Starts Soon', 'css_class': 'badge-warning'}
-        return {'label': 'Upcoming', 'css_class': 'badge-info'}
+            return {'label': 'Starting Soon', 'css_class': 'badge-warning', 'code': 'STARTING_SOON'}
+
+        now = timezone.localtime()
+        if self.event_date == now.date():
+            return {'label': 'Available Today', 'css_class': 'badge-info', 'code': 'AVAILABLE_TODAY'}
+
+        return {'label': 'Upcoming', 'css_class': 'badge-info', 'code': 'UPCOMING'}
+
+    def get_last_verified(self) -> dict | None:
+        """
+        Returns trust indicator showing when availability was most recently confirmed.
+        Examples: 'Verified 5 min ago', 'Last confirmed 18 min ago'.
+        Only returns verification info when there is an actual confirmation timestamp.
+        """
+        now = timezone.now()
+        latest_serving = self.live_statuses.filter(status='SERVING').order_by('-created_at').first()
+        if latest_serving and latest_serving.created_at:
+            diff = now - latest_serving.created_at
+            minutes = max(1, int(diff.total_seconds() // 60))
+            if minutes < 1:
+                text = "Last confirmed just now"
+            elif minutes < 60:
+                text = f"Last confirmed {minutes} min ago"
+            else:
+                hours = int(minutes // 60)
+                if hours < 24:
+                    text = f"Last confirmed {hours} hr{'s' if hours > 1 else ''} ago"
+                else:
+                    text = f"Confirmed on {latest_serving.created_at.strftime('%b %d')}"
+            return {
+                'has_timestamp': True,
+                'source': 'community',
+                'text': text,
+                'timestamp': latest_serving.created_at,
+            }
+
+        if self.approved_at:
+            diff = now - self.approved_at
+            minutes = max(1, int(diff.total_seconds() // 60))
+            if minutes < 1:
+                text = "Verified just now"
+            elif minutes < 60:
+                text = f"Verified {minutes} min ago"
+            else:
+                hours = int(minutes // 60)
+                if hours < 24:
+                    text = f"Verified {hours} hr{'s' if hours > 1 else ''} ago"
+                else:
+                    text = f"Verified on {self.approved_at.strftime('%b %d')}"
+            return {
+                'has_timestamp': True,
+                'source': 'moderator',
+                'text': text,
+                'timestamp': self.approved_at,
+            }
+
+        return None
 
 
 class Favorite(models.Model):
@@ -283,20 +362,28 @@ class Favorite(models.Model):
 
 class Report(models.Model):
     """Stores community reports for incorrect, outdated, or misleading listings."""
+    REASON_FOOD_FINISHED = 'FOOD_FINISHED'
     REASON_WRONG_LOCATION = 'WRONG_LOCATION'
-    REASON_NOT_EXIST = 'NOT_EXIST'
-    REASON_EVENT_OVER = 'EVENT_OVER'
+    REASON_WRONG_TIME = 'WRONG_TIME'
+    REASON_DUPLICATE = 'DUPLICATE'
     REASON_INCORRECT_INFO = 'INCORRECT_INFO'
-    REASON_MISLEADING = 'MISLEADING'
     REASON_OTHER = 'OTHER'
 
+    # Legacy compatibility
+    REASON_NOT_EXIST = 'NOT_EXIST'
+    REASON_EVENT_OVER = 'EVENT_OVER'
+    REASON_MISLEADING = 'MISLEADING'
+
     REPORT_REASONS = [
-        (REASON_WRONG_LOCATION, 'Wrong location or map pin'),
+        (REASON_FOOD_FINISHED, 'Food Finished'),
+        (REASON_WRONG_LOCATION, 'Wrong Location'),
+        (REASON_WRONG_TIME, 'Wrong Time'),
+        (REASON_DUPLICATE, 'Duplicate'),
+        (REASON_INCORRECT_INFO, 'Incorrect Information'),
+        (REASON_OTHER, 'Other'),
+        (REASON_EVENT_OVER, 'Food Finished / Event Over'),
         (REASON_NOT_EXIST, 'Event does not exist'),
-        (REASON_EVENT_OVER, 'Event is already over'),
-        (REASON_INCORRECT_INFO, 'Incorrect food or timing information'),
         (REASON_MISLEADING, 'Misleading or inappropriate listing'),
-        (REASON_OTHER, 'Other issue'),
     ]
 
     STATUS_PENDING = 'PENDING'

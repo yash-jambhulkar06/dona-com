@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load food_tags %}
 
 {% block title %}Free Food Near Me — Free Food{% endblock %}
 
@@ -137,13 +138,35 @@
   </div>
 
   {% if not has_location %}
-    <!-- Location Required State -->
-    <div class="empty-state" style="background: white; border: 2px dashed #cbd5e1;">
-      <div class="empty-state-tag">Location Setup</div>
-      <h3>Where are you located?</h3>
-      <p>
-        Search for your town or village (e.g. <strong>Palandur</strong>, <strong>Bhandara</strong>, <strong>Nagpur</strong>) above, or tap "Use Current Location" to discover free meals around you.
+    <!-- Location Fallback: Search Your Area -->
+    <div class="empty-state" style="background: white; border: 1.5px dashed #cbd5e1;">
+      <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      </div>
+      <div class="empty-state-tag">Location Required</div>
+      <h3>Search your area</h3>
+      <p style="max-width: 500px; margin: 0 auto 1.25rem;">
+        Location permission is currently unavailable. Enter your city or village name, or tap a quick area below to discover free food locations near you:
       </p>
+      
+      <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem;">
+        <button type="button" class="filter-chip" onclick="document.getElementById('nearbyLocationInput').value='Nagpur'; document.getElementById('nearbyLocationInput').dispatchEvent(new Event('input'))">Nagpur</button>
+        <button type="button" class="filter-chip" onclick="document.getElementById('nearbyLocationInput').value='Bhandara'; document.getElementById('nearbyLocationInput').dispatchEvent(new Event('input'))">Bhandara</button>
+        <button type="button" class="filter-chip" onclick="document.getElementById('nearbyLocationInput').value='Palandur'; document.getElementById('nearbyLocationInput').dispatchEvent(new Event('input'))">Palandur</button>
+        <button type="button" class="filter-chip" onclick="document.getElementById('nearbyLocationInput').value='Sakoli'; document.getElementById('nearbyLocationInput').dispatchEvent(new Event('input'))">Sakoli</button>
+        <button type="button" class="filter-chip" onclick="document.getElementById('nearbyLocationInput').value='Mumbai'; document.getElementById('nearbyLocationInput').dispatchEvent(new Event('input'))">Mumbai</button>
+        <button type="button" class="filter-chip" onclick="document.getElementById('nearbyLocationInput').value='Pune'; document.getElementById('nearbyLocationInput').dispatchEvent(new Event('input'))">Pune</button>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('nearbyLocationInput').focus()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Search Your Area</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="openModal('manualLocationModal')">
+          <span>Open Location Picker</span>
+        </button>
+      </div>
     </div>
   {% else %}
     <!-- Radius & Location Status Bar -->
@@ -192,36 +215,53 @@
       </div>
     </div>
 
+    <!-- Alternative notice when no food is currently serving right now -->
+    {% if results and not available_now %}
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.85rem;">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; color: #15803d; flex-shrink: 0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div>
+          <strong style="color: #166534; font-size: 0.95rem;">No food currently serving at this exact minute nearby.</strong>
+          <div style="font-size: 0.85rem; color: #15803d; margin-top: 2px;">
+            Here are verified community meals starting soon and available later today in your area:
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
     <div id="nearbyResultsContainer">
     {% if results %}
       <div class="cards-grid">
         {% for item in results %}
-          {% with event=item.event dist=item.distance_km %}
-            <article class="event-card">
-              <!-- Food Image Header with Curated Imagery & Overlays -->
+          {% with event=item.event dist=item.distance_km dist_display=item.distance_display last_verified=item.last_verified directions_url=item.directions_url %}
+            <article class="event-card" id="event-card-{{ event.id }}">
+              <!-- Food Image Header with Overlays -->
               <div class="event-card-media">
                 {% if event.is_surplus_food %}
-                  <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                  <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
                 {% elif event.event_type == 'Langar' %}
-                  <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                  <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
                 {% elif event.event_type == 'Mahaprasad' %}
-                  <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                  <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
                 {% elif event.event_type == 'Wedding' or event.event_type == 'Birthday' %}
-                  <img src="/static/images/celebration.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                  <img src="/static/images/celebration.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
                 {% else %}
-                  <img src="/static/images/default_food.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+                  <img src="/static/images/default_food.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
                 {% endif %}
                 <div class="event-card-media-overlay">
                   <div class="event-card-media-top">
-                    <span class="badge badge-type" style="background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);">
+                    <span class="badge badge-type" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);">
                       {{ event.get_event_type_display }}
                     </span>
                     {% if user.is_authenticated %}
-                      <button type="button" class="card-fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %} fav-btn" data-event-id="{{ event.id }}" aria-label="Save to favorites">
+                      <button type="button" class="card-fav-btn fav-btn {% if event.id in user_favorites_ids %}is-favorited{% endif %}" 
+                              data-event-id="{{ event.id }}" 
+                              title="{% if event.id in user_favorites_ids %}Saved{% else %}Save{% endif %}" aria-label="Save to favorites">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
                       </button>
                     {% else %}
-                      <a href="{% url 'accounts:login' %}?next={% url 'food:nearby_events' %}" class="card-fav-btn" aria-label="Sign in to save">
+                      <a href="{% url 'accounts:login' %}?next={% url 'food:nearby_events' %}" class="card-fav-btn" aria-label="Sign in to save" title="Save">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>
                       </a>
                     {% endif %}
@@ -240,44 +280,88 @@
                 </div>
               </div>
 
-              <!-- Card Body -->
+              <!-- Card Body: Clear Hierarchy -->
               <div class="event-card-body">
                 <h3 class="event-card-title">
                   <a href="{% url 'food:event_detail' event.id %}">{{ event.title }}</a>
                 </h3>
 
+                <!-- Distance & Location -->
                 <div class="event-card-row">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
                   <span>
-                    {% if dist %}<strong class="highlight-dist">{{ dist }} km away</strong> &bull; {% endif %}
+                    {% if dist_display %}
+                      <strong class="highlight-dist">{{ dist_display }}</strong> &bull;
+                    {% elif dist %}
+                      <strong class="highlight-dist">{{ dist|format_distance }}</strong> &bull;
+                    {% endif %}
                     {{ event.venue_name }}
                   </span>
                 </div>
 
+                <!-- Date & Time -->
                 <div class="event-card-row">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   <span>{{ event.event_date|date:"D, M d" }} &bull; {{ event.start_time|time:"g:i A" }} – {{ event.end_time|time:"g:i A" }}</span>
                 </div>
 
+                <!-- Last Verified Trust Indicator -->
+                {% if last_verified %}
+                  <div class="card-trust-indicator {% if last_verified.source == 'community' %}is-recent{% endif %}" title="Confirmed availability">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                    <span>{{ last_verified.text }}</span>
+                  </div>
+                {% elif event.get_last_verified %}
+                  <div class="card-trust-indicator" title="Confirmed availability">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                    <span>{{ event.get_last_verified.text }}</span>
+                  </div>
+                {% endif %}
+
+                <!-- Food Details Preview -->
                 <div class="event-food-summary">
                   {{ event.food_details|truncatechars:115 }}
                 </div>
               </div>
 
-              <!-- Card Footer -->
+              <!-- Card Footer: Directions, Details, Share, Save, Report -->
               <div class="event-card-footer">
                 <span class="distance-pill">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
-                  {% if dist %}{{ dist }} km away{% else %}Nearby{% endif %}
+                  {% if dist_display %}{{ dist_display }}{% elif dist %}{{ dist|format_distance }}{% else %}Nearby{% endif %}
                 </span>
-                <div style="display: flex; gap: 0.5rem;">
-                  <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}" 
-                     target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
-                    Directions
+
+                <div class="card-action-bar">
+                  <a href="{{ directions_url }}" 
+                     target="_blank" rel="noopener" class="btn btn-secondary btn-sm btn-directions" title="Directions">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                    <span>Directions</span>
                   </a>
+
                   <a href="{% url 'food:event_detail' event.id %}" class="btn btn-primary btn-sm">
                     Details
                   </a>
+
+                  <!-- Quick Native Share -->
+                  <button type="button" class="btn-card-action share-event-btn"
+                          data-share-title="{{ event.title|escape }}"
+                          data-share-occasion="{{ event.get_event_type_display|escape }}"
+                          data-share-location="{{ event.venue_name|escape }}, {{ event.address|escape }}"
+                          data-share-time="{{ event.event_date|date:'D, M d' }} &bull; {{ event.start_time|time:'g:i A' }} - {{ event.end_time|time:'g:i A' }}"
+                          data-share-availability="{{ event.availability_status.label|escape }}"
+                          data-share-url="{% url 'food:event_detail' event.id %}"
+                          data-directions-url="{{ directions_url }}"
+                          aria-label="Share {{ event.title }}" title="Share">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  </button>
+
+                  <!-- Quick Report Modal Trigger -->
+                  <button type="button" class="btn-card-action btn-card-report"
+                          data-event-id="{{ event.id }}"
+                          data-event-title="{{ event.title|escape }}"
+                          aria-label="Report listing" title="Report incorrect info">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                  </button>
                 </div>
               </div>
             </article>
@@ -285,13 +369,18 @@
         {% endfor %}
       </div>
     {% else %}
+      <!-- Clean Empty State with Useful Alternatives -->
       <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
         <div class="empty-state-tag">Search Radius</div>
-        <h3>No free food events found within {{ radius }} km</h3>
-        <p>Try extending your search radius to 50 km or search another nearby town or city.</p>
-        <div style="display: flex; justify-content: center; gap: 1rem;">
-          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=50{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-primary">Extend to 50 km</a>
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('nearbyLocationInput').focus()">Search Another Area</button>
+        <h3>No free food available nearby right now</h3>
+        <p>No food locations were found within {{ radius }} km right now. You can extend your radius, search another area, or view food scheduled for today.</p>
+        <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('nearbyLocationInput').focus()">Search Another Area</button>
+          <a href="{% url 'food:event_list' %}?date=today" class="btn btn-secondary">View Today's Food</a>
+          <a href="?lat={{ user_lat }}&lng={{ user_lng }}&radius=50{% if location_name %}&location_name={{ location_name|urlencode }}{% endif %}" class="btn btn-outline">Extend to 50 km</a>
         </div>
       </div>
     {% endif %}

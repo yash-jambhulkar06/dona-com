@@ -25,6 +25,7 @@ def home_view(request):
     user_lng = request.GET.get('lng')
     location_name = request.GET.get('location_name', '').strip()
     dietary = request.GET.get('dietary', '').strip()
+    availability = request.GET.get('availability', '').strip()
     
     user_favorites_ids = set()
 
@@ -47,7 +48,8 @@ def home_view(request):
         user_lat=lat_val,
         user_lng=lng_val,
         dietary=dietary or None,
-    )[:9]
+        availability=availability or None,
+    )[:12]
     if request.user.is_authenticated:
         user_favorites_ids = set(request.user.favorites.values_list('event_id', flat=True))
 
@@ -81,6 +83,7 @@ def home_view(request):
         'event_types': FreeFoodEvent.EVENT_TYPES,
         'dietary_types': FreeFoodEvent.DIETARY_TYPES,
         'selected_dietary': dietary,
+        'selected_availability': availability,
         'location_name': location_name,
         'user_lat': user_lat,
         'user_lng': user_lng,
@@ -170,6 +173,7 @@ def nearby_events_view(request):
     user_lat = request.GET.get('lat')
     user_lng = request.GET.get('lng')
     dietary = request.GET.get('dietary', '').strip()
+    availability = request.GET.get('availability', '').strip()
     surplus_only = request.GET.get('surplus', '').lower() in ('true', '1')
     location_name = request.GET.get('location_name', '').strip()
     radius = request.GET.get('radius', '25')
@@ -194,6 +198,7 @@ def nearby_events_view(request):
                 user_lng=lng_val,
                 max_distance_km=radius_val,
                 dietary=dietary or None,
+                availability=availability or None,
                 surplus_only=surplus_only,
             )
             if not location_name:
@@ -225,19 +230,33 @@ def nearby_events_view(request):
             'dietary': ev.dietary_badge_info,
             'is_verified': ev.has_verified_organizer,
             'verified_badge': ev.verified_organizer_badge,
+            'last_verified': ev.get_last_verified(),
             'is_surplus': ev.is_surplus_food,
             'detail_url': reverse('food:event_detail', kwargs={'event_id': ev.id}),
             'directions_url': directions_url,
             'distance_km': item.get('distance_km'),
+            'distance_display': item.get('distance_display'),
         })
+
+    # Group results for alternative suggestions when none available now
+    now_date = timezone.localtime().date()
+    available_now = [r for r in results if r['is_active_now']]
+    starting_soon = [r for r in results if r['is_starting_soon']]
+    available_today = [r for r in results if r['event'].event_date == now_date and not r['is_active_now'] and not r['is_starting_soon']]
+    upcoming = [r for r in results if r['event'].event_date > now_date]
 
     return render(request, 'food/nearby.html', {
         'results': results,
+        'available_now': available_now,
+        'starting_soon': starting_soon,
+        'available_today': available_today,
+        'upcoming': upcoming,
         'has_location': bool(lat_val and lng_val),
         'user_lat': user_lat,
         'user_lng': user_lng,
         'dietary_types': FreeFoodEvent.DIETARY_TYPES,
         'selected_dietary': dietary,
+        'selected_availability': availability,
         'selected_surplus': surplus_only,
         'location_name': location_name,
         'radius': radius,
@@ -351,20 +370,28 @@ def event_favorite_toggle_api(request, event_id):
 def event_report_api(request, event_id):
     """
     Submit a community report against an event listing.
+    Supports both standard form POST and AJAX.
+    Does not remove the event from public view upon report submission.
     """
     event = get_object_or_404(FreeFoodEvent, pk=event_id)
     form = ReportForm(request.POST)
-    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', '')
+
     if form.is_valid():
         report = form.save(commit=False)
         report.reported_by = request.user
         report.event = event
         report.status = Report.STATUS_PENDING
         report.save()
-        messages.success(request, "Thank you. Your report has been submitted to moderators for review.")
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': 'Report submitted'})
+        messages.success(request, "Report submitted")
     else:
-        messages.error(request, "Unable to submit report. Please select a reason.")
-        
+        err_msg = "Unable to submit report. Please select a reason."
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': err_msg}, status=400)
+        messages.error(request, err_msg)
+
     return redirect('food:event_detail', event_id=event.id)
 
 
@@ -430,7 +457,7 @@ def api_update_live_status(request, event_id):
         if note:
             recent_report.note = note
         recent_report.save()
-        action_text = "Updated your live status confirmation!"
+        action_text = "Availability confirmed" if status_choice == CommunityLiveStatus.STATUS_SERVING else "Confirmed recently"
     else:
         CommunityLiveStatus.objects.create(
             event=event,
@@ -440,12 +467,14 @@ def api_update_live_status(request, event_id):
             status=status_choice,
             note=note
         )
-        action_text = "Thank you! Your live status confirmation has been recorded."
+        action_text = "Availability confirmed" if status_choice == CommunityLiveStatus.STATUS_SERVING else "Confirmed recently"
 
     live_metrics = event.get_community_live_status()
+    last_verified = event.get_last_verified()
     return JsonResponse({
         'status': 'success',
         'message': action_text,
+        'last_verified': last_verified['text'] if last_verified else 'Confirmed recently',
         'live_status': {
             'status_code': live_metrics['status_code'],
             'status_label': live_metrics['status_label'],

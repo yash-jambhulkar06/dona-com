@@ -3,129 +3,82 @@
 {% block title %}Submit a Free Food Event — Free Food{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 780px; padding-top: 1.5rem; padding-bottom: 2rem;">
+<div class="container" style="max-width: 820px; padding-top: 1.5rem; padding-bottom: 2.5rem;">
   <div class="page-heading">
     <h1>Submit Free Food Event</h1>
-    <p>Share information about free food being served in your community.</p>
+    <p>Share verified community meals, mahaprasad, or langar to help people in need.</p>
   </div>
 
-  <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+  <div class="alert alert-info" style="margin-bottom: 1.75rem;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-    <span><strong>Community Notice:</strong> Every submission is reviewed by moderators before appearing publicly to keep the platform reliable.</span>
+    <span><strong>Community Review:</strong> Every submission is verified by moderators before appearing publicly to keep information accurate and trustworthy.</span>
   </div>
 
-  <div style="background-color: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-card); padding: clamp(1.25rem, 3.5vw, 2rem); box-shadow: var(--shadow-card);">
-    <form method="POST" action="{% url 'food:event_add' %}">
-      {% csrf_token %}
+  <form method="POST" action="{% url 'food:event_add' %}" id="eventSubmissionForm" novalidate>
+    {% csrf_token %}
 
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
-        </div>
-      {% endif %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+        {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+      </div>
+    {% endif %}
 
-      <div class="form-group">
-        <label class="form-label">Event Title *</label>
-        {{ form.title }}
-        <div class="form-help">e.g. Mahaprasad at Hanuman Temple, Gurudwara Community Langar</div>
-        {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
+    <!-- Step 1: Occasion -->
+    <section class="form-step-section" id="step-occasion">
+      <div class="form-step-header">
+        <span class="form-step-number">1</span>
+        <h2 class="form-step-title">Occasion & Event Details</h2>
+        <span class="form-required-badge">* Required fields</span>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
         <div class="form-group">
-          <label class="form-label">Event Category *</label>
+          <label class="form-label" for="id_event_type">Event Occasion / Category *</label>
           {{ form.event_type }}
+          <div class="form-help">Select the event type (e.g. Mahaprasad, Langar, Wedding, Public Distribution)</div>
           {% if form.event_type.errors %}<div class="form-error">{{ form.event_type.errors.0 }}</div>{% endif %}
         </div>
 
         <div class="form-group">
-          <label class="form-label">Event Date *</label>
-          {{ form.event_date }}
-          {% if form.event_date.errors %}<div class="form-error">{{ form.event_date.errors.0 }}</div>{% endif %}
+          <label class="form-label" for="id_title">Event Title *</label>
+          {{ form.title }}
+          <div class="form-help">e.g. Temple Mahaprasad, Gurudwara Community Langar</div>
+          {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
-        <div class="form-group">
-          <label class="form-label">Start Time *</label>
-          {{ form.start_time }}
-          {% if form.start_time.errors %}<div class="form-error">{{ form.start_time.errors.0 }}</div>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">End Time *</label>
-          {{ form.end_time }}
-          {% if form.end_time.errors %}<div class="form-error">{{ form.end_time.errors.0 }}</div>{% endif %}
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
-        <div class="form-group">
-          <label class="form-label">Dietary Preference *</label>
-          {{ form.dietary_type }}
-          <div class="form-help">Pure Veg, Vegan, Jain, Halal, etc.</div>
-          {% if form.dietary_type.errors %}<div class="form-error">{{ form.dietary_type.errors.0 }}</div>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Allergens / Dietary Notes</label>
-          {{ form.allergens_info }}
-          <div class="form-help">e.g. Nut-Free, Gluten-Free, Dairy-Free</div>
-          {% if form.allergens_info.errors %}<div class="form-error">{{ form.allergens_info.errors.0 }}</div>{% endif %}
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Food Details *</label>
-        {{ form.food_details }}
-        <div class="form-help">Mention food items (e.g. Puri, Bhaji, Dal, Rice, Kheer), meal type, packaging, etc.</div>
-        {% if form.food_details.errors %}<div class="form-error">{{ form.food_details.errors.0 }}</div>{% endif %}
-      </div>
-
-      <!-- Surplus Food Recovery Option -->
-      <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: var(--radius-input); padding: 1.25rem; margin-bottom: 1.5rem;">
-        <label style="display: flex; align-items: flex-start; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #9a3412; font-size: 0.95rem; line-height: 1.45; margin-bottom: 0.5rem;">
-          {{ form.is_surplus_food }}
-          <span>Surplus Food Rescue: Excess celebration food available for volunteer pickup</span>
-        </label>
-        <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.85rem; line-height: 1.5;">
-          If this is a wedding, banquet, or large gathering with surplus prepared meals, volunteer food rescue networks will be alerted for immediate pickup to prevent food waste.
-        </p>
-        <div id="surplusFields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.825rem; color: #9a3412;">Estimated Surplus Quantity</label>
-            {{ form.surplus_quantity }}
-            {% if form.surplus_quantity.errors %}<div class="form-error">{{ form.surplus_quantity.errors.0 }}</div>{% endif %}
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-size: 0.825rem; color: #9a3412;">Pickup Coordinator Phone</label>
-            {{ form.rescue_contact_phone }}
-            {% if form.rescue_contact_phone.errors %}<div class="form-error">{{ form.rescue_contact_phone.errors.0 }}</div>{% endif %}
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Description & Community Context *</label>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="id_description">Occasion Context & Guidelines *</label>
         {{ form.description }}
-        <div class="form-help">Provide organizer details, occasion, or special guidelines for visitors.</div>
+        <div class="form-help">Mention organizer name, purpose, entry instructions, or special community notices.</div>
         {% if form.description.errors %}<div class="form-error">{{ form.description.errors.0 }}</div>{% endif %}
       </div>
+    </section>
+
+    <!-- Step 2: Location -->
+    <section class="form-step-section" id="step-location">
+      <div class="form-step-header">
+        <span class="form-step-number">2</span>
+        <h2 class="form-step-title">Location & Venue</h2>
+        <span class="form-required-badge">* Required fields</span>
+      </div>
 
       <div class="form-group">
-        <label class="form-label">Venue / Place Name *</label>
+        <label class="form-label" for="id_venue_name">Venue / Place Name *</label>
         {{ form.venue_name }}
+        <div class="form-help">e.g. Shri Ganesh Mandir Hall, Community Hall, Gurudwara Complex</div>
         {% if form.venue_name.errors %}<div class="form-error">{{ form.venue_name.errors.0 }}</div>{% endif %}
       </div>
 
       <div class="form-group">
-        <label class="form-label">Full Street Address *</label>
+        <label class="form-label" for="id_address">Full Street Address *</label>
         {{ form.address }}
+        <div class="form-help">Landmarks, road name, and village/city name</div>
         {% if form.address.errors %}<div class="form-error">{{ form.address.errors.0 }}</div>{% endif %}
       </div>
 
       <!-- Map Pin Picker -->
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom: 0;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
           <label class="form-label" style="margin-bottom: 0;">Pin Exact Location on Map *</label>
           <button type="button" class="btn btn-outline btn-sm" id="btnPickerLocateMe">
@@ -134,7 +87,7 @@
           </button>
         </div>
         <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.65rem;">
-          Click on the map or drag the pin to set the exact coordinates of where food is being served.
+          Click the map or drag the pin to set the exact coordinates so community members can get accurate turn-by-turn directions.
         </p>
 
         <!-- Search bar for finding location to place pin -->
@@ -143,13 +96,13 @@
             type="text"
             id="pickerSearchInput"
             class="form-input"
-            placeholder="Search city, town, or village to move pin (e.g. Sakoli, Bhandara, Nagpur)..."
+            placeholder="Search village, town or landmark to move pin (e.g. Sakoli, Bhandara, Nagpur)..."
             autocomplete="off"
           >
           <div id="pickerSearchResults" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; z-index: 1000; max-height: 200px; overflow-y: auto; box-shadow: var(--shadow-elevated);"></div>
         </div>
 
-        <div id="pickerMap" class="map-picker" style="position: relative;">
+        <div id="pickerMap" class="map-picker" style="position: relative; height: 280px; border-radius: var(--radius-input); border: 1px solid var(--border-color);">
           <div class="skeleton-map-wrapper">
             <div class="skeleton-map-grid"></div>
             <div class="skeleton-map-radar">
@@ -163,31 +116,215 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
           <div>
-            <label class="form-label" style="font-size: 0.775rem;">Latitude</label>
+            <label class="form-label" for="id_latitude" style="font-size: 0.775rem;">Latitude *</label>
             {{ form.latitude }}
             {% if form.latitude.errors %}<div class="form-error">{{ form.latitude.errors.0 }}</div>{% endif %}
           </div>
           <div>
-            <label class="form-label" style="font-size: 0.775rem;">Longitude</label>
+            <label class="form-label" for="id_longitude" style="font-size: 0.775rem;">Longitude *</label>
             {{ form.longitude }}
             {% if form.longitude.errors %}<div class="form-error">{{ form.longitude.errors.0 }}</div>{% endif %}
           </div>
         </div>
       </div>
+    </section>
 
-      <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem; flex-wrap: wrap;">
-        <a href="{% url 'food:home' %}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary btn-lg">Submit for Verification</button>
+    <!-- Step 3: Time -->
+    <section class="form-step-section" id="step-time">
+      <div class="form-step-header">
+        <span class="form-step-number">3</span>
+        <h2 class="form-step-title">Date & Serving Hours</h2>
+        <span class="form-required-badge">* Required fields</span>
       </div>
-    </form>
-  </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="id_event_date">Event Date *</label>
+          {{ form.event_date }}
+          <div class="form-help">Select the date food will be served</div>
+          {% if form.event_date.errors %}<div class="form-error">{{ form.event_date.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="id_start_time">Start Time *</label>
+          {{ form.start_time }}
+          <div class="form-help">Serving starts at</div>
+          {% if form.start_time.errors %}<div class="form-error">{{ form.start_time.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="id_end_time">End Time *</label>
+          {{ form.end_time }}
+          <div class="form-help">Serving concludes at</div>
+          {% if form.end_time.errors %}<div class="form-error">{{ form.end_time.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+      <div id="timeValidationNotice" style="display: none; color: #dc2626; font-size: 0.85rem; font-weight: 600; margin-top: -0.5rem; margin-bottom: 0.5rem;"></div>
+    </section>
+
+    <!-- Step 4: Food Details -->
+    <section class="form-step-section" id="step-food">
+      <div class="form-step-header">
+        <span class="form-step-number">4</span>
+        <h2 class="form-step-title">Food Details & Dietary Information</h2>
+        <span class="form-required-badge">* Required fields</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="id_dietary_type">Dietary Suitability *</label>
+          {{ form.dietary_type }}
+          <div class="form-help">Pure Veg, Vegan, Jain, Halal, etc.</div>
+          {% if form.dietary_type.errors %}<div class="form-error">{{ form.dietary_type.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="id_allergens_info">Allergens / Dietary Notes</label>
+          {{ form.allergens_info }}
+          <div class="form-help">e.g. Nut-Free, Gluten-Free, Dairy-Free, Clean Water Available</div>
+          {% if form.allergens_info.errors %}<div class="form-error">{{ form.allergens_info.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_food_details">Food Items & Menu Details *</label>
+        {{ form.food_details }}
+        <div class="form-help">Detail the food items (e.g. Puri, Bhaji, Dal, Rice, Kheer), seating arrangements, or packaging.</div>
+        {% if form.food_details.errors %}<div class="form-error">{{ form.food_details.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Surplus Food Recovery Option -->
+      <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: var(--radius-input); padding: 1.25rem;">
+        <label style="display: flex; align-items: flex-start; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #9a3412; font-size: 0.95rem; line-height: 1.45; margin-bottom: 0.5rem;">
+          {{ form.is_surplus_food }}
+          <span>Surplus Food Rescue: Excess celebration food available for volunteer pickup</span>
+        </label>
+        <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.85rem; line-height: 1.5;">
+          If this is a wedding, banquet, or large gathering with surplus prepared meals, volunteer food rescue networks will be alerted for immediate pickup to prevent food waste.
+        </p>
+        <div id="surplusFields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="id_surplus_quantity" style="font-size: 0.825rem; color: #9a3412;">Estimated Surplus Quantity</label>
+            {{ form.surplus_quantity }}
+            {% if form.surplus_quantity.errors %}<div class="form-error">{{ form.surplus_quantity.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="id_rescue_contact_phone" style="font-size: 0.825rem; color: #9a3412;">Pickup Coordinator Phone</label>
+            {{ form.rescue_contact_phone }}
+            {% if form.rescue_contact_phone.errors %}<div class="form-error">{{ form.rescue_contact_phone.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 5: Submit -->
+    <div style="margin-top: 2rem; display: flex; justify-content: flex-end; align-items: center; gap: 1rem; flex-wrap: wrap;">
+      <a href="{% url 'food:home' %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg" id="btnSubmitEvent">
+        <span>Submit for Verification</span>
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize Map Picker
     FoodMap.initLocationPicker('pickerMap', 'id_latitude', 'id_longitude', 'id_address');
+
+    // 2. Instant client-side validation and duplicate submission prevention
+    const form = document.getElementById('eventSubmissionForm');
+    const submitBtn = document.getElementById('btnSubmitEvent');
+    const dateInput = document.getElementById('id_event_date');
+    const startTimeInput = document.getElementById('id_start_time');
+    const endTimeInput = document.getElementById('id_end_time');
+    const timeNotice = document.getElementById('timeValidationNotice');
+
+    // Prevent past date selection
+    if (dateInput) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      dateInput.min = todayStr;
+    }
+
+    function validateTimes() {
+      if (!startTimeInput || !endTimeInput) return true;
+      if (startTimeInput.value && endTimeInput.value) {
+        if (startTimeInput.value >= endTimeInput.value) {
+          timeNotice.style.display = 'block';
+          timeNotice.textContent = 'End time must be later than start time.';
+          endTimeInput.style.borderColor = '#dc2626';
+          return false;
+        } else {
+          timeNotice.style.display = 'none';
+          endTimeInput.style.borderColor = '';
+          return true;
+        }
+      }
+      return true;
+    }
+
+    if (startTimeInput) startTimeInput.addEventListener('change', validateTimes);
+    if (endTimeInput) endTimeInput.addEventListener('change', validateTimes);
+
+    // Form Submission: Submit -> Loading -> Success/Error & prevent double submit
+    if (form && submitBtn) {
+      form.addEventListener('submit', (e) => {
+        // Validate required fields
+        const requiredInputs = [
+          document.getElementById('id_title'),
+          document.getElementById('id_event_type'),
+          document.getElementById('id_description'),
+          document.getElementById('id_venue_name'),
+          document.getElementById('id_address'),
+          document.getElementById('id_latitude'),
+          document.getElementById('id_longitude'),
+          document.getElementById('id_event_date'),
+          document.getElementById('id_start_time'),
+          document.getElementById('id_end_time'),
+          document.getElementById('id_dietary_type'),
+          document.getElementById('id_food_details')
+        ];
+
+        let firstInvalid = null;
+        requiredInputs.forEach(input => {
+          if (input) {
+            if (!input.value || !input.value.trim()) {
+              input.style.borderColor = '#dc2626';
+              if (!firstInvalid) firstInvalid = input;
+            } else {
+              input.style.borderColor = '';
+            }
+          }
+        });
+
+        if (!validateTimes()) {
+          e.preventDefault();
+          if (endTimeInput) endTimeInput.focus();
+          return;
+        }
+
+        if (firstInvalid) {
+          e.preventDefault();
+          firstInvalid.focus();
+          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (typeof showToast === 'function') {
+            showToast('Please fill out all required fields marked with *', 'error');
+          }
+          return;
+        }
+
+        // Prevent duplicate submissions and show instant button feedback
+        if (window.InteractionFeedback) {
+          window.InteractionFeedback.setButtonLoading(submitBtn, 'Submitting event...');
+          window.InteractionFeedback.startTopProgress();
+        } else {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = 'Submitting event...';
+        }
+      });
+    }
   });
 </script>
 {% endblock %}

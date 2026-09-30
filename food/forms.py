@@ -81,12 +81,23 @@ class FreeFoodEventForm(forms.ModelForm):
 
 class ReportForm(forms.ModelForm):
     """Form to submit an issue or report on a listing."""
+    reason = forms.ChoiceField(
+        choices=[
+            ('', 'Select a reason...'),
+            (Report.REASON_FOOD_FINISHED, 'Food Finished'),
+            (Report.REASON_WRONG_LOCATION, 'Wrong Location'),
+            (Report.REASON_WRONG_TIME, 'Wrong Time'),
+            (Report.REASON_DUPLICATE, 'Duplicate'),
+            (Report.REASON_INCORRECT_INFO, 'Incorrect Information'),
+            (Report.REASON_OTHER, 'Other'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-select', 'required': 'required'})
+    )
     class Meta:
         model = Report
         fields = ['reason', 'details']
         widgets = {
-            'reason': forms.Select(attrs={'class': 'form-select'}),
-            'details': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3, 'placeholder': 'Explain what is incorrect or why this listing should be reviewed'}),
+            'details': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3, 'placeholder': 'Optional details to help moderators investigate'}),
         }
 
 
