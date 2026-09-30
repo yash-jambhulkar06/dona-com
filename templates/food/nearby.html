@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Free Food Near Me — Dona.Com{% endblock %}
+{% block title %}Free Food Near Me — Free Food{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -481,15 +481,18 @@
     if (detectBtn) {
       detectBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const origText = detectBtn.innerHTML;
-        detectBtn.innerHTML = '<span>Detecting location...</span>';
-        detectBtn.style.opacity = '0.7';
+        if (window.InteractionFeedback) {
+          window.InteractionFeedback.setButtonLoading(detectBtn, 'Detecting location...');
+        } else {
+          detectBtn.disabled = true;
+        }
         renderNearbyCardsSkeleton('Detecting your GPS/Network location...');
 
         GeolocationManager.requestLocation(
           (coords) => {
-            detectBtn.innerHTML = origText;
-            detectBtn.style.opacity = '1';
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.startTopProgress();
+            }
             let url = `/food/nearby/?lat=${coords.lat}&lng=${coords.lng}&radius={{ radius|default:"25" }}`;
             if (coords.locationName) {
               url += `&location_name=${encodeURIComponent(coords.locationName)}`;
@@ -500,8 +503,11 @@
             window.location.href = url;
           },
           (err) => {
-            detectBtn.innerHTML = origText;
-            detectBtn.style.opacity = '1';
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.setButtonError(detectBtn, 'Detection failed');
+            } else {
+              detectBtn.disabled = false;
+            }
             showToast(err, 'error');
           }
         );

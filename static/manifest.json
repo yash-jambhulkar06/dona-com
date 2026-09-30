@@ -1,6 +1,6 @@
 {
-  "name": "Dona.Com",
-  "short_name": "Dona",
+  "name": "Free Food",
+  "short_name": "Free Food",
   "description": "A community platform to discover verified free food events near you.",
   "start_url": "/?source=pwa",
   "scope": "/",

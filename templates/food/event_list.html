@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Browse Free Food Events — Dona.Com{% endblock %}
+{% block title %}Browse Free Food Events — Free Food{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top: 1.5rem;">
@@ -168,7 +168,7 @@
 
               {% if event.approved_at %}
                 <div style="font-size: 0.775rem; color: #0284c7; font-weight: 600;">
-                  Dona Verified {{ event.approved_at|timesince }} ago
+                  Free Food Verified {{ event.approved_at|timesince }} ago
                 </div>
               {% endif %}
 

@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>{% block title %}Dona.Com — Community Free Food Discovery{% endblock %}</title>
+  <title>{% block title %}Free Food — Community Free Food Discovery{% endblock %}</title>
   <meta name="description"
-    content="{% block meta_description %}Discover nearby locations offering free food including community kitchens, langars, mahaprasad, celebrations, and NGO distributions on Dona.Com.{% endblock %}">
+    content="{% block meta_description %}Discover nearby locations offering free food including community kitchens, langars, mahaprasad, celebrations, and NGO distributions on Free Food.{% endblock %}">
 
   <!-- Progressive Web App (PWA) Manifest & Meta -->
   <link rel="manifest" href="/manifest.json">
@@ -15,8 +15,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Dona">
-  <meta name="application-name" content="Dona.Com">
+  <meta name="apple-mobile-web-app-title" content="Free Food">
+  <meta name="application-name" content="Free Food">
 
   <!-- Production App Icons & Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="/static/images/icons/favicon-32x32.png">
@@ -40,6 +40,9 @@
   <link rel="stylesheet" href="/static/css/pages.css">
   <link rel="stylesheet" href="/static/css/notifications.css">
 
+  <!-- Multilingual Engine -->
+  <script src="/static/js/i18n.js"></script>
+
   {% block extra_head %}{% endblock %}
 </head>
 
@@ -48,15 +51,12 @@
   <!-- Site Header -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="{% url 'food:home' %}" class="brand-logo" aria-label="Dona.Com home">
+      <a href="{% url 'food:home' %}" class="brand-logo" aria-label="Free Food home">
         <span class="brand-icon-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path>
-            <circle cx="12" cy="10" r="2.5"></circle>
-          </svg>
+          <img src="/static/images/logo-symbol.svg" alt="" width="26" height="26">
         </span>
         <div class="brand-logo-text">
-          <span class="brand-name">Dona</span><span class="brand-tld">.Com</span>
+          <span class="brand-name">Free</span><span class="brand-food-word">Food</span>
         </div>
       </a>
 
@@ -77,6 +77,32 @@
       </nav>
 
       <div class="header-actions">
+        <!-- Multilingual Language Selector (Desktop) -->
+        <div class="lang-selector-wrapper" id="langSelectorWrapper">
+          <button class="lang-btn" id="langSelectorBtn" aria-label="Select Language" aria-expanded="false" type="button" title="Change Language">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span id="currentLangLabel">English</span>
+            <svg class="lang-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="lang-dropdown-menu" id="langDropdownMenu" role="listbox" aria-label="Languages">
+            <button type="button" class="lang-menu-item active" data-lang="en"><span class="lang-native">English</span><span class="lang-en">English</span></button>
+            <button type="button" class="lang-menu-item" data-lang="hi"><span class="lang-native">हिन्दी</span><span class="lang-en">Hindi</span></button>
+            <button type="button" class="lang-menu-item" data-lang="mr"><span class="lang-native">मराठी</span><span class="lang-en">Marathi</span></button>
+            <button type="button" class="lang-menu-item" data-lang="bn"><span class="lang-native">বাংলা</span><span class="lang-en">Bengali</span></button>
+            <button type="button" class="lang-menu-item" data-lang="gu"><span class="lang-native">ગુજરાતી</span><span class="lang-en">Gujarati</span></button>
+            <button type="button" class="lang-menu-item" data-lang="ta"><span class="lang-native">தமிழ்</span><span class="lang-en">Tamil</span></button>
+            <button type="button" class="lang-menu-item" data-lang="te"><span class="lang-native">తెలుగు</span><span class="lang-en">Telugu</span></button>
+            <button type="button" class="lang-menu-item" data-lang="kn"><span class="lang-native">ಕನ್ನಡ</span><span class="lang-en">Kannada</span></button>
+            <button type="button" class="lang-menu-item" data-lang="ml"><span class="lang-native">മലയാളം</span><span class="lang-en">Malayalam</span></button>
+            <button type="button" class="lang-menu-item" data-lang="pa"><span class="lang-native">ਪੰਜਾਬੀ</span><span class="lang-en">Punjabi</span></button>
+            <button type="button" class="lang-menu-item" data-lang="or"><span class="lang-native">ଓଡ଼ିଆ</span><span class="lang-en">Odia</span></button>
+          </div>
+        </div>
+
         <!-- Real-Time Notification Bell (Mobile & Desktop) -->
         <div class="notification-bell-wrapper" id="notificationBellWrapper">
           <button class="notification-bell-btn" id="notificationBellBtn" aria-label="Notifications" aria-expanded="false" type="button" title="Notifications">
@@ -113,6 +139,31 @@
     <!-- Mobile Menu Drawer (Slide down) -->
     <div class="mobile-menu-drawer" id="mobileMenuDrawer" aria-hidden="true">
       <div class="mobile-menu-inner">
+        <!-- Mobile Language Selector Section -->
+        <div class="mobile-lang-section">
+          <div class="mobile-lang-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span>Language / भाषा</span>
+          </div>
+          <div class="mobile-lang-grid">
+            <button type="button" class="mobile-lang-chip active" data-lang="en">English</button>
+            <button type="button" class="mobile-lang-chip" data-lang="hi">हिन्दी</button>
+            <button type="button" class="mobile-lang-chip" data-lang="mr">मराठी</button>
+            <button type="button" class="mobile-lang-chip" data-lang="bn">বাংলা</button>
+            <button type="button" class="mobile-lang-chip" data-lang="gu">ગુજરાતી</button>
+            <button type="button" class="mobile-lang-chip" data-lang="ta">தமிழ்</button>
+            <button type="button" class="mobile-lang-chip" data-lang="te">తెలుగు</button>
+            <button type="button" class="mobile-lang-chip" data-lang="kn">ಕನ್ನಡ</button>
+            <button type="button" class="mobile-lang-chip" data-lang="ml">മലയാളം</button>
+            <button type="button" class="mobile-lang-chip" data-lang="pa">ਪੰਜਾਬੀ</button>
+            <button type="button" class="mobile-lang-chip" data-lang="or">ଓଡ଼ିଆ</button>
+          </div>
+        </div>
+
         <ul class="mobile-nav-list">
           <li>
             <a href="{% url 'food:home' %}" class="mobile-nav-link">
@@ -194,7 +245,7 @@
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span>Install Dona.Com App</span>
+            <span>Install Free Food App</span>
           </button>
         </div>
       </div>
@@ -247,7 +298,7 @@
             Sign in to receive instant real-time alerts when free meals, langar, or surplus food distributions are posted near you.
           </p>
           <div style="display: flex; flex-direction: column; gap: 0.65rem;">
-            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-block">Sign In to Dona.Com</a>
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-block">Sign In to Free Food</a>
             <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-block">Create Free Account</a>
           </div>
         </div>
@@ -275,7 +326,7 @@
       <div class="hud-content">
         <div class="hud-header">
           <span class="hud-brand">
-            <span>Dona.Com</span>
+            <span>Free Food</span>
             <span>•</span>
             <span id="hudTime">Just now</span>
           </span>
@@ -308,6 +359,31 @@
 
     {% block content %}{% endblock %}
   </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container site-footer-inner">
+      <div class="site-footer-brand">
+        <span class="brand-icon-mark" style="width: 28px; height: 28px;">
+          <img src="/static/images/logo-symbol.svg" alt="" width="20" height="20">
+        </span>
+        <span>Free <span style="color: var(--primary);">Food</span></span>
+      </div>
+      <p class="site-footer-tagline">
+        A community-driven platform connecting people with verified free food distributions, temple mahaprasad, langars, and surplus food recovery.
+      </p>
+      <div class="site-footer-links">
+        <a href="{% url 'food:home' %}">Home</a>
+        <a href="{% url 'food:event_list' %}">Explore Events</a>
+        <a href="{% url 'locations:map_view' %}">Interactive Map</a>
+        <a href="{% url 'food:surplus_recovery' %}">Food Rescue</a>
+        <a href="{% url 'food:event_add' %}">Submit Event</a>
+      </div>
+      <div class="site-footer-copy">
+        &copy; {% now "Y" %} Free Food. All listings are 100% free of cost.
+      </div>
+    </div>
+  </footer>
 
   <!-- Mobile Fixed Bottom Navigation (5 Destinations with Center Add Button) -->
   <nav class="mobile-bottom-nav" aria-label="Mobile navigation">

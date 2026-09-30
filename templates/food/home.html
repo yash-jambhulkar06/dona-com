@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Find Free Food Near You — Dona.Com{% endblock %}
+{% block title %}Find Free Food Near You — Free Food{% endblock %}
 
 {% block content %}
 <section class="page-shell">
@@ -22,7 +22,7 @@
       <button type="button" class="location-change" id="btnChangeLocation" onclick="event.stopPropagation(); openModal('manualLocationModal')">Change</button>
     </div>
 
-    <!-- Contained Dona Red Hero Component -->
+    <!-- Contained Free Food Red Hero Component -->
     <div class="hero-panel">
       <div class="hero-panel-inner">
         <span class="hero-kicker">
@@ -42,7 +42,7 @@
             <input type="text" name="q" placeholder="Search food, venue, langar, or place..." aria-label="Search free food listings">
           </form>
           <div class="hero-search-actions">
-            <a href="{% url 'food:nearby_events' %}" class="btn btn-secondary btn-lg" style="color: #dc2626; font-weight: 700;">
+            <a href="{% url 'food:nearby_events' %}" class="btn btn-secondary btn-lg btn-near-me" style="color: #dc2626; font-weight: 700;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
               <span>Find Food Near Me</span>
             </a>

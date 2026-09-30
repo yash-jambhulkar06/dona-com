@@ -1,6 +1,6 @@
 /**
  * Real-Time Mobile-App Style Notifications
- * Dona.Com — Community Free-Food Discovery Platform
+ * Free Food — Community Free-Food Discovery Platform
  */
 
 (function () {
@@ -620,7 +620,7 @@
         <div class="hud-content">
           <div class="hud-header">
             <span class="hud-brand">
-              <span>Dona.Com</span>
+              <span>Free Food</span>
               <span>•</span>
               <span id="hudTime">Just now</span>
             </span>
@@ -846,7 +846,7 @@
                 btn.style.color = '#ffffff';
                 triggerNativeBrowserNotification({
                   id: 'welcome-alert',
-                  title: 'Dona.Com Proximity Alerts Active',
+                  title: 'Free Food Proximity Alerts Active',
                   message: 'You will receive browser notifications whenever free food is published within 5 km of your location.',
                   target_url: '/food/'
                 });
@@ -893,8 +893,8 @@
     try {
       const nativeNotif = new Notification(notif.title, {
         body: notif.message,
-        icon: '/static/icons/dona-icon.png',
-        tag: `dona-notif-${notif.id}`,
+        icon: '/static/images/icons/icon-192.png',
+        tag: `freefood-notif-${notif.id}`,
         data: { url: notif.target_url }
       });
       nativeNotif.onclick = function () {

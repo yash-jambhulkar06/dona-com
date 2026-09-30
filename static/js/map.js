@@ -1,6 +1,6 @@
 /**
  * Map Integration using Leaflet + OpenStreetMap
- * Dona.Com — Community Free-Food Discovery Platform
+ * Free Food — Community Free-Food Discovery Platform
  * Red Theme (Emoji-Free)
  */
 
@@ -117,14 +117,19 @@ const FoodMap = {
     if (locateBtn) {
       locateBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const originalText = locateBtn.innerHTML;
-        locateBtn.innerHTML = '<span>Detecting location...</span>';
-        locateBtn.style.opacity = '0.7';
+        if (window.InteractionFeedback) {
+          window.InteractionFeedback.setButtonLoading(locateBtn, 'Locating...');
+        } else {
+          locateBtn.disabled = true;
+        }
 
         GeolocationManager.requestLocation(
           (coords) => {
-            locateBtn.innerHTML = originalText;
-            locateBtn.style.opacity = '1';
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.restoreButton(locateBtn);
+            } else {
+              locateBtn.disabled = false;
+            }
             FoodMap._placeUserMarker(map, coords.lat, coords.lng, coords.locationName);
             map.flyTo([coords.lat, coords.lng], 13, { duration: 1.2 });
 
@@ -138,8 +143,11 @@ const FoodMap = {
             }
           },
           (errMsg) => {
-            locateBtn.innerHTML = originalText;
-            locateBtn.style.opacity = '1';
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.setButtonError(locateBtn, 'Locate failed');
+            } else {
+              locateBtn.disabled = false;
+            }
             showToast(errMsg, 'error');
             openModal('manualLocationModal');
           }
@@ -493,10 +501,19 @@ const FoodMap = {
     if (locateBtn) {
       locateBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        locateBtn.textContent = 'Detecting...';
+        if (window.InteractionFeedback) {
+          window.InteractionFeedback.setButtonLoading(locateBtn, 'Detecting location...');
+        } else {
+          locateBtn.disabled = true;
+        }
+
         GeolocationManager.requestLocation(
           (coords) => {
-            locateBtn.textContent = 'Use My Current Location';
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.setButtonSuccess(locateBtn, 'Location Pinned!');
+            } else {
+              locateBtn.disabled = false;
+            }
             map.setView([coords.lat, coords.lng], 15);
             marker.setLatLng([coords.lat, coords.lng]);
             updateCoords(coords.lat, coords.lng);
@@ -507,7 +524,11 @@ const FoodMap = {
             }
           },
           (err) => {
-            locateBtn.textContent = 'Use My Current Location';
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.setButtonError(locateBtn, 'Location failed');
+            } else {
+              locateBtn.disabled = false;
+            }
             showToast(err, 'error');
           }
         );

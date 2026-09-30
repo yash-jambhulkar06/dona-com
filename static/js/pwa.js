@@ -1,5 +1,5 @@
 /**
- * Dona.Com Progressive Web App (PWA) Manager
+ * Free Food Progressive Web App (PWA) Manager
  * Handles Service Worker registration, updates, installation prompt, and online/offline status.
  */
 
@@ -92,7 +92,7 @@
 
   // Event fired after app is successfully installed
   window.addEventListener('appinstalled', () => {
-    console.log('[PWA] Dona.Com successfully installed as an app');
+    console.log('[PWA] Free Food successfully installed as an app');
     deferredInstallPrompt = null;
     const installBtns = document.querySelectorAll('.btn-pwa-install');
     installBtns.forEach((btn) => {
@@ -100,7 +100,7 @@
     });
 
     if (typeof showToast === 'function') {
-      showToast('Dona.Com has been added to your Home Screen!', 'success');
+      showToast('Free Food has been added to your Home Screen!', 'success');
     }
   });
 
@@ -147,7 +147,7 @@
     banner.innerHTML = `
       <div style="display: flex; align-items: center; gap: 0.6rem;">
         <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span>
-        <span>A new update of Dona.Com is available.</span>
+        <span>A new update of Free Food is available.</span>
       </div>
       <button type="button" id="btnPwaUpdateApply" style="background: #dc2626; color: #ffffff; border: none; padding: 0.35rem 0.75rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
         Update

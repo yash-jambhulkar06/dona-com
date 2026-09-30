@@ -1,12 +1,12 @@
 /* ==========================================================================
-   Dona.Com — Design System & Base Styles
+   Free Food — Design System & Base Styles
    Mobile-First Consumer Food-Discovery Theme
-   Brand: Dona Red (#DC2626)
+   Brand: Free Food Red (#DC2626)
    ========================================================================== */
 
 :root {
   /* Brand Color Palette */
-  --primary: #DC2626;          /* Dona Red */
+  --primary: #DC2626;          /* Free Food Red */
   --primary-hover: #B91C1C;    /* Primary Dark */
   --primary-light: #FEE2E2;    /* Primary Light */
   --primary-subtle: #FEF2F2;   /* 50 tint */
@@ -180,36 +180,40 @@ a {
 }
 
 .brand-icon-mark {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: #ffffff;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.28);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
+.brand-icon-mark img,
 .brand-icon-mark svg {
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
 }
 
 .brand-logo-text {
   display: flex;
   align-items: baseline;
+  gap: 0.28rem;
+  white-space: nowrap;
 }
 
 .brand-logo-text .brand-name {
   color: var(--text-main);
+  font-weight: 800;
 }
 
-.brand-logo-text .brand-dot {
-  color: var(--primary);
-}
-
-.brand-logo-text .brand-tld {
+.brand-logo-text .brand-food-word {
   color: var(--primary);
   font-weight: 800;
 }
@@ -612,5 +616,226 @@ a {
   .mobile-menu-backdrop {
     display: block;
   }
+}
+
+/* ==========================================================================
+   Language Selector System
+   ========================================================================== */
+.lang-selector-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.lang-btn:hover,
+.lang-btn[aria-expanded="true"] {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #FFF7ED;
+}
+
+.lang-btn svg {
+  flex-shrink: 0;
+}
+
+.lang-btn .lang-caret {
+  transition: transform 0.2s ease;
+}
+
+.lang-btn[aria-expanded="true"] .lang-caret {
+  transform: rotate(180deg);
+}
+
+.lang-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 0.4rem;
+  display: none;
+  z-index: 1050;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.lang-dropdown-menu.show {
+  display: block;
+  animation: dropdownFade 0.18s ease-out;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lang-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.835rem;
+  color: #334155;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lang-menu-item:hover {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+.lang-menu-item.active {
+  background: #FEE2E2;
+  color: #DC2626;
+  font-weight: 700;
+}
+
+.lang-menu-item .lang-native {
+  font-weight: 600;
+}
+
+.lang-menu-item .lang-en {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  margin-left: 0.5rem;
+}
+
+.lang-menu-item.active .lang-en {
+  color: #DC2626;
+  opacity: 0.85;
+}
+
+/* Mobile drawer language section */
+.mobile-lang-section {
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.85rem;
+  background: #F8FAFC;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.mobile-lang-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.55rem;
+}
+
+.mobile-lang-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+}
+
+.mobile-lang-chip {
+  padding: 0.4rem 0.25rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-xs);
+  background: #FFFFFF;
+  color: #1E293B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-lang-chip.active {
+  background: #DC2626;
+  color: #FFFFFF;
+  border-color: #DC2626;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Site Footer
+   ========================================================================== */
+.site-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  background: #FFFFFF;
+  padding: 2.25rem 1rem 1.75rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  text-align: center;
+}
+
+.site-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--text-main);
+}
+
+.site-footer-tagline {
+  color: var(--text-subtle);
+  font-size: 0.85rem;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.825rem;
+}
+
+.site-footer-links a {
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.site-footer-links a:hover {
+  color: var(--primary);
+}
+
+.site-footer-copy {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-light);
 }
 

@@ -211,7 +211,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Platform & Service Configuration
-PLATFORM_NAME = os.getenv('PLATFORM_NAME', 'Dona.Com')
+PLATFORM_NAME = os.getenv('PLATFORM_NAME', 'Free Food')
 MAP_PROVIDER = os.getenv('MAP_PROVIDER', 'leaflet')
 MAP_API_KEY = os.getenv('MAP_API_KEY', '')
 
@@ -230,10 +230,10 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    DEFAULT_FROM_EMAIL = f'"Dona.Com" <{EMAIL_HOST_USER}>'
+    DEFAULT_FROM_EMAIL = f'"Free Food" <{EMAIL_HOST_USER}>'
 else:
     EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-    DEFAULT_FROM_EMAIL = '"Dona.Com" <no-reply@dona.com>'
+    DEFAULT_FROM_EMAIL = '"Free Food" <no-reply@freefood.org>'
 
 
 

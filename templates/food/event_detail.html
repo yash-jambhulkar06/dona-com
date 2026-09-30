@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ event.title }} — Dona.Com{% endblock %}
+{% block title %}{{ event.title }} — Free Food{% endblock %}
 
-{% block meta_description %}{{ event.title }} at {{ event.venue_name }} on {{ event.event_date|date:"F j, Y" }}. Find verified free food on Dona.Com.{% endblock %}
+{% block meta_description %}{{ event.title }} at {{ event.venue_name }} on {{ event.event_date|date:"F j, Y" }}. Find verified free food on Free Food.{% endblock %}
 
 {% block extra_head %}
 <meta property="og:type" content="event">
-<meta property="og:title" content="{{ event.title|escape }} — Dona.Com">
+<meta property="og:title" content="{{ event.title|escape }} — Free Food">
 <meta property="og:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
 <meta property="og:url" content="{{ canonical_url }}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ event.title|escape }} — Dona.Com">
+<meta name="twitter:title" content="{{ event.title|escape }} — Free Food">
 <meta name="twitter:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
 <link rel="canonical" href="{{ canonical_url }}">
 <style>
@@ -258,7 +258,7 @@
 
         <button type="button" class="btn btn-secondary btn-block share-event-btn"
                 data-share-title="{{ event.title|escape }}"
-                data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Dona.Com"
+                data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Free Food"
                 aria-label="Share {{ event.title }}">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           <span>Share This Event</span>
@@ -285,7 +285,7 @@
           <div><strong>Listing Status:</strong> {{ event.get_status_display }}</div>
           <div style="margin-top: 0.25rem;"><strong>Submitted:</strong> {{ event.created_at|date:"M d, Y" }}</div>
           {% if event.approved_at %}
-            <div style="margin-top: 0.25rem;"><strong>Dona Verified:</strong> {{ event.approved_at|timesince }} ago</div>
+            <div style="margin-top: 0.25rem;"><strong>Free Food Verified:</strong> {{ event.approved_at|timesince }} ago</div>
           {% endif %}
         </div>
       </div>
@@ -301,7 +301,7 @@
   </a>
   <button type="button" class="btn btn-secondary btn-sm share-event-btn"
           data-share-title="{{ event.title|escape }}"
-          data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Dona.Com">
+          data-share-text="{{ event.title|escape }} at {{ event.venue_name|escape }} on Free Food">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
     <span>Share</span>
   </button>
@@ -415,8 +415,11 @@
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
         try {
-          btn.disabled = true;
-          btn.style.opacity = '0.6';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonLoading(btn, 'Updating status...');
+          } else {
+            btn.disabled = true;
+          }
 
           const res = await fetch("{% url 'food:api_live_status' event.id %}", {
             method: 'POST',
@@ -433,12 +436,19 @@
             document.getElementById('liveServingCount').textContent = data.live_status.serving_count;
             document.getElementById('liveFinishedCount').textContent = data.live_status.finished_count;
 
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.setButtonSuccess(btn, 'Status Confirmed!');
+            }
+
             if (feedbackEl) {
               feedbackEl.style.display = 'block';
               feedbackEl.style.color = '#16a34a';
               feedbackEl.textContent = data.message;
             }
           } else {
+            if (window.InteractionFeedback) {
+              window.InteractionFeedback.setButtonError(btn, 'Update failed');
+            }
             if (feedbackEl) {
               feedbackEl.style.display = 'block';
               feedbackEl.style.color = '#dc2626';
@@ -447,9 +457,9 @@
           }
         } catch (err) {
           console.error('Error submitting live status:', err);
-        } finally {
-          btn.disabled = false;
-          btn.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonError(btn, 'Error');
+          }
         }
       });
     });

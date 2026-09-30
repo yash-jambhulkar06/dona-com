@@ -42,7 +42,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, f"Welcome to Dona.Com, {user.full_name}! Your account has been created.")
+            messages.success(request, f"Welcome to Free Food, {user.full_name}! Your account has been created.")
             return redirect(redirect_to)
     else:
         form = RegisterForm()

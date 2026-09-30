@@ -1,21 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Account — Dona.Com{% endblock %}
+{% block title %}Create Account — Free Food{% endblock %}
 
 {% block content %}
 <div class="container auth-shell">
   <div class="auth-card-shell">
     <div class="auth-card">
       <div style="text-align: center; margin-bottom: 1.5rem;">
-        <div class="brand-icon-mark" style="width: 44px; height: 44px; margin: 0 auto 0.75rem auto;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21s6-5.29 6-11a6 6 0 1 0-12 0c0 5.71 6 11 6 11Z"></path>
-            <circle cx="12" cy="10" r="2.5"></circle>
-          </svg>
+        <div class="brand-icon-mark" style="width: 52px; height: 52px; margin: 0 auto 0.75rem auto; background: #FFF7ED; border: 1.5px solid #FED7AA;">
+          <img src="/static/images/logo-symbol.svg" alt="" width="36" height="36" style="display:block;">
         </div>
-        <div class="auth-brand" style="justify-content: center; margin-bottom: 0.25rem;">Dona<span>.Com</span></div>
+        <div class="auth-brand" style="justify-content: center; margin-bottom: 0.25rem;">Free <span style="color: var(--primary);">Food</span></div>
         <h1 class="auth-title">Create an Account</h1>
-        <p class="auth-subtitle">Join Dona.Com to share free food listings, track community events, and bookmark favorites.</p>
+        <p class="auth-subtitle">Join Free Food to share free food listings, track community events, and bookmark favorites.</p>
       </div>
 
       {% if form.non_field_errors %}
@@ -91,14 +88,14 @@
     </div>
 
     <div style="font-size: 0.875rem; color: #475569; line-height: 1.6; margin-top: 1rem;">
-      <h4 style="font-size: 0.95rem; font-weight: 700; color: #111827; margin-bottom: 0.35rem;">1. Purpose of Dona.Com</h4>
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #111827; margin-bottom: 0.35rem;">1. Purpose of Free Food</h4>
       <p style="margin-bottom: 1rem;">
-        Dona.Com is a community platform dedicated to sharing information about 100% free food distributions, langars, temple mahaprasad, celebrations, and NGO food distribution programs. All listings must offer food completely free of cost.
+        Free Food is a community platform dedicated to sharing information about 100% free food distributions, langars, temple mahaprasad, celebrations, and NGO food distribution programs. All listings must offer food completely free of cost.
       </p>
 
       <h4 style="font-size: 0.95rem; font-weight: 700; color: #111827; margin-bottom: 0.35rem;">2. Prohibition of Commercial Charges</h4>
       <p style="margin-bottom: 1rem;">
-        No fees, donations, ticket sales, or commercial charges may be demanded from attendees receiving food at any event listed on Dona.Com.
+        No fees, donations, ticket sales, or commercial charges may be demanded from attendees receiving food at any event listed on Free Food.
       </p>
 
       <h4 style="font-size: 0.95rem; font-weight: 700; color: #111827; margin-bottom: 0.35rem;">3. Accurate Information</h4>

@@ -1,9 +1,9 @@
 /**
- * Dona.Com Progressive Web App — Production Service Worker
+ * Free Food Progressive Web App — Production Service Worker
  * Version: 1.0.0
  */
 
-const CACHE_VERSION = 'dona-pwa-v1';
+const CACHE_VERSION = 'freefood-pwa-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const OFFLINE_CACHE = `${CACHE_VERSION}-offline`;
 
@@ -71,7 +71,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName.startsWith('dona-pwa-') && cacheName !== STATIC_CACHE && cacheName !== OFFLINE_CACHE)
+          .filter((cacheName) => (cacheName.startsWith('dona-pwa-') || (cacheName.startsWith('freefood-pwa-') && cacheName !== STATIC_CACHE && cacheName !== OFFLINE_CACHE)))
           .map((cacheName) => {
             console.log(`[SW] Removing outdated cache: ${cacheName}`);
             return caches.delete(cacheName);
@@ -119,7 +119,7 @@ self.addEventListener('fetch', (event) => {
           }
           // Fallback minimal offline response if cache was somehow missed
           return new Response(
-            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline — Dona.Com</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:sans-serif;text-align:center;padding:3rem 1rem;color:#111827;}h1{color:#dc2626;}button{background:#dc2626;color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:1rem;cursor:pointer;margin-top:1rem;}</style></head><body><h1>Connection Lost</h1><p>Dona.Com needs an internet connection to discover live food events.</p><button onclick="window.location.reload()">Retry Connection</button></body></html>',
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline — Free Food</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:sans-serif;text-align:center;padding:3rem 1rem;color:#111827;}h1{color:#dc2626;}button{background:#dc2626;color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:1rem;cursor:pointer;margin-top:1rem;}</style></head><body><h1>Connection Lost</h1><p>Free Food needs an internet connection to discover live food events.</p><button onclick="window.location.reload()">Retry Connection</button></body></html>',
             { headers: { 'Content-Type': 'text/html' } }
           );
         })

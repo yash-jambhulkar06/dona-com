@@ -1,6 +1,6 @@
 /**
  * Geolocation and manual location fallback system
- * Dona.Com — Community Free-Food Discovery Platform
+ * Free Food — Community Free-Food Discovery Platform
  */
 
 const GeolocationManager = {
@@ -163,21 +163,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Quick GPS detect button inside Manual Location Modal
   const btnDetectGPSInModal = document.getElementById('btnDetectGPSInModal');
-  const btnDetectGPSText = document.getElementById('btnDetectGPSText');
   if (btnDetectGPSInModal) {
     btnDetectGPSInModal.addEventListener('click', () => {
-      if (btnDetectGPSText) btnDetectGPSText.textContent = 'Detecting GPS...';
-      btnDetectGPSInModal.disabled = true;
-      btnDetectGPSInModal.style.opacity = '0.7';
+      if (window.InteractionFeedback) {
+        window.InteractionFeedback.setButtonLoading(btnDetectGPSInModal, 'Detecting GPS location...');
+      } else {
+        btnDetectGPSInModal.disabled = true;
+      }
 
       GeolocationManager.requestLocation(
         (coords) => {
           const placeName = coords.locationName || 'Current Location';
           GeolocationManager.setStoredLocation(coords.lat, coords.lng, placeName, false);
           closeModal('manualLocationModal');
-          if (btnDetectGPSText) btnDetectGPSText.textContent = 'Use Current GPS Location';
-          btnDetectGPSInModal.disabled = false;
-          btnDetectGPSInModal.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.restoreButton(btnDetectGPSInModal);
+            window.InteractionFeedback.startTopProgress();
+          } else {
+            btnDetectGPSInModal.disabled = false;
+          }
 
           if (window.location.pathname === '/') {
             const newParams = new URLSearchParams(window.location.search);
@@ -190,9 +194,11 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         },
         (err) => {
-          if (btnDetectGPSText) btnDetectGPSText.textContent = 'Use Current GPS Location';
-          btnDetectGPSInModal.disabled = false;
-          btnDetectGPSInModal.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonError(btnDetectGPSInModal, 'Detection failed');
+          } else {
+            btnDetectGPSInModal.disabled = false;
+          }
           if (typeof showToast === 'function') {
             showToast(err || 'Could not detect location. Please search area manually.', 'error');
           } else {
@@ -203,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // "Find Free Food Near Me" CTA button handler.
+  // "Find Free Food Near Me" CTA button handler with immediate spinner feedback
   const nearMeBtns = document.querySelectorAll('.btn-near-me');
   const isMapPage = !!document.getElementById('fullDiscoveryMap') || !!document.getElementById('nearbyMap');
 
@@ -212,12 +218,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span>Detecting location...</span>';
-      btn.style.opacity = '0.7';
+      if (window.InteractionFeedback) {
+        window.InteractionFeedback.setButtonLoading(btn, 'Finding food...');
+      } else {
+        btn.disabled = true;
+      }
 
       GeolocationManager.requestLocation(
         (coords) => {
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.startTopProgress();
+          }
           let url = `/food/nearby/?lat=${coords.lat}&lng=${coords.lng}`;
           if (coords.locationName) {
             url += `&location_name=${encodeURIComponent(coords.locationName)}`;
@@ -225,8 +236,11 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = url;
         },
         (errorMsg) => {
-          btn.innerHTML = originalText;
-          btn.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonError(btn, 'Location unavailable');
+          } else {
+            btn.disabled = false;
+          }
           if (typeof showToast === 'function') {
             showToast(errorMsg, 'error');
           }

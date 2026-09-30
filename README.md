@@ -1,9 +1,9 @@
-# Dona.Com — Location-Based Free Food Discovery Platform
+# Free Food — Location-Based Free Food Discovery Platform
 
 [![Django](https://img.shields.io/badge/Django-6.1-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Database](https://img.shields.io/badge/Database-TiDB%20%7C%20MySQL-00758F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.pingcap.com/tidb/)
-[![Leaflet](https://img.shields.io/badge/Maps-Leaflet%20%7C%20OpenStreetMap-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![Maps](https://img.shields.io/badge/Maps-Leaflet%20%7C%20OpenStreetMap-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
 [![UI](https://img.shields.io/badge/Design-Red%20Theme%20%7C%20Emoji--Free-DC2626?style=for-the-badge)](https://github.com/yash-jambhulkar06/dona-com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
@@ -11,24 +11,22 @@
 
 ## Table of Contents
 1. [Project Overview](#1-project-overview)
-2. [What Does "Dona" Mean?](#2-what-does-dona-mean)
-3. [How Dona.Com Works](#3-how-donacom-works)
-4. [Features](#4-features)
-5. [User Flow](#5-user-flow)
-6. [Admin Flow](#6-admin-flow)
-7. [Technology Stack](#7-technology-stack)
-8. [Project Structure](#8-project-structure)
-9. [Future Scope](#9-future-scope)
-10. [Installation & Setup](#10-installation--setup)
-11. [Screenshots](#11-screenshots)
-12. [Contributing](#12-contributing)
-13. [License](#13-license)
+2. [How Free Food Works](#2-how-free-food-works)
+3. [Features](#3-features)
+4. [User Flow](#4-user-flow)
+5. [Admin Flow](#5-admin-flow)
+6. [Technology Stack](#6-technology-stack)
+7. [Project Structure](#7-project-structure)
+8. [Future Scope](#8-future-scope)
+9. [Installation & Setup](#9-installation--setup)
+10. [Contributing](#10-contributing)
+11. [License](#11-license)
 
 ---
 
 ## 1. Project Overview
 
-**Dona.Com** is a location-based free-food discovery platform. It allows users to discover and share places or events where free food is being served, such as weddings, religious/community meals, langar, mahaprasad, birthdays, public events, and other occasions.
+**Free Food** is a location-based free-food discovery platform. It allows users to discover and share places or events where free food is being served, such as community meals, langar, mahaprasad, celebrations, NGO distributions, and surplus food recovery.
 
 Users can submit information about a free-food event or place. The submitted information goes through an admin review process before it becomes publicly visible. This helps maintain the quality and reliability of listings.
 
@@ -36,22 +34,9 @@ The platform uses location-based functionality to help users find nearby free-fo
 
 ---
 
-## 2. What Does "Dona" Mean?
+## 2. How Free Food Works
 
-**"Dona"** is a local slang word used to describe the act of going somewhere to eat free food without being invited or without permission. For example, someone may hear about a wedding, community meal, religious event, birthday, or other function where food is being served and go there to eat even though they were not invited.
-
-The name is intentionally informal and represents the core idea of the platform: **discovering places and events where free food is available**.
-
-### Respectful & Ethical Platform Purpose
-> **Important Note on Ethical Discovery:**  
-> While the name draws its inspiration from local slang, **Dona.Com does not encourage or endorse trespassing, illegal entry, property intrusion, or disrupting private gatherings**.  
-> The platform is strictly intended for discovering **publicly accessible, community-shared, or otherwise legitimately available free-food opportunities**—including religious community kitchens, langars, mahaprasad, charitable food drives, and open celebration feasts. All submissions are vetted by platform administrators to ensure community respect and event appropriateness.
-
----
-
-## 3. How Dona.Com Works
-
-Dona.Com connects community members and people seeking meals through a verified, multi-step discovery process:
+Free Food connects community members and people seeking meals through a verified, multi-step discovery process:
 
 ```
 [ User / Contributor ]
@@ -416,4 +401,4 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ---
 
-*Dona.Com — Connecting communities through shared meals and open food discovery.*
+*Free Food — Connecting communities through shared meals and open food discovery.*

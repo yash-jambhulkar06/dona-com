@@ -1,7 +1,7 @@
 /* ==========================================================================
-   Dona.Com — Page-Specific Styles
+   Free Food — Page-Specific Styles
    Mobile-First Consumer Food-Discovery Theme
-   Brand: Dona Red (#DC2626)
+   Brand: Free Food Red (#DC2626)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -107,7 +107,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Hero Component (Contained component with Dona Red gradient)
+   Hero Component (Contained component with Free Food Red gradient)
    -------------------------------------------------------------------------- */
 .hero-panel {
   position: relative;

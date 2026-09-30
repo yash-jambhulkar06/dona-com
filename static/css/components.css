@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Dona.Com — Component Styles
+   Free Food — Component Styles
    Mobile-First Consumer Food-Discovery Application Theme
    ========================================================================== */
 
@@ -113,9 +113,168 @@
 }
 
 .btn:disabled, .btn[disabled] {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Tap Feedback & Immediate Response
+   -------------------------------------------------------------------------- */
+.btn, button, .btn-sm, .btn-lg, .fav-btn, .pill-tab, .filter-chip, .location-change, .alert-close {
+  transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:active, button:active, a.btn:active, .fav-btn:active, .location-change:active {
+  transform: scale(0.96) !important;
+}
+
+/* Subtle click ripple flash wave */
+.btn-tap-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  padding-bottom: 200%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  animation: tapFlashAnim 0.35s ease-out forwards;
+}
+
+@keyframes tapFlashAnim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   Button Loading & Processing States
+   -------------------------------------------------------------------------- */
+.btn.is-loading, button.is-loading, .is-loading {
+  pointer-events: none !important;
+  cursor: wait !important;
+  opacity: 0.88;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btnSpinnerRotate 0.65s linear infinite;
+  vertical-align: -0.125em;
+  margin-right: 0.45rem;
+  flex-shrink: 0;
+}
+
+@keyframes btnSpinnerRotate {
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Shake Feedback */
+@keyframes btnShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.btn.is-error, .is-error {
+  animation: btnShake 0.4s ease-in-out !important;
+  background-color: var(--danger) !important;
+  border-color: var(--danger) !important;
+  color: #ffffff !important;
+}
+
+/* Success Feedback */
+.btn.is-success, .is-success {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease;
+}
+
+/* Favorite Heart Pop Animation */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.32); }
+  65% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.fav-btn.is-pop {
+  animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* --------------------------------------------------------------------------
+   Global Top Navigation Progress Bar (Page navigation & Async loading)
+   -------------------------------------------------------------------------- */
+#topProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, #dc2626, #ea580c, #f59e0b);
+  z-index: 99999;
+  opacity: 0;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.7), 0 0 4px rgba(234, 88, 12, 0.5);
+  transition: width 0.25s cubic-bezier(0.1, 0.85, 0.25, 1), opacity 0.2s ease;
+  pointer-events: none;
+}
+
+#topProgressBar.is-active {
+  opacity: 1;
+}
+
+#topProgressBar.is-done {
+  opacity: 0;
+  transition: opacity 0.35s ease 0.1s, width 0.15s ease;
+}
+
+#topProgressBar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100px;
+  height: 3px;
+  box-shadow: 0 0 12px #f59e0b, 0 0 6px #ea580c;
+  opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
+   File & Image Upload Instant Feedback
+   -------------------------------------------------------------------------- */
+.file-upload-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-input);
+  margin-top: 0.65rem;
+  font-size: 0.875rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.file-upload-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.skeleton-search-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 /* --------------------------------------------------------------------------
@@ -511,7 +670,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Forms System (48px–52px height, 12px radius, Dona Red focus ring)
+   Forms System (48px–52px height, 12px radius, Free Food Red focus ring)
    -------------------------------------------------------------------------- */
 .form-group {
   margin-bottom: 1.25rem;
