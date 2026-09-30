@@ -38,7 +38,7 @@
     flex: 1;
     border: none;
     outline: none;
-    font-size: 0.9rem;
+    font-size: 16px; /* 16px prevents iOS Safari auto-zoom on mobile */
     color: var(--text-main);
     background: transparent;
     min-width: 0;
@@ -88,9 +88,45 @@
   }
 
   @media (max-width: 640px) {
+    .map-header-bar {
+      flex-direction: column;
+      align-items: stretch !important;
+      gap: 0.75rem !important;
+    }
+    .map-header-tools {
+      flex-direction: column;
+      width: 100%;
+      gap: 0.5rem !important;
+    }
+    .map-search-wrapper {
+      min-width: 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    .map-header-tools-buttons {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .map-header-tools-buttons .btn {
+      flex: 1;
+      text-align: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      padding: 0.45rem 0.5rem;
+    }
     .discovery-map-frame {
-      height: 400px;
+      height: 380px;
       border-radius: 14px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .discovery-map-frame {
+      height: 320px;
+    }
+    .map-header-tools-buttons .btn span {
+      font-size: 0.75rem;
     }
   }
 </style>
@@ -98,13 +134,13 @@
 
 {% block content %}
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 2rem;">
-  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+  <div class="map-header-bar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
     <div class="page-heading" style="margin-bottom: 0;">
       <h1>Free Food Map Discovery</h1>
       <p>Locate active and upcoming community meals and food distributions near you.</p>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+    <div class="map-header-tools" style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
       <!-- Inline Location Search Bar -->
       <div class="map-search-wrapper">
         <div class="map-search-bar">
@@ -123,13 +159,15 @@
         <div id="mapLocationSearchResults"></div>
       </div>
 
-      <button type="button" class="btn btn-primary btn-sm btn-near-me">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-        <span>Center on My Location</span>
-      </button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('manualLocationModal')">
-        <span>Change Area</span>
-      </button>
+      <div class="map-header-tools-buttons">
+        <button type="button" class="btn btn-primary btn-sm btn-near-me">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+          <span>My Location</span>
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('manualLocationModal')">
+          <span>Change Area</span>
+        </button>
+      </div>
     </div>
   </div>
 

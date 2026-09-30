@@ -48,7 +48,7 @@
     border: none;
     outline: none;
     background: transparent;
-    font-size: 0.95rem;
+    font-size: 16px; /* 16px prevents iOS Safari auto-zoom on mobile */
     color: #0f172a;
     width: 100%;
   }
@@ -88,6 +88,24 @@
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     margin-bottom: 2rem;
+  }
+
+  @media (max-width: 640px) {
+    .nearby-search-box {
+      padding: 1rem 0.85rem;
+    }
+    .nearby-input-wrapper {
+      min-width: 100% !important;
+      width: 100%;
+    }
+    .nearby-search-inner .btn {
+      width: 100% !important;
+      justify-content: center;
+    }
+    .nearby-map-container {
+      height: 300px;
+      margin-bottom: 1.5rem;
+    }
   }
 </style>
 {% endblock %}

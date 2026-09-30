@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 2rem;">
   <!-- Header Banner (Contained component with warm rescue theme) -->
-  <div style="background: linear-gradient(140deg, #ea580c 0%, #c2410c 100%); border-radius: var(--radius-hero); padding: clamp(1.5rem, 4vw, 2.5rem); color: #ffffff; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(234, 88, 12, 0.2);">
+  <div class="surplus-hero-banner">
     <div style="max-width: 720px;">
       <span class="badge" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-weight: 800; font-size: 0.75rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
         Volunteer Food Rescue Network
@@ -16,7 +16,7 @@
       <p style="font-size: 1rem; color: rgba(255, 255, 255, 0.95); line-height: 1.6; margin-bottom: 1.5rem;">
         Preventing food waste at weddings, banquets, and large celebrations. Connect registered NGOs, community kitchens, and volunteer food rescue teams for immediate pickup of excess prepared meals.
       </p>
-      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <div class="surplus-hero-buttons">
         <a href="{% url 'food:event_add' %}" class="btn" style="background: #ffffff; color: #c2410c; font-weight: 700; border: none;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>Post Surplus Event Food</span>

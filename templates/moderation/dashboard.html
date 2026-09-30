@@ -9,7 +9,7 @@
       <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Admin Moderation Dashboard</h1>
       <p style="color: #64748b; font-size: 0.95rem;">Review submissions, manage listing verification, and address community reports.</p>
     </div>
-    <div style="display: flex; gap: 0.75rem;">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
       <a href="{% url 'moderation:pending_queue' %}" class="btn btn-primary">
         Pending Queue ({{ pending_count }})
       </a>
@@ -47,7 +47,7 @@
 
   <!-- Recent Pending Submissions -->
   <div style="margin-bottom: 2.5rem;">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
       <h2 style="font-size: 1.25rem; font-weight: 700;">Submissions Awaiting Verification</h2>
       <a href="{% url 'moderation:pending_queue' %}" class="btn btn-outline btn-sm">View All Pending &rarr;</a>
     </div>

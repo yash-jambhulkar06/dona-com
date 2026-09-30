@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container" style="padding-top: 2rem;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
       <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Community Reports</h1>
       <p style="color: #64748b; font-size: 0.95rem;">Review reports submitted by users regarding incorrect or outdated listings.</p>
@@ -13,7 +13,7 @@
   </div>
 
   <!-- Status Filter Tabs -->
-  <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+  <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
     <a href="?status=PENDING" class="btn btn-sm {% if current_status == 'PENDING' %}btn-primary{% else %}btn-secondary{% endif %}">Pending</a>
     <a href="?status=RESOLVED" class="btn btn-sm {% if current_status == 'RESOLVED' %}btn-primary{% else %}btn-secondary{% endif %}">Resolved</a>
     <a href="?status=DISMISSED" class="btn btn-sm {% if current_status == 'DISMISSED' %}btn-primary{% else %}btn-secondary{% endif %}">Dismissed</a>

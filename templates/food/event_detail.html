@@ -18,10 +18,10 @@
   @media (max-width: 768px) {
     .detail-sticky-bar {
       position: fixed;
-      bottom: var(--bottom-nav-height);
+      bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
       left: 0;
       right: 0;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-top: 1px solid var(--border-color);
@@ -33,6 +33,19 @@
     }
     .detail-sticky-bar .btn {
       flex: 1;
+      min-width: 0;
+    }
+    .main-content {
+      padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 70px) !important;
+    }
+  }
+  @media (max-width: 360px) {
+    .detail-sticky-bar {
+      padding: 0.5rem 0.65rem;
+      gap: 0.35rem;
+    }
+    .detail-sticky-bar .btn span {
+      font-size: 0.8rem;
     }
   }
   @media (min-width: 769px) {

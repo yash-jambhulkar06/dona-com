@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container" style="padding-top: 2rem;">
-  <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+  <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
     <a href="{% url 'moderation:pending_queue' %}" style="text-decoration: none; color: #64748b; font-weight: 500;">
       &larr; Back to Pending Queue
     </a>
@@ -120,7 +120,7 @@
           <form action="{% url 'moderation:event_approve' event.id %}" method="POST">
             {% csrf_token %}
             <div class="form-group" style="margin-bottom: 0.75rem;">
-              <input type="text" name="admin_note" class="form-input" placeholder="Optional admin verification note" style="font-size: 0.85rem;">
+              <input type="text" name="admin_note" class="form-input" placeholder="Optional admin verification note">
             </div>
 
             <!-- Verified Organizer Badge Option -->
@@ -130,13 +130,13 @@
                 Award Verified Organizer Badge
               </label>
               <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                <select name="organizer_type" class="form-select" style="font-size: 0.8rem; padding: 0.4rem;">
+                <select name="organizer_type" class="form-select" style="padding: 0.5rem;">
                   <option value="NGO" {% if event.organizer_type == 'NGO' %}selected{% endif %}>Registered NGO / Non-Profit</option>
                   <option value="COMMUNITY_KITCHEN" {% if event.organizer_type == 'COMMUNITY_KITCHEN' %}selected{% endif %}>Community Kitchen / Langar Seva</option>
                   <option value="RELIGIOUS_TRUST" {% if event.organizer_type == 'RELIGIOUS_TRUST' %}selected{% endif %}>Religious Trust / Temple / Gurudwara / Mosque</option>
                   <option value="INDIVIDUAL" {% if event.organizer_type == 'INDIVIDUAL' %}selected{% endif %}>Verified Volunteer / Individual</option>
                 </select>
-                <input type="text" name="organization_name" class="form-input" placeholder="Organization name (e.g. Robin Hood Army / ISKCON)" value="{{ event.organization_name }}" style="font-size: 0.8rem; padding: 0.4rem;">
+                <input type="text" name="organization_name" class="form-input" placeholder="Organization name (e.g. Robin Hood Army / ISKCON)" value="{{ event.organization_name }}" style="padding: 0.5rem;">
               </div>
             </div>
 
@@ -157,7 +157,7 @@
           <form action="{% url 'moderation:event_reject' event.id %}" method="POST">
             {% csrf_token %}
             <div class="form-group" style="margin-bottom: 0.75rem;">
-              <textarea name="rejection_reason" class="form-textarea" rows="3" placeholder="Specify reason for rejection (visible to submitter)..." required style="font-size: 0.85rem;"></textarea>
+              <textarea name="rejection_reason" class="form-textarea" rows="3" placeholder="Specify reason for rejection (visible to submitter)..." required></textarea>
             </div>
             <button type="submit" class="btn btn-danger btn-block">
               Reject Submission

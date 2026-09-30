@@ -60,7 +60,7 @@
             </div>
           {% endif %}
 
-          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.85rem;">
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.85rem; flex-wrap: wrap;">
             {% if event.status == 'APPROVED' %}
               <a href="{% url 'food:event_detail' event.id %}" class="btn btn-outline btn-sm">View Public Listing &rarr;</a>
             {% elif event.status == 'PENDING' %}

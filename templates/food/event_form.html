@@ -2,6 +2,51 @@
 
 {% block title %}Submit a Free Food Event — Free Food{% endblock %}
 
+{% block extra_head %}
+<style>
+  .form-grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+  }
+  .form-grid-coords {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  .form-actions-bar {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 640px) {
+    .form-grid-responsive {
+      grid-template-columns: 1fr !important;
+      gap: 0.85rem;
+    }
+    .form-actions-bar {
+      flex-direction: column-reverse;
+      width: 100%;
+    }
+    .form-actions-bar .btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+  }
+  @media (max-width: 420px) {
+    .form-grid-coords {
+      grid-template-columns: 1fr !important;
+      gap: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container" style="max-width: 820px; padding-top: 1.5rem; padding-bottom: 2.5rem;">
   <div class="page-heading">
@@ -31,7 +76,7 @@
         <span class="form-required-badge">* Required fields</span>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+      <div class="form-grid-responsive">
         <div class="form-group">
           <label class="form-label" for="id_event_type">Event Occasion / Category *</label>
           {{ form.event_type }}
@@ -114,7 +159,7 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
+        <div class="form-grid-coords">
           <div>
             <label class="form-label" for="id_latitude" style="font-size: 0.775rem;">Latitude *</label>
             {{ form.latitude }}
@@ -137,7 +182,7 @@
         <span class="form-required-badge">* Required fields</span>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+      <div class="form-grid-responsive">
         <div class="form-group">
           <label class="form-label" for="id_event_date">Event Date *</label>
           {{ form.event_date }}
@@ -170,7 +215,7 @@
         <span class="form-required-badge">* Required fields</span>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+      <div class="form-grid-responsive">
         <div class="form-group">
           <label class="form-label" for="id_dietary_type">Dietary Suitability *</label>
           {{ form.dietary_type }}
@@ -202,7 +247,7 @@
         <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.85rem; line-height: 1.5;">
           If this is a wedding, banquet, or large gathering with surplus prepared meals, volunteer food rescue networks will be alerted for immediate pickup to prevent food waste.
         </p>
-        <div id="surplusFields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+        <div id="surplusFields" class="form-grid-responsive">
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" for="id_surplus_quantity" style="font-size: 0.825rem; color: #9a3412;">Estimated Surplus Quantity</label>
             {{ form.surplus_quantity }}
@@ -218,7 +263,7 @@
     </section>
 
     <!-- Step 5: Submit -->
-    <div style="margin-top: 2rem; display: flex; justify-content: flex-end; align-items: center; gap: 1rem; flex-wrap: wrap;">
+    <div class="form-actions-bar">
       <a href="{% url 'food:home' %}" class="btn btn-secondary">Cancel</a>
       <button type="submit" class="btn btn-primary btn-lg" id="btnSubmitEvent">
         <span>Submit for Verification</span>

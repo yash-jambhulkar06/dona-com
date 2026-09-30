@@ -659,17 +659,6 @@ function showToast(message, type = 'info') {
   if (!toastContainer) {
     toastContainer = document.createElement('div');
     toastContainer.id = 'toastContainer';
-    toastContainer.style.cssText = `
-      position: fixed;
-      bottom: calc(var(--bottom-nav-height, 64px) + 16px);
-      right: 1.25rem;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      max-width: min(400px, calc(100vw - 2.5rem));
-      pointer-events: none;
-    `;
     document.body.appendChild(toastContainer);
   }
 
