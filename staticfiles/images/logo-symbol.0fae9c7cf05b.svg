@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Free Food Brand Symbol: Bowl + Heart Steam + Sharing -->
+  <defs>
+    <linearGradient id="bowlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#EA580C"/>
+    </linearGradient>
+    <linearGradient id="heartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#DC2626"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Heart Steam Motif (Rising from food) -->
+  <path d="M50 18 C47 13, 38 12, 36 21 C34 29, 44 38, 50 44 C56 38, 66 29, 64 21 C62 12, 53 13, 50 18 Z" 
+        fill="url(#heartGrad)" />
+  <path d="M49 12 C48 8, 53 5, 51 2" 
+        stroke="#DC2626" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M33 32 C30 28, 29 22, 33 17" 
+        stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M67 32 C70 28, 71 22, 67 17" 
+        stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Bowl Base -->
+  <path d="M15 50 C15 74, 30 84, 50 84 C70 84, 85 74, 85 50 Z" 
+        fill="url(#bowlGrad)" stroke="#DC2626" stroke-width="4" stroke-linejoin="round"/>
+  
+  <!-- Subtle Bowl Shine -->
+  <path d="M24 57 C22 66, 28 73, 36 78" 
+        stroke="#FED7AA" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Bowl Rim / Surface -->
+  <ellipse cx="50" cy="50" rx="35" ry="9" 
+           fill="#FFF7ED" stroke="#DC2626" stroke-width="4"/>
+  
+  <!-- Inner meal surface line -->
+  <ellipse cx="50" cy="51" rx="27" ry="5.5" 
+           fill="#FDBA74" opacity="0.4"/>
+
+  <!-- Bowl Foot / Pedestal -->
+  <path d="M38 84 C38 88, 42 90, 50 90 C58 90, 62 88, 62 84 Z" 
+        fill="#DC2626"/>
+</svg>
