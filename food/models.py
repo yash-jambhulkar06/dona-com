@@ -136,6 +136,9 @@ class FreeFoodEvent(models.Model):
         ordering = ['event_date', 'start_time']
         indexes = [
             models.Index(fields=['status', 'event_date']),
+            models.Index(fields=['status', 'event_date', 'start_time'], name='idx_food_status_date_time'),
+            models.Index(fields=['status', 'latitude', 'longitude'], name='idx_food_status_coords'),
+            models.Index(fields=['status', 'is_surplus_food', 'rescue_status'], name='idx_food_status_surplus'),
             models.Index(fields=['latitude', 'longitude']),
         ]
 

@@ -72,15 +72,15 @@
       <!-- Immersive Large Food Image Header -->
       <div class="event-detail-hero-media">
         {% if event.is_surplus_food %}
-          <img src="/static/images/surplus.jpg" alt="{{ event.title }}">
+          <img src="/static/images/surplus.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
         {% elif event.event_type == 'Langar' %}
-          <img src="/static/images/langar.jpg" alt="{{ event.title }}">
+          <img src="/static/images/langar.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
         {% elif event.event_type == 'Mahaprasad' %}
-          <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}">
+          <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
         {% elif event.event_type == 'Wedding' or event.event_type == 'Birthday' %}
-          <img src="/static/images/celebration.jpg" alt="{{ event.title }}">
+          <img src="/static/images/celebration.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
         {% else %}
-          <img src="/static/images/default_food.jpg" alt="{{ event.title }}">
+          <img src="/static/images/default_food.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
         {% endif %}
       </div>
 

@@ -51,10 +51,13 @@ def home_view(request):
     # Fast AJAX partial response for progressive location & nearby updates
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
     if is_ajax:
-        return render(request, 'food/partials/home_cards.html', {
+        response = render(request, 'food/partials/home_cards.html', {
             'recommended_results': recommended,
             'user_favorites_ids': user_favorites_ids,
         })
+        if not request.user.is_authenticated:
+            response['Cache-Control'] = 'public, max-age=15, s-maxage=30, stale-while-revalidate=60'
+        return response
 
     # Active count metrics (single aggregated query for platform transparency)
     now = timezone.localtime()
@@ -83,7 +86,7 @@ def home_view(request):
     active_now_count = counts['active_now_count'] or 0
     surplus_count = counts['surplus_count'] or 0
 
-    return render(request, 'food/home.html', {
+    response = render(request, 'food/home.html', {
         'recommended_results': recommended,
         'total_approved': total_approved,
         'active_now_count': active_now_count,
@@ -97,6 +100,12 @@ def home_view(request):
         'user_lat': user_lat,
         'user_lng': user_lng,
     })
+
+    # Edge CDN caching for anonymous first-time visitors (sub-50ms instant response)
+    if not request.user.is_authenticated and not user_lat and not user_lng and not dietary and not availability:
+        response['Cache-Control'] = 'public, max-age=30, s-maxage=60, stale-while-revalidate=300'
+
+    return response
 
 
 def event_list_view(request):

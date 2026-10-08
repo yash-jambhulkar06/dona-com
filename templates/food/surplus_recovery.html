@@ -46,7 +46,7 @@
         <article class="event-card" style="border: 2px solid {% if event.rescue_status == 'AVAILABLE' %}#ea580c{% else %}#cbd5e1{% endif %};">
           <!-- Food Image Header with Curated Imagery & Overlays -->
           <div class="event-card-media">
-            <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy">
+            <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
             <div class="event-card-media-overlay">
               <div class="event-card-media-top">
                 <span class="badge" style="background: #ea580c; color: #ffffff; font-weight: 800;">
