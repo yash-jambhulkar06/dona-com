@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Dona.Com — Component Styles
+   Free Food — Component Styles
    Mobile-First Consumer Food-Discovery Application Theme
    ========================================================================== */
 
@@ -22,6 +22,7 @@
   text-decoration: none;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  max-width: 100%;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
@@ -113,9 +114,168 @@
 }
 
 .btn:disabled, .btn[disabled] {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Tap Feedback & Immediate Response
+   -------------------------------------------------------------------------- */
+.btn, button, .btn-sm, .btn-lg, .fav-btn, .pill-tab, .filter-chip, .location-change, .alert-close {
+  transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:active, button:active, a.btn:active, .fav-btn:active, .location-change:active {
+  transform: scale(0.96) !important;
+}
+
+/* Subtle click ripple flash wave */
+.btn-tap-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  padding-bottom: 200%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  animation: tapFlashAnim 0.35s ease-out forwards;
+}
+
+@keyframes tapFlashAnim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   Button Loading & Processing States
+   -------------------------------------------------------------------------- */
+.btn.is-loading, button.is-loading, .is-loading {
+  pointer-events: none !important;
+  cursor: wait !important;
+  opacity: 0.88;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btnSpinnerRotate 0.65s linear infinite;
+  vertical-align: -0.125em;
+  margin-right: 0.45rem;
+  flex-shrink: 0;
+}
+
+@keyframes btnSpinnerRotate {
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Shake Feedback */
+@keyframes btnShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.btn.is-error, .is-error {
+  animation: btnShake 0.4s ease-in-out !important;
+  background-color: var(--danger) !important;
+  border-color: var(--danger) !important;
+  color: #ffffff !important;
+}
+
+/* Success Feedback */
+.btn.is-success, .is-success {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease;
+}
+
+/* Favorite Heart Pop Animation */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.32); }
+  65% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.fav-btn.is-pop {
+  animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* --------------------------------------------------------------------------
+   Global Top Navigation Progress Bar (Page navigation & Async loading)
+   -------------------------------------------------------------------------- */
+#topProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, #dc2626, #ea580c, #f59e0b);
+  z-index: 99999;
+  opacity: 0;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.7), 0 0 4px rgba(234, 88, 12, 0.5);
+  transition: width 0.25s cubic-bezier(0.1, 0.85, 0.25, 1), opacity 0.2s ease;
+  pointer-events: none;
+}
+
+#topProgressBar.is-active {
+  opacity: 1;
+}
+
+#topProgressBar.is-done {
+  opacity: 0;
+  transition: opacity 0.35s ease 0.1s, width 0.15s ease;
+}
+
+#topProgressBar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100px;
+  height: 3px;
+  box-shadow: 0 0 12px #f59e0b, 0 0 6px #ea580c;
+  opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
+   File & Image Upload Instant Feedback
+   -------------------------------------------------------------------------- */
+.file-upload-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-input);
+  margin-top: 0.65rem;
+  font-size: 0.875rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.file-upload-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.skeleton-search-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 /* --------------------------------------------------------------------------
@@ -221,10 +381,13 @@
   gap: 0.5rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
   padding: 0.5rem 0.25rem 0.75rem;
   margin-bottom: 1.25rem;
   align-items: center;
+  max-width: 100%;
+  width: 100%;
 }
 
 .dietary-filter-bar::-webkit-scrollbar {
@@ -308,6 +471,9 @@
   box-shadow: var(--shadow-card);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
   position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .event-card:hover {
@@ -356,6 +522,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   pointer-events: auto;
+  flex-wrap: wrap;
 }
 
 .event-card-media-bottom {
@@ -364,6 +531,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   pointer-events: auto;
+  flex-wrap: wrap;
 }
 
 /* Favorite heart button inside card media */
@@ -424,6 +592,8 @@
   color: var(--text-main);
   line-height: 1.35;
   margin: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .event-card-title a {
@@ -482,17 +652,58 @@
   .event-card-footer {
     flex-direction: column;
     align-items: stretch;
+    padding: 0.75rem 0.85rem;
+    gap: 0.55rem;
   }
 
-  .event-card-footer > div:last-child {
+  .event-card-footer .distance-pill {
+    font-size: 0.8rem;
+  }
+
+  .card-action-bar {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.35rem;
     width: 100%;
   }
 
-  .event-card-footer > div:last-child .btn {
-    flex: 1;
+  .card-action-bar .btn-directions {
+    flex: 1.2;
+    min-width: 0;
+    padding: 0.4rem 0.4rem;
+    font-size: 0.8rem;
     text-align: center;
+    justify-content: center;
+  }
+
+  .card-action-bar a.btn-primary {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.4rem;
+    font-size: 0.8rem;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .card-action-bar .btn-card-action {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 360px) {
+  .event-card-body {
+    padding: 0.5rem 0.75rem 0.85rem;
+  }
+  .event-card-footer {
+    padding: 0.65rem 0.75rem;
+  }
+  .card-action-bar .btn-directions span {
+    font-size: 0.75rem;
+  }
+  .card-action-bar a.btn-primary {
+    font-size: 0.75rem;
   }
 }
 
@@ -510,8 +721,134 @@
   height: 14px;
 }
 
+/* Trust Indicator (Verified X min ago / Last confirmed X min ago) */
+.card-trust-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #0369a1;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.55rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+  width: fit-content;
+}
+
+.card-trust-indicator.is-recent {
+  color: #15803d;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.card-trust-indicator svg {
+  flex-shrink: 0;
+}
+
+/* Card Action Bar & Micro-Buttons */
+.card-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-card-action {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  background-color: #ffffff;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-card-action:hover {
+  background-color: var(--bg-subtle);
+  color: var(--primary);
+  border-color: #cbd5e1;
+}
+
+.btn-card-action:active {
+  transform: scale(0.92);
+}
+
+.btn-card-action.is-favorited {
+  color: var(--primary);
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+
+/* Form Steps */
+.form-step-section {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+}
+
+.form-step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .form-step-section {
+    padding: 1rem 0.85rem;
+    border-radius: var(--radius-input);
+  }
+  .form-step-title {
+    font-size: 0.95rem;
+  }
+}
+
+.form-step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.form-step-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.form-required-badge {
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--danger);
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* --------------------------------------------------------------------------
-   Forms System (48px–52px height, 12px radius, Dona Red focus ring)
+   Forms System (48px–52px height, 12px radius, Free Food Red focus ring)
    -------------------------------------------------------------------------- */
 .form-group {
   margin-bottom: 1.25rem;
@@ -529,12 +866,13 @@
 .form-select,
 .form-textarea {
   width: 100%;
+  max-width: 100%;
   padding: 0.75rem 1rem;
   min-height: 48px;
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-input);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 16px; /* 16px prevents iOS Safari from automatically zooming the page on focus */
   color: var(--text-main);
   background-color: #ffffff;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -622,13 +960,20 @@
 .alert-close {
   background: none;
   border: none;
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   line-height: 1;
   color: inherit;
   cursor: pointer;
-  opacity: 0.65;
+  opacity: 0.7;
   transition: opacity var(--transition-fast);
-  padding: 0 0.25rem;
+  padding: 0;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .alert-close:hover {
@@ -700,9 +1045,12 @@
   .modal-card {
     border-radius: 24px 24px 0 0;
     max-width: 100%;
-    padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
-    max-height: 88vh;
+    width: 100%;
+    padding: 1.25rem 1.15rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    max-height: min(88vh, calc(100dvh - 20px));
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     transform: translateY(100%);
   }
 
@@ -717,6 +1065,13 @@
     border-radius: 999px;
     margin: -0.25rem auto 1rem;
     display: block;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal-card {
+    padding: 1rem 0.85rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -855,4 +1210,90 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   Skeleton Map Placeholder Overlay
+   -------------------------------------------------------------------------- */
+.skeleton-map-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  overflow: hidden;
+}
+
+.skeleton-map-wrapper.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.skeleton-map-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(226, 232, 240, 0.45) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.45) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.skeleton-map-radar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.skeleton-map-pulse-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: badgePulse 2s infinite;
+}
+
+.skeleton-map-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* --------------------------------------------------------------------------
+   Toast Notification Container (Mobile Responsive & Safe Area Aware)
+   -------------------------------------------------------------------------- */
+#toastContainer {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px) + 16px);
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(400px, calc(100vw - 2.5rem));
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  #toastContainer {
+    right: 0.75rem;
+    left: 0.75rem;
+    max-width: calc(100vw - 1.5rem);
+    align-items: center;
+  }
 }

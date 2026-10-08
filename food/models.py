@@ -153,30 +153,40 @@ class FreeFoodEvent(models.Model):
 
     def is_active_now(self) -> bool:
         """Checks if food is actively available right now."""
+        if hasattr(self, '_cached_is_active_now'):
+            return self._cached_is_active_now
         now = timezone.localtime()
-        if self.status != self.STATUS_APPROVED:
-            return False
-        if self.is_expired():
+        if self.status != self.STATUS_APPROVED or self.is_expired():
+            self._cached_is_active_now = False
             return False
         # If community recently reported food finished, it is no longer available now
         community_status = self.get_community_live_status()
         if community_status.get('status_code') == 'FINISHED':
+            self._cached_is_active_now = False
             return False
-        return (
+        val = (
             self.event_date == now.date()
             and self.start_time <= now.time() <= self.end_time
         )
+        self._cached_is_active_now = val
+        return val
 
     def is_starting_soon(self) -> bool:
         """Checks if the event starts within the next 60 minutes today."""
+        if hasattr(self, '_cached_is_starting_soon'):
+            return self._cached_is_starting_soon
         now = timezone.localtime()
         if self.status != self.STATUS_APPROVED or self.event_date != now.date():
+            self._cached_is_starting_soon = False
             return False
         if self.start_time > now.time():
             start_dt = datetime.combine(now.date(), self.start_time)
             now_dt = datetime.combine(now.date(), now.time())
             diff_seconds = (start_dt - now_dt).total_seconds()
-            return 0 < diff_seconds <= 3600
+            val = 0 < diff_seconds <= 3600
+            self._cached_is_starting_soon = val
+            return val
+        self._cached_is_starting_soon = False
         return False
 
     @property
@@ -225,17 +235,24 @@ class FreeFoodEvent(models.Model):
         """
         Calculates real-time community live confirmation metrics (Future Scope Item 1).
         Aggregates reports from today / active serving window.
+        Uses cached result or prefetched relations to avoid redundant DB queries.
         """
+        if hasattr(self, '_cached_community_live_status'):
+            return self._cached_community_live_status
+
         now = timezone.localtime()
         cutoff = now - timezone.timedelta(hours=4)
-        
-        recent_statuses = self.live_statuses.filter(created_at__gte=cutoff)
-        serving_count = recent_statuses.filter(status='SERVING').count()
-        finished_count = recent_statuses.filter(status='FINISHED').count()
+
+        if hasattr(self, 'recent_live_statuses'):
+            recent_statuses = [s for s in self.recent_live_statuses if s.created_at >= cutoff]
+        else:
+            recent_statuses = list(self.live_statuses.filter(created_at__gte=cutoff))
+
+        serving_count = sum(1 for s in recent_statuses if s.status == 'SERVING')
+        finished_count = sum(1 for s in recent_statuses if s.status == 'FINISHED')
         total_reports = serving_count + finished_count
-        
-        last_report = recent_statuses.order_by('-created_at').first()
-        
+        last_report = recent_statuses[0] if recent_statuses else None
+
         if finished_count > serving_count and finished_count >= 2:
             status_code = 'FINISHED'
             status_label = 'Community Alert: Food Finished'
@@ -248,8 +265,8 @@ class FreeFoodEvent(models.Model):
             status_code = 'UNCONFIRMED'
             status_label = 'Awaiting Live Confirmation'
             css_class = 'live-status-pending'
-            
-        return {
+
+        res = {
             'status_code': status_code,
             'status_label': status_label,
             'css_class': css_class,
@@ -258,6 +275,8 @@ class FreeFoodEvent(models.Model):
             'total_reports': total_reports,
             'last_report_time': last_report.created_at if last_report else None,
         }
+        self._cached_community_live_status = res
+        return res
 
     @property
     def availability_status(self) -> dict:
@@ -266,33 +285,50 @@ class FreeFoodEvent(models.Model):
         Statuses: 'Available Now', 'Starting Soon', 'Available Today', 'Ended'.
         Expired events must not appear as currently available.
         """
+        if hasattr(self, '_cached_availability_status'):
+            return self._cached_availability_status
+
         if self.status != self.STATUS_APPROVED:
-            return {
+            res = {
                 'label': self.get_status_display(),
                 'css_class': 'badge-warning' if self.status == self.STATUS_PENDING else 'badge-danger',
                 'code': self.status
             }
-        
+            self._cached_availability_status = res
+            return res
+
         # Expired events must not appear as currently available
         if self.is_expired():
-            return {'label': 'Ended', 'css_class': 'badge-expired', 'code': 'ENDED'}
+            res = {'label': 'Ended', 'css_class': 'badge-expired', 'code': 'ENDED'}
+            self._cached_availability_status = res
+            return res
 
         # If community confirmed food finished, treat as Ended
         community_status = self.get_community_live_status()
         if community_status.get('status_code') == 'FINISHED':
-            return {'label': 'Ended', 'css_class': 'badge-expired', 'code': 'ENDED'}
+            res = {'label': 'Ended', 'css_class': 'badge-expired', 'code': 'ENDED'}
+            self._cached_availability_status = res
+            return res
 
         if self.is_active_now():
-            return {'label': 'Available Now', 'css_class': 'badge-success', 'code': 'AVAILABLE_NOW'}
+            res = {'label': 'Available Now', 'css_class': 'badge-success', 'code': 'AVAILABLE_NOW'}
+            self._cached_availability_status = res
+            return res
 
         if self.is_starting_soon():
-            return {'label': 'Starting Soon', 'css_class': 'badge-warning', 'code': 'STARTING_SOON'}
+            res = {'label': 'Starting Soon', 'css_class': 'badge-warning', 'code': 'STARTING_SOON'}
+            self._cached_availability_status = res
+            return res
 
         now = timezone.localtime()
         if self.event_date == now.date():
-            return {'label': 'Available Today', 'css_class': 'badge-info', 'code': 'AVAILABLE_TODAY'}
+            res = {'label': 'Available Today', 'css_class': 'badge-info', 'code': 'AVAILABLE_TODAY'}
+            self._cached_availability_status = res
+            return res
 
-        return {'label': 'Upcoming', 'css_class': 'badge-info', 'code': 'UPCOMING'}
+        res = {'label': 'Upcoming', 'css_class': 'badge-info', 'code': 'UPCOMING'}
+        self._cached_availability_status = res
+        return res
 
     def get_last_verified(self) -> dict | None:
         """
@@ -300,8 +336,17 @@ class FreeFoodEvent(models.Model):
         Examples: 'Verified 5 min ago', 'Last confirmed 18 min ago'.
         Only returns verification info when there is an actual confirmation timestamp.
         """
+        if hasattr(self, '_cached_last_verified'):
+            return self._cached_last_verified
+
         now = timezone.now()
-        latest_serving = self.live_statuses.filter(status='SERVING').order_by('-created_at').first()
+        latest_serving = None
+        if hasattr(self, 'recent_live_statuses'):
+            serving_reports = [s for s in self.recent_live_statuses if s.status == 'SERVING']
+            latest_serving = serving_reports[0] if serving_reports else None
+        else:
+            latest_serving = self.live_statuses.filter(status='SERVING').order_by('-created_at').first()
+
         if latest_serving and latest_serving.created_at:
             diff = now - latest_serving.created_at
             minutes = max(1, int(diff.total_seconds() // 60))
@@ -315,12 +360,14 @@ class FreeFoodEvent(models.Model):
                     text = f"Last confirmed {hours} hr{'s' if hours > 1 else ''} ago"
                 else:
                     text = f"Confirmed on {latest_serving.created_at.strftime('%b %d')}"
-            return {
+            res = {
                 'has_timestamp': True,
                 'source': 'community',
                 'text': text,
                 'timestamp': latest_serving.created_at,
             }
+            self._cached_last_verified = res
+            return res
 
         if self.approved_at:
             diff = now - self.approved_at
@@ -335,13 +382,16 @@ class FreeFoodEvent(models.Model):
                     text = f"Verified {hours} hr{'s' if hours > 1 else ''} ago"
                 else:
                     text = f"Verified on {self.approved_at.strftime('%b %d')}"
-            return {
+            res = {
                 'has_timestamp': True,
                 'source': 'moderator',
                 'text': text,
                 'timestamp': self.approved_at,
             }
+            self._cached_last_verified = res
+            return res
 
+        self._cached_last_verified = None
         return None
 
 

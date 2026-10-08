@@ -16,6 +16,7 @@ class SimpleAuthTests(TestCase):
             'email': 'aarav@example.com',
             'password': 'password123',
             'confirm_password': 'password123',
+            'agree_terms': True,
         }
         response = self.client.post(self.register_url, data=data, follow=True)
         self.assertEqual(response.status_code, 200)

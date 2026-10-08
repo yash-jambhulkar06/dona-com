@@ -2,9 +2,9 @@ import math
 from datetime import datetime, date, timedelta
 from typing import List, Optional, Tuple, Dict, Any
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 import requests
-from food.models import FreeFoodEvent
+from food.models import FreeFoodEvent, CommunityLiveStatus
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -112,8 +112,16 @@ def get_recommended_events(
     elif date_filter == 'this_week':
         queryset = queryset.filter(event_date__range=[today, today + timedelta(days=7)])
 
-    # Materialize candidate list
-    candidate_events = list(queryset.select_related('submitted_by'))
+    # Materialize candidate list with prefetched relationships (1 query for events, 1 query for live statuses)
+    cutoff = now - timezone.timedelta(hours=24)
+    live_statuses_prefetch = Prefetch(
+        'live_statuses',
+        queryset=CommunityLiveStatus.objects.filter(created_at__gte=cutoff).order_by('-created_at'),
+        to_attr='recent_live_statuses'
+    )
+    candidate_events = list(
+        queryset.select_related('submitted_by').prefetch_related(live_statuses_prefetch)
+    )
 
     results = []
     for event in candidate_events:
@@ -225,7 +233,17 @@ def search_places_geocoding(query: str) -> List[Dict[str, Any]]:
 def reverse_geocode(lat: float, lon: float) -> Optional[str]:
     """
     Reverse geocoding helper to convert coordinates to a clean human-readable place name.
+    Cached for 24 hours to eliminate redundant external HTTP requests.
     """
+    cache_key = f"revgeo_{round(lat, 3)}_{round(lon, 3)}"
+    try:
+        from django.core.cache import cache
+        cached = cache.get(cache_key)
+        if cached:
+            return cached
+    except Exception:
+        cache = None
+
     try:
         url = "https://nominatim.openstreetmap.org/reverse"
         params = {
@@ -236,7 +254,7 @@ def reverse_geocode(lat: float, lon: float) -> Optional[str]:
             'addressdetails': 1,
         }
         headers = {'User-Agent': 'CommunityFreeFoodDiscoveryApp/1.0'}
-        response = requests.get(url, params=params, headers=headers, timeout=4)
+        response = requests.get(url, params=params, headers=headers, timeout=2.5)
         if response.status_code == 200:
             data = response.json()
             address = data.get('address', {})
@@ -249,9 +267,18 @@ def reverse_geocode(lat: float, lon: float) -> Optional[str]:
                 data.get('display_name', '').split(',')[0]
             )
             district = address.get('county') or address.get('state_district') or address.get('state')
+            result = None
             if place and district and place != district:
-                return f"{place}, {district}"
-            return place or data.get('display_name', '').split(',')[0]
+                result = f"{place}, {district}"
+            else:
+                result = place or data.get('display_name', '').split(',')[0]
+
+            if result and cache:
+                try:
+                    cache.set(cache_key, result, 86400)
+                except Exception:
+                    pass
+            return result
     except Exception:
         pass
     return None

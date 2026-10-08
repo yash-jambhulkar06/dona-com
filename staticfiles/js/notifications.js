@@ -1,6 +1,6 @@
 /**
  * Real-Time Mobile-App Style Notifications
- * Dona.Com — Community Free-Food Discovery Platform
+ * Free Food — Community Free-Food Discovery Platform
  */
 
 (function () {
@@ -172,15 +172,13 @@
       }, { passive: true });
     }
 
-    // Adaptive Tab Visibility: Poll fast when active, slow when hidden
+    // Adaptive Tab Visibility: Pause polling when tab is hidden, resume on focus
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        // Slow down to 15s in background
-        resetPolling(15000);
+        stopPolling();
       } else {
-        // Immediately fetch and speed back up to 4.5s
-        fetchNotifications(false);
-        resetPolling(4500);
+        pingUnreadCount();
+        startPolling();
       }
     });
   }
@@ -188,19 +186,36 @@
   function startPolling() {
     if (pollIntervalId) clearInterval(pollIntervalId);
     pollIntervalId = setInterval(() => {
-      if (isPollingActive) {
-        fetchNotifications(false);
+      if (isPollingActive && !document.hidden) {
+        pingUnreadCount();
       }
-    }, 4500);
+    }, 30000); // 30s interval for lightweight count checks
   }
 
-  function resetPolling(intervalMs) {
-    if (pollIntervalId) clearInterval(pollIntervalId);
-    pollIntervalId = setInterval(() => {
-      if (isPollingActive) {
-        fetchNotifications(false);
+  function stopPolling() {
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
+    }
+  }
+
+  async function pingUnreadCount() {
+    try {
+      const res = await fetch('/notifications/api/unread-count/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const unreadCount = data.unread_count || 0;
+        updateBadge(unreadCount);
+        const currentUnread = cachedNotifications.filter(n => !n.is_read).length;
+        if (unreadCount > currentUnread) {
+          fetchNotifications(false);
+        }
       }
-    }, intervalMs);
+    } catch (e) {
+      // Background ping fails gracefully
+    }
   }
 
   /**
@@ -620,7 +635,7 @@
         <div class="hud-content">
           <div class="hud-header">
             <span class="hud-brand">
-              <span>Dona.Com</span>
+              <span>Free Food</span>
               <span>•</span>
               <span id="hudTime">Just now</span>
             </span>
@@ -846,7 +861,7 @@
                 btn.style.color = '#ffffff';
                 triggerNativeBrowserNotification({
                   id: 'welcome-alert',
-                  title: 'Dona.Com Proximity Alerts Active',
+                  title: 'Free Food Proximity Alerts Active',
                   message: 'You will receive browser notifications whenever free food is published within 5 km of your location.',
                   target_url: '/food/'
                 });
@@ -893,8 +908,8 @@
     try {
       const nativeNotif = new Notification(notif.title, {
         body: notif.message,
-        icon: '/static/icons/dona-icon.png',
-        tag: `dona-notif-${notif.id}`,
+        icon: '/static/images/icons/icon-192.png',
+        tag: `freefood-notif-${notif.id}`,
         data: { url: notif.target_url }
       });
       nativeNotif.onclick = function () {

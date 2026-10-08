@@ -147,22 +147,31 @@ if enable_ssl:
         'ca': TIDB_CA_PATH,
     }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': TIDB_NAME,
-        'USER': TIDB_USER,
-        'PASSWORD': TIDB_PASSWORD,
-        'HOST': TIDB_HOST,
-        'PORT': TIDB_PORT,
-        'OPTIONS': db_options,
-        'CONN_MAX_AGE': int(os.getenv('CONN_MAX_AGE', 300)),
-        'TEST': {
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_unicode_ci',
+if 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
         }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': TIDB_NAME,
+            'USER': TIDB_USER,
+            'PASSWORD': TIDB_PASSWORD,
+            'HOST': TIDB_HOST,
+            'PORT': TIDB_PORT,
+            'OPTIONS': db_options,
+            'CONN_MAX_AGE': int(os.getenv('CONN_MAX_AGE', 60 if IS_VERCEL else 300)),
+            'CONN_HEALTH_CHECKS': True,
+            'TEST': {
+                'CHARSET': 'utf8mb4',
+                'COLLATION': 'utf8mb4_unicode_ci',
+            }
+        }
+    }
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -202,6 +211,9 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+
+# 1-year browser cache for compressed manifest static assets in production
+WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0
 
 # Media files (User uploads, etc.)
 MEDIA_URL = '/media/'

@@ -50,8 +50,16 @@ def api_get_notifications(request):
         since=since_dt
     )
 
+    read_ids = set()
+    if request.user.is_authenticated:
+        from .models import NotificationRead
+        read_ids = set(NotificationRead.objects.filter(
+            user=request.user,
+            notification__in=notifications_qs
+        ).values_list('notification_id', flat=True))
+
     notifications_data = [
-        n.to_dict(current_user=request.user)
+        n.to_dict(current_user=request.user, read_notification_ids=read_ids)
         for n in notifications_qs
     ]
 

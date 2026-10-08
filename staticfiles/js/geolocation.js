@@ -1,6 +1,6 @@
 /**
  * Geolocation and manual location fallback system
- * Dona.Com — Community Free-Food Discovery Platform
+ * Free Food — Community Free-Food Discovery Platform
  */
 
 const GeolocationManager = {
@@ -54,28 +54,36 @@ const GeolocationManager = {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       const accuracy = position.coords.accuracy || 0; // in meters
-
-      let locationName = null;
-      try {
-        const resp = await fetch(`/api/locations/reverse/?lat=${lat}&lng=${lng}`);
-        const data = await resp.json();
-        if (data.name) locationName = data.name;
-      } catch (e) {
-        console.warn('Reverse geocode lookup failed:', e);
-      }
-
-      const finalName = locationName || 'Current Location';
-      GeolocationManager.setStoredLocation(lat, lng, finalName, false);
-
       const isCoarse = accuracy > 4000;
+
+      // Provide coordinates immediately without waiting for reverse geocoding
+      const initialName = 'Current Location';
+      GeolocationManager.setStoredLocation(lat, lng, initialName, false);
+
       if (onSuccess) {
         onSuccess({
           lat,
           lng,
           accuracy,
           isCoarse,
-          locationName: finalName
+          locationName: initialName
         });
+      }
+
+      // Reverse geocode in background to refine human-readable place name
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const resp = await fetch(`/api/locations/reverse/?lat=${lat}&lng=${lng}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const data = await resp.json();
+        if (data && data.name) {
+          GeolocationManager.setStoredLocation(lat, lng, data.name, false);
+          const heroEl = document.getElementById('heroLocationName');
+          if (heroEl) heroEl.textContent = data.name;
+        }
+      } catch (e) {
+        // Fallback silently to initial coordinates
       }
     };
 
@@ -94,17 +102,48 @@ const GeolocationManager = {
               }
               if (onError) onError(msg);
             },
-            { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
           );
         } else {
           const msg = 'Location permission was denied. Tap to search your area manually.';
           if (onError) onError(msg);
         }
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
     );
   }
 };
+
+// Helper: Progressively update homepage food cards asynchronously without reloading the page
+async function updateHomeCardsAsync(lat, lng, name) {
+  const container = document.getElementById('homeCardsContainer');
+  if (!container) return;
+  if (container.dataset.loadedLat === String(lat) && container.dataset.loadedLng === String(lng)) {
+    return;
+  }
+  container.style.opacity = '0.6';
+  container.style.transition = 'opacity 0.2s ease';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('ajax', '1');
+    urlParams.set('lat', lat);
+    urlParams.set('lng', lng);
+    if (name) urlParams.set('location_name', name);
+    const res = await fetch(`/?${urlParams.toString()}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    if (res.ok) {
+      const html = await res.text();
+      container.innerHTML = html;
+      container.dataset.loadedLat = String(lat);
+      container.dataset.loadedLng = String(lng);
+    }
+  } catch (err) {
+    console.warn('Nearby update error:', err);
+  } finally {
+    container.style.opacity = '1';
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Home Page Hero Location
@@ -131,68 +170,74 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else if (stored && stored.name) {
       heroLocationEl.textContent = stored.name;
-      // If home was loaded without ?lat= and ?lng=, refresh with stored coordinates
+      // Asynchronously update cards without reloading the page
       if (!urlLat && !urlLng && window.location.pathname === '/') {
-        urlParams.set('lat', stored.lat);
-        urlParams.set('lng', stored.lng);
-        urlParams.set('location_name', stored.name);
-        window.location.replace(`${window.location.pathname}?${urlParams.toString()}`);
+        updateHomeCardsAsync(stored.lat, stored.lng, stored.name);
       }
     } else {
-      // Auto-detect user's real GPS position
-      heroLocationEl.textContent = 'Detecting location...';
-      GeolocationManager.requestLocation(
-        (coords) => {
-          const detectedName = coords.locationName || 'Current Location';
-          heroLocationEl.textContent = detectedName;
-          if (!urlLat && window.location.pathname === '/') {
-            const newParams = new URLSearchParams(window.location.search);
-            newParams.set('lat', coords.lat);
-            newParams.set('lng', coords.lng);
-            newParams.set('location_name', detectedName);
-            window.location.replace(`${window.location.pathname}?${newParams.toString()}`);
+      // Non-blocking location check: only auto-query if permission was previously granted
+      if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then((perm) => {
+          if (perm.state === 'granted') {
+            GeolocationManager.requestLocation(
+              (coords) => {
+                const detectedName = coords.locationName || 'Current Location';
+                heroLocationEl.textContent = detectedName;
+                if (window.location.pathname === '/') {
+                  updateHomeCardsAsync(coords.lat, coords.lng, detectedName);
+                }
+              },
+              () => {
+                heroLocationEl.textContent = 'Tap to set location';
+              }
+            );
+          } else {
+            heroLocationEl.textContent = 'Tap to set location';
           }
-        },
-        (errMsg) => {
-          console.log('Location detection notice:', errMsg);
+        }).catch(() => {
           heroLocationEl.textContent = 'Tap to set location';
-        }
-      );
+        });
+      } else {
+        heroLocationEl.textContent = 'Tap to set location';
+      }
     }
   }
 
   // Quick GPS detect button inside Manual Location Modal
   const btnDetectGPSInModal = document.getElementById('btnDetectGPSInModal');
-  const btnDetectGPSText = document.getElementById('btnDetectGPSText');
   if (btnDetectGPSInModal) {
     btnDetectGPSInModal.addEventListener('click', () => {
-      if (btnDetectGPSText) btnDetectGPSText.textContent = 'Detecting GPS...';
-      btnDetectGPSInModal.disabled = true;
-      btnDetectGPSInModal.style.opacity = '0.7';
+      if (window.InteractionFeedback) {
+        window.InteractionFeedback.setButtonLoading(btnDetectGPSInModal, 'Detecting location...');
+      } else {
+        btnDetectGPSInModal.disabled = true;
+      }
 
       GeolocationManager.requestLocation(
         (coords) => {
           const placeName = coords.locationName || 'Current Location';
           GeolocationManager.setStoredLocation(coords.lat, coords.lng, placeName, false);
           closeModal('manualLocationModal');
-          if (btnDetectGPSText) btnDetectGPSText.textContent = 'Use Current GPS Location';
-          btnDetectGPSInModal.disabled = false;
-          btnDetectGPSInModal.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.restoreButton(btnDetectGPSInModal);
+            window.InteractionFeedback.startTopProgress();
+          } else {
+            btnDetectGPSInModal.disabled = false;
+          }
 
           if (window.location.pathname === '/') {
-            const newParams = new URLSearchParams(window.location.search);
-            newParams.set('lat', coords.lat);
-            newParams.set('lng', coords.lng);
-            newParams.set('location_name', placeName);
-            window.location.href = `${window.location.pathname}?${newParams.toString()}`;
+            if (heroLocationEl) heroLocationEl.textContent = placeName;
+            updateHomeCardsAsync(coords.lat, coords.lng, placeName);
           } else {
             window.location.href = `/food/nearby/?lat=${coords.lat}&lng=${coords.lng}&location_name=${encodeURIComponent(placeName)}`;
           }
         },
         (err) => {
-          if (btnDetectGPSText) btnDetectGPSText.textContent = 'Use Current GPS Location';
-          btnDetectGPSInModal.disabled = false;
-          btnDetectGPSInModal.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonError(btnDetectGPSInModal, 'Detection failed');
+          } else {
+            btnDetectGPSInModal.disabled = false;
+          }
           if (typeof showToast === 'function') {
             showToast(err || 'Could not detect location. Please search area manually.', 'error');
           } else {
@@ -203,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // "Find Free Food Near Me" CTA button handler.
+  // "Find Free Food Near Me" CTA button handler with immediate spinner feedback
   const nearMeBtns = document.querySelectorAll('.btn-near-me');
   const isMapPage = !!document.getElementById('fullDiscoveryMap') || !!document.getElementById('nearbyMap');
 
@@ -212,12 +257,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span>Detecting location...</span>';
-      btn.style.opacity = '0.7';
+      if (window.InteractionFeedback) {
+        window.InteractionFeedback.setButtonLoading(btn, 'Finding food...');
+      } else {
+        btn.disabled = true;
+      }
 
       GeolocationManager.requestLocation(
         (coords) => {
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.startTopProgress();
+          }
           let url = `/food/nearby/?lat=${coords.lat}&lng=${coords.lng}`;
           if (coords.locationName) {
             url += `&location_name=${encodeURIComponent(coords.locationName)}`;
@@ -225,8 +275,11 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = url;
         },
         (errorMsg) => {
-          btn.innerHTML = originalText;
-          btn.style.opacity = '1';
+          if (window.InteractionFeedback) {
+            window.InteractionFeedback.setButtonError(btn, 'Location unavailable');
+          } else {
+            btn.disabled = false;
+          }
           if (typeof showToast === 'function') {
             showToast(errorMsg, 'error');
           }
@@ -284,11 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
               GeolocationManager.setStoredLocation(place.lat, place.lon, shortName, true);
               closeModal('manualLocationModal');
               if (window.location.pathname === '/') {
-                const newParams = new URLSearchParams(window.location.search);
-                newParams.set('lat', place.lat);
-                newParams.set('lng', place.lon);
-                newParams.set('location_name', shortName);
-                window.location.href = `${window.location.pathname}?${newParams.toString()}`;
+                if (heroLocationEl) heroLocationEl.textContent = shortName;
+                updateHomeCardsAsync(place.lat, place.lon, shortName);
               } else {
                 window.location.href = `/food/nearby/?lat=${place.lat}&lng=${place.lon}&location_name=${encodeURIComponent(shortName)}`;
               }

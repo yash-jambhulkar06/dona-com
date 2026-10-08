@@ -172,15 +172,13 @@
       }, { passive: true });
     }
 
-    // Adaptive Tab Visibility: Poll fast when active, slow when hidden
+    // Adaptive Tab Visibility: Pause polling when tab is hidden, resume on focus
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        // Slow down to 15s in background
-        resetPolling(15000);
+        stopPolling();
       } else {
-        // Immediately fetch and speed back up to 4.5s
-        fetchNotifications(false);
-        resetPolling(4500);
+        pingUnreadCount();
+        startPolling();
       }
     });
   }
@@ -188,19 +186,36 @@
   function startPolling() {
     if (pollIntervalId) clearInterval(pollIntervalId);
     pollIntervalId = setInterval(() => {
-      if (isPollingActive) {
-        fetchNotifications(false);
+      if (isPollingActive && !document.hidden) {
+        pingUnreadCount();
       }
-    }, 4500);
+    }, 30000); // 30s interval for lightweight count checks
   }
 
-  function resetPolling(intervalMs) {
-    if (pollIntervalId) clearInterval(pollIntervalId);
-    pollIntervalId = setInterval(() => {
-      if (isPollingActive) {
-        fetchNotifications(false);
+  function stopPolling() {
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
+    }
+  }
+
+  async function pingUnreadCount() {
+    try {
+      const res = await fetch('/notifications/api/unread-count/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const unreadCount = data.unread_count || 0;
+        updateBadge(unreadCount);
+        const currentUnread = cachedNotifications.filter(n => !n.is_read).length;
+        if (unreadCount > currentUnread) {
+          fetchNotifications(false);
+        }
       }
-    }, intervalMs);
+    } catch (e) {
+      // Background ping fails gracefully
+    }
   }
 
   /**

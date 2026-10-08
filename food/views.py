@@ -8,7 +8,7 @@ from django.http import JsonResponse, Http404, HttpResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from .models import FreeFoodEvent, Favorite, Report, CommunityLiveStatus, FoodRescueClaim
 from .forms import FreeFoodEventForm, ReportForm, FoodRescueClaimForm
@@ -39,11 +39,6 @@ def home_view(request):
     except ValueError:
         lat_val, lng_val = None, None
 
-    if not location_name and lat_val is not None and lng_val is not None:
-        from locations.services import reverse_geocode
-        location_name = reverse_geocode(lat_val, lng_val) or ""
-
-
     recommended = get_recommended_events(
         user_lat=lat_val,
         user_lng=lng_val,
@@ -53,26 +48,40 @@ def home_view(request):
     if request.user.is_authenticated:
         user_favorites_ids = set(request.user.favorites.values_list('event_id', flat=True))
 
-    # Active count metrics (safe summary counters for platform transparency)
+    # Fast AJAX partial response for progressive location & nearby updates
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+    if is_ajax:
+        return render(request, 'food/partials/home_cards.html', {
+            'recommended_results': recommended,
+            'user_favorites_ids': user_favorites_ids,
+        })
+
+    # Active count metrics (single aggregated query for platform transparency)
     now = timezone.localtime()
-    total_approved = FreeFoodEvent.objects.filter(
-        status=FreeFoodEvent.STATUS_APPROVED,
-        event_date__gte=now.date()
-    ).count()
+    now_date = now.date()
+    now_time = now.time()
 
-    active_now_count = FreeFoodEvent.objects.filter(
-        status=FreeFoodEvent.STATUS_APPROVED,
-        event_date=now.date(),
-        start_time__lte=now.time(),
-        end_time__gte=now.time()
-    ).count()
-
-    surplus_count = FreeFoodEvent.objects.filter(
-        status=FreeFoodEvent.STATUS_APPROVED,
-        is_surplus_food=True,
-        rescue_status=FreeFoodEvent.RESCUE_STATUS_AVAILABLE,
-        event_date__gte=now.date()
-    ).count()
+    counts = FreeFoodEvent.objects.aggregate(
+        total_approved=Count('id', filter=Q(
+            status=FreeFoodEvent.STATUS_APPROVED,
+            event_date__gte=now_date
+        )),
+        active_now_count=Count('id', filter=Q(
+            status=FreeFoodEvent.STATUS_APPROVED,
+            event_date=now_date,
+            start_time__lte=now_time,
+            end_time__gte=now_time
+        )),
+        surplus_count=Count('id', filter=Q(
+            status=FreeFoodEvent.STATUS_APPROVED,
+            is_surplus_food=True,
+            rescue_status=FreeFoodEvent.RESCUE_STATUS_AVAILABLE,
+            event_date__gte=now_date
+        ))
+    )
+    total_approved = counts['total_approved'] or 0
+    active_now_count = counts['active_now_count'] or 0
+    surplus_count = counts['surplus_count'] or 0
 
     return render(request, 'food/home.html', {
         'recommended_results': recommended,

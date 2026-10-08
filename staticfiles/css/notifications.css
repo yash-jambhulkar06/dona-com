@@ -1,6 +1,6 @@
 /* ==========================================================================
    Real-Time Mobile-App Style Notifications Stylesheet
-   Dona.Com — Community Free-Food Discovery Platform
+   Free Food — Community Free-Food Discovery Platform
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -589,7 +589,7 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    max-height: 82vh !important;
+    max-height: min(85vh, calc(100dvh - 30px)) !important;
     border-radius: 24px 24px 0 0 !important;
     border-bottom: none !important;
     border-left: none !important;
@@ -597,6 +597,7 @@
     box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.25) !important;
     z-index: 1060 !important;
     display: flex !important;
+    flex-direction: column !important;
     transform: translateY(105%) !important;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
     visibility: hidden;
@@ -618,15 +619,21 @@
   }
 
   .notif-tray-body {
-    max-height: calc(82vh - 160px) !important;
+    max-height: calc(min(85vh, calc(100dvh - 30px)) - 170px) !important;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .notif-tray-footer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* Optimize floating HUD for small phone screens */
   .mobile-push-hud {
-    top: 0.75rem;
+    top: max(0.75rem, env(safe-area-inset-top, 0px));
     width: calc(100% - 1.25rem);
+    max-width: min(420px, calc(100vw - 1.25rem));
     border-radius: 16px;
     z-index: 1070 !important;
   }

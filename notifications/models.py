@@ -85,12 +85,15 @@ class Notification(models.Model):
             return f"{d}d ago"
         return self.created_at.strftime("%b %d, %Y")
 
-    def to_dict(self, current_user=None):
+    def to_dict(self, current_user=None, read_notification_ids=None):
         """Serializes notification for real-time mobile JSON sync."""
         is_user_read = self.is_read
         if current_user and current_user.is_authenticated:
             if self.recipient is None:
-                is_user_read = self.reads.filter(user=current_user).exists()
+                if read_notification_ids is not None:
+                    is_user_read = self.id in read_notification_ids
+                else:
+                    is_user_read = self.reads.filter(user=current_user).exists()
             elif self.recipient == current_user:
                 is_user_read = self.is_read
 
