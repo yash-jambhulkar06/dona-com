@@ -212,9 +212,6 @@ STORAGES = {
     },
 }
 
-# 1-year browser cache for compressed manifest static assets in production
-WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0
-
 # Media files (User uploads, etc.)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
