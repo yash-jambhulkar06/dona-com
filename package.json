@@ -1,0 +1,23 @@
+{
+  "name": "primary",
+  "version": "1.0.0",
+  "description": "[![Django](https://img.shields.io/badge/Django-6.1-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/) [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/) [![Database](https://img.shields.io/badge/Database-TiDB%20%7C%20MySQL-00758F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.pingcap.com/tidb/) [![Maps](https://img.shields.io/badge/Maps-Leaflet%20%7C%20OpenStreetMap-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/) [![UI](https://img.shields.io/badge/Design-Red%20Theme%20%7C%20Emoji--Free-DC2626?style=for-the-badge)](https://github.com/yash-jambhulkar06/dona-com) [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yash-jambhulkar06/dona-com.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yash-jambhulkar06/dona-com/issues"
+  },
+  "homepage": "https://github.com/yash-jambhulkar06/dona-com#readme",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
