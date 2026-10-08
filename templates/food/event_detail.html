@@ -71,9 +71,7 @@
     <div class="event-main-card">
       <!-- Immersive Large Food Image Header -->
       <div class="event-detail-hero-media">
-        {% if event.is_surplus_food %}
-          <img src="/static/images/surplus.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
-        {% elif event.event_type == 'Langar' %}
+        {% if event.event_type == 'Langar' %}
           <img src="/static/images/langar.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
         {% elif event.event_type == 'Mahaprasad' %}
           <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" loading="lazy" decoding="async">
@@ -198,38 +196,7 @@
         <div id="liveStatusFeedback" style="display: none; margin-top: 0.75rem; font-size: 0.85rem; font-weight: 700;"></div>
       </div>
 
-      <!-- Surplus Food Recovery Banner -->
-      {% if event.is_surplus_food %}
-        <div style="background: #fff7ed; border: 1.5px solid #fb923c; border-radius: var(--radius-input); padding: 1.25rem; margin-bottom: 1.5rem;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="badge" style="background: #ea580c; color: #ffffff; font-weight: 800; font-size: 0.8rem;">
-                SURPLUS RESCUE
-              </span>
-              <span style="font-weight: 700; color: #9a3412; font-size: 0.9rem;">
-                Status: {{ event.get_rescue_status_display }}
-              </span>
-            </div>
-            {% if event.rescue_status == 'AVAILABLE' %}
-              <button type="button" class="btn btn-sm btn-primary" onclick="openModal('rescueClaimModal')" style="background: #ea580c; border-color: #c2410c;">
-                Volunteer: Claim Food for Rescue
-              </button>
-            {% endif %}
-          </div>
-          <p style="font-size: 0.875rem; color: #9a3412; margin-bottom: 0.5rem;">
-            <strong>Available Quantity:</strong> {{ event.surplus_quantity|default:"Excess feast food available for urgent pickup" }}<br>
-            <strong>Coordinator Contact:</strong> <a href="tel:{{ event.rescue_contact_phone }}" style="color: #ea580c; font-weight: 700;">{{ event.rescue_contact_phone }}</a>
-          </p>
-          {% if rescue_claims %}
-            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #fed7aa; font-size: 0.825rem; color: #9a3412;">
-              <strong>Active Claims:</strong>
-              {% for claim in rescue_claims %}
-                <div>Claimed by {{ claim.volunteer_name }} ({{ claim.organization|default:"Volunteer" }}) &bull; ETA: {{ claim.estimated_pickup_time }}</div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
-      {% endif %}
+
 
       <!-- Food Served & Dietary Information -->
       <div class="detail-section" style="margin-top: 0; padding-top: 0; border-top: none;">
@@ -367,47 +334,6 @@
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
           <button type="button" class="btn btn-secondary" onclick="closeModal('reportModal')">Cancel</button>
           <button type="submit" class="btn btn-danger" id="btnDetailSubmitReport">Submit Report</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Surplus Food Rescue Claim Modal -->
-  <div class="modal-overlay" id="rescueClaimModal">
-    <div class="modal-card">
-      <div class="modal-sheet-handle"></div>
-      <div class="modal-header">
-        <h3 style="font-size: 1.25rem; font-weight: 800; color: #ea580c;">Claim Food for Rescue Pickup</h3>
-        <button type="button" class="alert-close" onclick="closeModal('rescueClaimModal')">&times;</button>
-      </div>
-      <form action="{% url 'food:claim_food_rescue' event.id %}" method="POST">
-        {% csrf_token %}
-        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 1rem;">
-          Coordinate pickup with the venue to transport surplus food to communities in need:
-        </p>
-        <div class="form-group">
-          <label class="form-label">Volunteer Name *</label>
-          {{ claim_form.volunteer_name }}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mobile Number *</label>
-          {{ claim_form.volunteer_phone }}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Rescue Organization / NGO</label>
-          {{ claim_form.organization }}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Estimated Arrival Time *</label>
-          {{ claim_form.estimated_pickup_time }}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Vehicle & Container Notes</label>
-          {{ claim_form.notes }}
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('rescueClaimModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary" style="background: #ea580c; border-color: #c2410c;">Confirm Rescue Claim</button>
         </div>
       </form>
     </div>

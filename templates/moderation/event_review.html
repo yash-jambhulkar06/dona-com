@@ -42,11 +42,6 @@
           <span class="badge {{ event.dietary_badge_info.css_class }}" style="font-weight: 700;">
             {{ event.dietary_badge_info.label }}
           </span>
-          {% if event.is_surplus_food %}
-            <span class="badge" style="background: #ea580c; color: #fff; font-weight: 700;">
-              Surplus Food Rescue Active
-            </span>
-          {% endif %}
           {% if event.has_verified_organizer %}
             <span class="badge" style="background: #0284c7; color: #fff; font-weight: 700;">
               Verified Organizer
@@ -58,13 +53,7 @@
             <strong>Allergens / Special Notes:</strong> {{ event.allergens_info }}
           </p>
         {% endif %}
-        {% if event.is_surplus_food %}
-          <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 0.75rem; border-radius: 8px; font-size: 0.875rem; color: #9a3412;">
-            <strong>Surplus Quantity:</strong> {{ event.surplus_quantity|default:"Celebration excess" }}<br>
-            <strong>Rescue Contact Phone:</strong> {{ event.rescue_contact_phone }}<br>
-            <strong>Rescue Status:</strong> {{ event.get_rescue_status_display }}
-          </div>
-        {% endif %}
+
         <div class="food-details-box" style="margin-top: 0.75rem;">
           {{ event.food_details|linebreaks }}
         </div>

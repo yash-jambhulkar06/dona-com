@@ -83,10 +83,6 @@
       <!-- Quick Toggles -->
       <div style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem;">
         <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #111827; cursor: pointer;">
-          <input type="checkbox" name="surplus" value="true" {% if selected_surplus %}checked{% endif %}>
-          Surplus Food Rescue Only
-        </label>
-        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #111827; cursor: pointer;">
           <input type="checkbox" name="verified" value="true" {% if selected_verified %}checked{% endif %}>
           Verified Organizers Only
         </label>
@@ -110,9 +106,7 @@
           <article class="event-card" id="event-card-{{ event.id }}">
             <!-- Food Image Header with Overlays -->
             <div class="event-card-media">
-              {% if event.is_surplus_food %}
-                <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
-              {% elif event.event_type == 'Langar' %}
+              {% if event.event_type == 'Langar' %}
                 <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
               {% elif event.event_type == 'Mahaprasad' %}
                 <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
@@ -148,11 +142,6 @@
                     <span class="badge badge-verified">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
                       Verified
-                    </span>
-                  {% endif %}
-                  {% if event.is_surplus_food %}
-                    <span class="badge" style="background: #ea580c; color: #fff; font-weight: 700;">
-                      Rescue Active
                     </span>
                   {% endif %}
                   <span class="badge {{ event.availability_status.css_class }}" style="margin-left: auto;">
@@ -257,7 +246,7 @@
     {% if page_obj.has_other_pages %}
       <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2.5rem;">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&surplus={{ selected_surplus }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}&max_distance={{ selected_max_distance }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+          <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}&max_distance={{ selected_max_distance }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
         {% endif %}
         
         <span style="padding: 0.4rem 1rem; font-size: 0.875rem; color: #64748b; font-weight: 600;">
@@ -265,7 +254,7 @@
         </span>
 
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&surplus={{ selected_surplus }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}&max_distance={{ selected_max_distance }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+          <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}&max_distance={{ selected_max_distance }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
         {% endif %}
       </div>
     {% endif %}

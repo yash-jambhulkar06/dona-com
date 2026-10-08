@@ -5,9 +5,7 @@
         <article class="event-card" id="event-card-{{ event.id }}">
           <!-- Food Image Header with Overlays -->
           <div class="event-card-media">
-            {% if event.is_surplus_food %}
-              <img src="/static/images/surplus.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
-            {% elif event.event_type == 'Langar' %}
+            {% if event.event_type == 'Langar' %}
               <img src="/static/images/langar.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">
             {% elif event.event_type == 'Mahaprasad' %}
               <img src="/static/images/mahaprasad.jpg" alt="{{ event.title }}" class="event-card-img" loading="lazy" decoding="async" width="360" height="200">

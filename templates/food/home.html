@@ -65,10 +65,6 @@
         <strong>{{ total_approved }}</strong>
         <span>Upcoming Listings</span>
       </a>
-      <a href="{% url 'food:surplus_recovery' %}" class="stat-card" style="text-decoration: none; cursor: pointer;">
-        <strong>{{ surplus_count }}</strong>
-        <span>Rescue Alerts</span>
-      </a>
       <a href="{% url 'food:nearby_events' %}" class="stat-card" style="text-decoration: none; cursor: pointer;">
         <strong>{{ recommended_results|length }}</strong>
         <span>Nearby Picks</span>
@@ -99,7 +95,6 @@
       <a href="?dietary=JAIN{% if user_lat %}&lat={{ user_lat }}&lng={{ user_lng }}{% endif %}" class="filter-chip {% if selected_dietary == 'JAIN' %}is-active{% endif %}">Jain</a>
       <a href="?dietary=VEGAN{% if user_lat %}&lat={{ user_lat }}&lng={{ user_lng }}{% endif %}" class="filter-chip {% if selected_dietary == 'VEGAN' %}is-active{% endif %}">Vegan</a>
       <a href="?dietary=HALAL{% if user_lat %}&lat={{ user_lat }}&lng={{ user_lng }}{% endif %}" class="filter-chip {% if selected_dietary == 'HALAL' %}is-active{% endif %}">Halal</a>
-      <a href="{% url 'food:surplus_recovery' %}" class="filter-chip rescue-link">Food Rescue</a>
     </div>
 
     <!-- Event Cards Grid with Asynchronous Progressive Enhancement -->

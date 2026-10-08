@@ -239,28 +239,6 @@
         {% if form.food_details.errors %}<div class="form-error">{{ form.food_details.errors.0 }}</div>{% endif %}
       </div>
 
-      <!-- Surplus Food Recovery Option -->
-      <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: var(--radius-input); padding: 1.25rem;">
-        <label style="display: flex; align-items: flex-start; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #9a3412; font-size: 0.95rem; line-height: 1.45; margin-bottom: 0.5rem;">
-          {{ form.is_surplus_food }}
-          <span>Surplus Food Rescue: Excess celebration food available for volunteer pickup</span>
-        </label>
-        <p style="font-size: 0.825rem; color: #c2410c; margin-bottom: 0.85rem; line-height: 1.5;">
-          If this is a wedding, banquet, or large gathering with surplus prepared meals, volunteer food rescue networks will be alerted for immediate pickup to prevent food waste.
-        </p>
-        <div id="surplusFields" class="form-grid-responsive">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="id_surplus_quantity" style="font-size: 0.825rem; color: #9a3412;">Estimated Surplus Quantity</label>
-            {{ form.surplus_quantity }}
-            {% if form.surplus_quantity.errors %}<div class="form-error">{{ form.surplus_quantity.errors.0 }}</div>{% endif %}
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="id_rescue_contact_phone" style="font-size: 0.825rem; color: #9a3412;">Pickup Coordinator Phone</label>
-            {{ form.rescue_contact_phone }}
-            {% if form.rescue_contact_phone.errors %}<div class="form-error">{{ form.rescue_contact_phone.errors.0 }}</div>{% endif %}
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- Step 5: Submit -->

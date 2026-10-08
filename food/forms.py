@@ -21,9 +21,6 @@ class FreeFoodEventForm(forms.ModelForm):
             'address',
             'latitude',
             'longitude',
-            'is_surplus_food',
-            'surplus_quantity',
-            'rescue_contact_phone',
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. Mahaprasad at ISKCON Temple'}),
@@ -39,9 +36,6 @@ class FreeFoodEventForm(forms.ModelForm):
             'address': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Complete street address, landmarks'}),
             'latitude': forms.NumberInput(attrs={'class': 'form-input coord-input', 'step': '0.0000001', 'readonly': 'readonly'}),
             'longitude': forms.NumberInput(attrs={'class': 'form-input coord-input', 'step': '0.0000001', 'readonly': 'readonly'}),
-            'is_surplus_food': forms.CheckboxInput(attrs={'class': 'form-checkbox', 'id': 'id_is_surplus_food'}),
-            'surplus_quantity': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. 50+ meals, 3 large vessels'}),
-            'rescue_contact_phone': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g. +91 9876543210'}),
         }
 
     def clean_event_date(self):
@@ -57,8 +51,6 @@ class FreeFoodEventForm(forms.ModelForm):
         end_time = cleaned_data.get('end_time')
         lat = cleaned_data.get('latitude')
         lng = cleaned_data.get('longitude')
-        is_surplus = cleaned_data.get('is_surplus_food')
-        rescue_phone = cleaned_data.get('rescue_contact_phone')
 
         if start_time and end_time and start_time >= end_time:
             self.add_error('end_time', "End time must be later than start time.")
@@ -72,9 +64,6 @@ class FreeFoodEventForm(forms.ModelForm):
 
         if lng is not None and not (-180 <= lng <= 180):
             self.add_error('longitude', "Longitude must be between -180 and 180 degrees.")
-
-        if is_surplus and not rescue_phone:
-            self.add_error('rescue_contact_phone', "Please provide a direct phone number for surplus food rescue pickup.")
 
         return cleaned_data
 

@@ -10,8 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q, Count
 
-from .models import FreeFoodEvent, Favorite, Report, CommunityLiveStatus, FoodRescueClaim
-from .forms import FreeFoodEventForm, ReportForm, FoodRescueClaimForm
+from .models import FreeFoodEvent, Favorite, Report, CommunityLiveStatus
+from .forms import FreeFoodEventForm, ReportForm
 from locations.services import get_recommended_events, haversine_distance
 
 def home_view(request):
@@ -74,23 +74,15 @@ def home_view(request):
             event_date=now_date,
             start_time__lte=now_time,
             end_time__gte=now_time
-        )),
-        surplus_count=Count('id', filter=Q(
-            status=FreeFoodEvent.STATUS_APPROVED,
-            is_surplus_food=True,
-            rescue_status=FreeFoodEvent.RESCUE_STATUS_AVAILABLE,
-            event_date__gte=now_date
         ))
     )
     total_approved = counts['total_approved'] or 0
     active_now_count = counts['active_now_count'] or 0
-    surplus_count = counts['surplus_count'] or 0
 
     response = render(request, 'food/home.html', {
         'recommended_results': recommended,
         'total_approved': total_approved,
         'active_now_count': active_now_count,
-        'surplus_count': surplus_count,
         'user_favorites_ids': user_favorites_ids,
         'event_types': FreeFoodEvent.EVENT_TYPES,
         'dietary_types': FreeFoodEvent.DIETARY_TYPES,
@@ -119,7 +111,6 @@ def event_list_view(request):
     dietary = request.GET.get('dietary', '').strip()
     date_filter = request.GET.get('date', '').strip()
     availability = request.GET.get('availability', '').strip()
-    surplus_only = request.GET.get('surplus', '').lower() in ('true', '1')
     verified_only = request.GET.get('verified', '').lower() in ('true', '1')
     user_lat = request.GET.get('lat')
     user_lng = request.GET.get('lng')
@@ -151,7 +142,6 @@ def event_list_view(request):
         max_distance_km=max_dist_val,
         search_query=q or None,
         dietary=dietary or None,
-        surplus_only=surplus_only,
         verified_only=verified_only,
     )
 
@@ -169,7 +159,6 @@ def event_list_view(request):
         'search_query': q,
         'selected_type': event_type,
         'selected_dietary': dietary,
-        'selected_surplus': surplus_only,
         'selected_verified': verified_only,
         'selected_date': date_filter,
         'selected_availability': availability,
@@ -305,23 +294,17 @@ def event_detail_view(request, event_id):
         is_favorited = Favorite.objects.filter(user=request.user, event=event).exists()
 
     report_form = ReportForm()
-    claim_form = FoodRescueClaimForm()
     directions_url = f"https://www.google.com/maps/dir/?api=1&destination={event.latitude},{event.longitude}"
     canonical_url = request.build_absolute_uri(reverse('food:event_detail', kwargs={'event_id': event.id}))
     
     # Community Live Status metrics (Future Scope Item 1)
     live_status = event.get_community_live_status()
 
-    # Surplus Food Rescue Claims (Future Scope Item 5)
-    rescue_claims = event.rescue_claims.all().order_by('-created_at')
-
     return render(request, 'food/event_detail.html', {
         'event': event,
         'is_favorited': is_favorited,
         'report_form': report_form,
-        'claim_form': claim_form,
         'live_status': live_status,
-        'rescue_claims': rescue_claims,
         'directions_url': directions_url,
         'canonical_url': canonical_url,
     })
@@ -504,76 +487,6 @@ def api_update_live_status(request, event_id):
     })
 
 
-@login_required
-def surplus_recovery_feed_view(request):
-    """
-    Dedicated Surplus Food Recovery feed (Future Scope Item 5).
-    Connects volunteer food rescue networks to prevent food waste from weddings, feasts, and community meals.
-    """
-    now = timezone.localtime()
-    surplus_events = FreeFoodEvent.objects.filter(
-        status=FreeFoodEvent.STATUS_APPROVED,
-        is_surplus_food=True,
-        event_date__gte=now.date()
-    ).exclude(
-        status__in=[FreeFoodEvent.STATUS_EXPIRED, FreeFoodEvent.STATUS_CANCELLED]
-    ).order_by('event_date', 'start_time')
-
-    return render(request, 'food/surplus_recovery.html', {
-        'surplus_events': surplus_events,
-        'now': now,
-    })
-
-
-@login_required
-@require_POST
-def claim_food_rescue_view(request, event_id):
-    """
-    Claims surplus food for volunteer pickup and rescue (Future Scope Item 5).
-    Updates event status and notifies the event organizer.
-    """
-    event = get_object_or_404(FreeFoodEvent, pk=event_id)
-    form = FoodRescueClaimForm(request.POST)
-
-    if form.is_valid():
-        claim = form.save(commit=False)
-        claim.event = event
-        claim.claimed_by = request.user
-        claim.status = FoodRescueClaim.STATUS_CLAIMED
-        claim.save()
-
-        # Update event rescue status
-        event.rescue_status = FreeFoodEvent.RESCUE_STATUS_IN_PROGRESS
-        event.save(update_fields=['rescue_status'])
-
-        # Notify the original submitter that a volunteer is coming
-        try:
-            from notifications.services import send_notification
-            if event.submitted_by:
-                send_notification(
-                    recipient=event.submitted_by,
-                    title="Surplus Food Rescue Pickup In Progress!",
-                    message=(
-                        f"Volunteer {claim.volunteer_name} ({claim.organization or 'Food Rescue'}) "
-                        f"has claimed your surplus food. Estimated arrival: {claim.estimated_pickup_time}. "
-                        f"Contact: {claim.volunteer_phone}"
-                    ),
-                    notification_type="SYSTEM",
-                    target_url=f"/food/{event.id}/",
-                    related_event=event
-                )
-        except Exception:
-            pass
-
-        messages.success(
-            request,
-            f"Thank you for helping rescue food! Your claim for '{event.title}' has been submitted. "
-            f"The organizer has been notified."
-        )
-    else:
-        messages.error(request, "Unable to complete claim. Please check your contact information.")
-
-    return redirect('food:event_detail', event_id=event.id)
 
 
 # --------------------------------------------------------------------------
