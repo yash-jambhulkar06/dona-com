@@ -27,6 +27,7 @@ urlpatterns = [
     path('sw.js', food_views.service_worker_view, name='pwa_service_worker'),
     path('manifest.json', food_views.manifest_view, name='pwa_manifest'),
     path('offline/', food_views.offline_view, name='pwa_offline'),
+    path('ads.txt', food_views.ads_txt_view, name='ads_txt'),
 
     # Real-Time Notifications
     path('notifications/', include('notifications.urls')),

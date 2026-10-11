@@ -540,3 +540,25 @@ def offline_view(request):
     """
     return render(request, 'offline.html')
 
+
+def ads_txt_view(request):
+    """
+    Serves ads.txt from root URL /ads.txt for Google AdSense verification.
+    """
+    ads_file = settings.BASE_DIR / 'static' / 'ads.txt'
+    if not ads_file.exists() and hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+        fallback = settings.STATIC_ROOT / 'ads.txt'
+        if fallback.exists():
+            ads_file = fallback
+
+    try:
+        with open(ads_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except IOError:
+        content = 'google.com, pub-5453679134238144, DIRECT, f08c47fec0942fa0\n'
+
+    response = HttpResponse(content, content_type='text/plain')
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
+
+
