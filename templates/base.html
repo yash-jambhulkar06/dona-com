@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <title>{% block title %}Free Food — Community Free Food Discovery{% endblock %}</title>
   <meta name="description"
     content="{% block meta_description %}Discover nearby locations offering free food including community kitchens, langars, mahaprasad, celebrations, and NGO distributions on Free Food.{% endblock %}">
@@ -17,6 +17,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Free Food">
   <meta name="application-name" content="Free Food">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="msapplication-TileColor" content="#DC2626">
 
   <!-- Production App Icons & Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="/static/images/icons/favicon-32x32.png">
@@ -49,7 +52,7 @@
     <div class="container header-inner">
       <a href="{% url 'food:home' %}" class="brand-logo" aria-label="Free Food home">
         <span class="brand-icon-mark" aria-hidden="true">
-          <img src="/static/images/logo-symbol.svg" alt="" width="26" height="26">
+          <img src="/static/images/logo-symbol.svg" alt="Free Food Logo" width="34" height="34">
         </span>
         <div class="brand-logo-text">
           <span class="brand-name">Free</span><span class="brand-food-word">Food</span>
@@ -353,8 +356,8 @@
   <footer class="site-footer">
     <div class="container site-footer-inner">
       <div class="site-footer-brand">
-        <span class="brand-icon-mark" style="width: 28px; height: 28px;">
-          <img src="/static/images/logo-symbol.svg" alt="" width="20" height="20">
+        <span class="brand-icon-mark" style="width: 28px; height: 28px; border-radius: 8px;">
+          <img src="/static/images/logo-symbol.svg" alt="Free Food Logo" width="28" height="28">
         </span>
         <span>Free <span style="color: var(--primary);">Food</span></span>
       </div>

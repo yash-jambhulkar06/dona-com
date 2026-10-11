@@ -3,7 +3,7 @@
  * Version: 1.0.0
  */
 
-const CACHE_VERSION = 'freefood-pwa-v1';
+const CACHE_VERSION = 'freefood-pwa-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const OFFLINE_CACHE = `${CACHE_VERSION}-offline`;
 
@@ -15,10 +15,13 @@ const PRECACHE_ASSETS = [
   '/static/css/pages.css',
   '/static/css/notifications.css',
   '/static/js/main.js',
+  '/static/js/pwa.js',
   '/static/js/geolocation.js',
   '/static/js/map.js',
   '/static/js/notifications.js',
   '/static/manifest.json',
+  '/static/images/logo-symbol.svg',
+  '/static/images/logo-full.svg',
   '/static/images/icons/icon-192.png',
   '/static/images/icons/icon-512.png',
   '/static/images/icons/icon-maskable-512.png',

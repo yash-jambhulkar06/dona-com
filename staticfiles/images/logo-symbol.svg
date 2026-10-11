@@ -1,43 +1,115 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Free Food Brand Symbol: Bowl + Heart Steam + Sharing -->
+  <!-- Free Food Brand Symbol: Modern App Squircle + Nourishing Bowl + Heart Steam -->
   <defs>
-    <linearGradient id="bowlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FB923C"/>
-      <stop offset="100%" stop-color="#EA580C"/>
+    <!-- Background Gradient (Rich Crimson App Squircle) -->
+    <linearGradient id="sqGrad" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#881337"/>
+      <stop offset="50%" stop-color="#58081E"/>
+      <stop offset="100%" stop-color="#3B0313"/>
     </linearGradient>
-    <linearGradient id="heartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#EF4444"/>
+
+    <!-- Warm Golden Ambient Glow -->
+    <radialGradient id="hearthGlow" cx="50%" cy="42%" r="42%">
+      <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.45"/>
+      <stop offset="45%" stop-color="#F59E0B" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#EA580C" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Heart Steam Left Ribbon -->
+    <linearGradient id="steamRibbonL" x1="10%" y1="90%" x2="70%" y2="10%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="35%" stop-color="#F59E0B"/>
+      <stop offset="85%" stop-color="#EA580C"/>
       <stop offset="100%" stop-color="#DC2626"/>
     </linearGradient>
+
+    <!-- Heart Steam Right Ribbon -->
+    <linearGradient id="steamRibbonR" x1="90%" y1="90%" x2="30%" y2="10%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="35%" stop-color="#F59E0B"/>
+      <stop offset="85%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#DC2626"/>
+    </linearGradient>
+
+    <!-- Inner Heart Flame Core -->
+    <linearGradient id="flameCore" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="30%" stop-color="#FEF08A"/>
+      <stop offset="80%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EA580C"/>
+    </linearGradient>
+
+    <!-- Bowl Outer Shell Gradient -->
+    <linearGradient id="bowlShellGrad" x1="10%" y1="20%" x2="90%" y2="80%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="40%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#F97316"/>
+    </linearGradient>
+
+    <!-- Bowl Soup Basin Gradient -->
+    <linearGradient id="soupGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EA580C"/>
+      <stop offset="45%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#FBBF24"/>
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow Filter for Squircle -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
   </defs>
 
-  <!-- Heart Steam Motif (Rising from food) -->
-  <path d="M50 18 C47 13, 38 12, 36 21 C34 29, 44 38, 50 44 C56 38, 66 29, 64 21 C62 12, 53 13, 50 18 Z" 
-        fill="url(#heartGrad)" />
-  <path d="M49 12 C48 8, 53 5, 51 2" 
-        stroke="#DC2626" stroke-width="3" stroke-linecap="round" fill="none"/>
-  <path d="M33 32 C30 28, 29 22, 33 17" 
-        stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <path d="M67 32 C70 28, 71 22, 67 17" 
-        stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Squircle Base -->
+  <rect x="3" y="3" width="94" height="94" rx="25" fill="url(#sqGrad)" filter="url(#softShadow)"/>
+  <!-- Subtle Inner Border Highlight -->
+  <rect x="3.5" y="3.5" width="93" height="93" rx="24.5" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1"/>
 
-  <!-- Bowl Base -->
-  <path d="M15 50 C15 74, 30 84, 50 84 C70 84, 85 74, 85 50 Z" 
-        fill="url(#bowlGrad)" stroke="#DC2626" stroke-width="4" stroke-linejoin="round"/>
-  
-  <!-- Subtle Bowl Shine -->
-  <path d="M24 57 C22 66, 28 73, 36 78" 
-        stroke="#FED7AA" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <!-- Warm Central Glow -->
+  <circle cx="50" cy="42" r="32" fill="url(#hearthGlow)"/>
 
-  <!-- Bowl Rim / Surface -->
-  <ellipse cx="50" cy="50" rx="35" ry="9" 
-           fill="#FFF7ED" stroke="#DC2626" stroke-width="4"/>
-  
-  <!-- Inner meal surface line -->
-  <ellipse cx="50" cy="51" rx="27" ry="5.5" 
-           fill="#FDBA74" opacity="0.4"/>
+  <!-- Left Steam Ribbon forming Left Heart Lobe -->
+  <path d="M 49.5 53 
+           C 47.5 45, 36 43, 34 32 
+           C 32 20.5, 45 15, 50 25 
+           C 46 20, 38.5 22, 38.5 30 
+           C 38.5 39, 47.5 45, 49.5 53 Z" 
+        fill="url(#steamRibbonL)" opacity="0.95"/>
+
+  <!-- Right Steam Ribbon forming Right Heart Lobe -->
+  <path d="M 50.5 53 
+           C 52.5 45, 64 43, 66 32 
+           C 68 20.5, 55 15, 50 25 
+           C 54 20, 61.5 22, 61.5 30 
+           C 61.5 39, 52.5 45, 50.5 53 Z" 
+        fill="url(#steamRibbonR)" opacity="0.95"/>
+
+  <!-- Inner Radiant Heart Ember -->
+  <path d="M 50 26 
+           C 48 21.5, 43 21.5, 43 27 
+           C 43 32.5, 50 37.5, 50 37.5 
+           C 50 37.5, 57 32.5, 57 27 
+           C 57 21.5, 52 21.5, 50 26 Z" 
+        fill="url(#flameCore)" opacity="0.88"/>
+
+  <!-- Serving Bowl Body -->
+  <path d="M 19 55.5 
+           C 19 74, 32.5 82.5, 50 82.5 
+           C 67.5 82.5, 81 74, 81 55.5 Z" 
+        fill="url(#bowlShellGrad)"/>
 
   <!-- Bowl Foot / Pedestal -->
-  <path d="M38 84 C38 88, 42 90, 50 90 C58 90, 62 88, 62 84 Z" 
-        fill="#DC2626"/>
+  <path d="M 39 82.5 
+           C 39 86, 43 87, 50 87 
+           C 57 87, 61 86, 61 82.5 Z" 
+        fill="#9F1239"/>
+
+  <!-- Bowl Rim Lip -->
+  <ellipse cx="50" cy="55.5" rx="31" ry="8" fill="#F97316"/>
+  <!-- Hot Soup / Nourishing Meal Surface -->
+  <ellipse cx="50" cy="56" rx="27" ry="5.8" fill="url(#soupGrad)"/>
+  <ellipse cx="50" cy="56.3" rx="22" ry="3.5" fill="#FEF08A" opacity="0.5"/>
+
+  <!-- Left Gloss Highlight on Bowl Rim & Body -->
+  <path d="M 24 61 C 22.5 69, 28 75.5, 36 78.5" 
+        stroke="#FFFFFF" stroke-opacity="0.32" stroke-width="2.5" stroke-linecap="round" fill="none"/>
 </svg>

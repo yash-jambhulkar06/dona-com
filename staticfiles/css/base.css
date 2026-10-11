@@ -78,6 +78,10 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   overflow-x: clip;
   max-width: 100vw;
 }
@@ -95,6 +99,10 @@ body {
   overflow-x: clip;
   width: 100%;
   max-width: 100%;
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior-y: contain; /* Prevents pull-to-refresh & browser elastic bounce */
 }
 
 /* Fallback for browsers not supporting overflow-x: clip */
@@ -194,35 +202,45 @@ a {
 .brand-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
   text-decoration: none;
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-main);
   flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .brand-icon-mark {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-sm);
-  background: #FFF7ED;
-  border: 1px solid #FED7AA;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+  box-shadow: 0 3px 8px rgba(136, 19, 55, 0.22);
   overflow: hidden;
   flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.brand-logo:hover .brand-icon-mark {
+  transform: scale(1.06) rotate(-2deg);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
 }
 
 .brand-icon-mark img,
 .brand-icon-mark svg {
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
+  border-radius: 9px;
 }
 
 .brand-logo-text {
@@ -918,4 +936,204 @@ a {
   font-size: 0.78rem;
   color: var(--text-light);
 }
+
+/* ==========================================================================
+   Progressive Web App (PWA) Native App Experience & Zero-Zoom Controls
+   ========================================================================== */
+
+/* Prevent accidental text highlighting during touch gestures on UI chrome */
+.site-header,
+.desktop-nav,
+.mobile-bottom-nav,
+.btn,
+button,
+.brand-logo,
+.brand-icon-mark,
+.badge,
+.chip,
+.lang-btn,
+.lang-dropdown-menu,
+.modal-sheet-handle,
+.modal-header,
+.mobile-menu-drawer,
+.mobile-push-hud,
+.nav-link,
+.bottom-nav-item,
+.tab-btn,
+.leaflet-control {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Form inputs maintain native text selection and typing behavior */
+input, textarea, select {
+  -webkit-user-select: auto;
+  user-select: auto;
+  touch-action: manipulation;
+}
+
+/* Safe Area Insets for iOS & Android Notches / Gesture Home Bars */
+.site-header {
+  padding-top: max(0.45rem, env(safe-area-inset-top));
+}
+
+.mobile-bottom-nav {
+  padding-bottom: max(0.45rem, env(safe-area-inset-bottom));
+  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+}
+
+body {
+  padding-bottom: calc(var(--bottom-nav-height) + 16px + env(safe-area-inset-bottom));
+}
+
+/* Standalone PWA Mode Specific Tweaks */
+.pwa-standalone {
+  -webkit-touch-callout: none;
+}
+
+.pwa-standalone .site-header {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Native App-grade Floating Install Banner (HUD) */
+.pwa-install-hud {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height, 64px) + 14px + env(safe-area-inset-bottom, 0px));
+  left: 1rem;
+  right: 1rem;
+  max-width: 440px;
+  margin: 0 auto;
+  z-index: 1070;
+  animation: pwaSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 769px) {
+  .pwa-install-hud {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    left: auto;
+    margin: 0;
+  }
+}
+
+.pwa-install-hud-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #FFFFFF;
+  padding: 0.75rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pwa-install-app-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.pwa-install-app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pwa-install-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-install-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.pwa-install-desc {
+  font-size: 0.74rem;
+  color: #94A3B8;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pwa-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.pwa-btn-install {
+  background: linear-gradient(135deg, #DC2626 0%, #EA580C 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
+}
+
+.pwa-btn-install:active {
+  transform: scale(0.96);
+}
+
+.pwa-btn-close {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.pwa-btn-close:hover {
+  color: #FFFFFF;
+}
+
+.pwa-hud-closing {
+  animation: pwaSlideDown 0.25s ease forwards;
+}
+
+@keyframes pwaSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pwaSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+}
+
 

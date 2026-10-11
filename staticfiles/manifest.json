@@ -1,16 +1,23 @@
 {
   "name": "Free Food",
   "short_name": "Free Food",
-  "description": "A community platform to discover verified free food events near you.",
+  "description": "Discover verified free food distributions, langars, and community meals near you.",
   "start_url": "/?source=pwa",
   "scope": "/",
+  "id": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "theme_color": "#DC2626",
   "background_color": "#F8FAFC",
   "lang": "en-US",
   "dir": "ltr",
-  "categories": ["food", "lifestyle", "social"],
+  "categories": ["food", "lifestyle", "social", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/static/images/icons/icon-192.png",
@@ -39,9 +46,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Find Free Food",
+      "name": "Find Free Food Nearby",
       "short_name": "Nearby",
-      "description": "Find free food distributions near your location",
+      "description": "Find free food distributions near your GPS location",
       "url": "/food/nearby/?source=pwa",
       "icons": [
         {
@@ -52,10 +59,23 @@
       ]
     },
     {
-      "name": "Explore Events",
+      "name": "Explore Food Events",
       "short_name": "Explore",
       "description": "Explore active and upcoming community food events",
       "url": "/food/?source=pwa",
+      "icons": [
+        {
+          "src": "/static/images/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Interactive Food Map",
+      "short_name": "Map",
+      "description": "View live distributions on the community map",
+      "url": "/food/map/?source=pwa",
       "icons": [
         {
           "src": "/static/images/icons/icon-192.png",
