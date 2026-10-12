@@ -4,7 +4,42 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <style>
+  /* ── Marker Cluster Custom Dona Red Theme ── */
+  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+    background-color: rgba(220, 38, 38, 0.2) !important;
+  }
+  .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
+  }
+  /* ── Floating Locate Me Button ── */
+  .leaflet-locate-btn {
+    background: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px !important;
+    border: 1px solid rgba(0,0,0,0.15) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 12px !important;
+    margin-bottom: 24px !important;
+  }
+  .leaflet-locate-btn:hover {
+    background: #f8fafc;
+    transform: scale(1.05);
+  }
+  .leaflet-locate-btn.is-locating svg {
+    animation: spin 1s linear infinite;
+  }
   /* ── Map Search Bar ── */
   .map-search-wrapper {
     position: relative;
@@ -202,6 +237,7 @@
 
 {% block extra_scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="/static/js/map.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {

@@ -317,7 +317,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       debounceTimeout = setTimeout(async () => {
         try {
-          const resp = await fetch(`/api/locations/search/?q=${encodeURIComponent(query)}`);
+          const stored = GeolocationManager.getStoredLocation();
+          let searchUrl = `/api/locations/search/?q=${encodeURIComponent(query)}`;
+          if (stored && stored.lat && stored.lng) {
+            searchUrl += `&lat=${stored.lat}&lng=${stored.lng}`;
+          }
+          const resp = await fetch(searchUrl);
           const data = await resp.json();
           manualSearchResults.innerHTML = '';
 

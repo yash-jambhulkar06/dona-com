@@ -134,7 +134,7 @@
     <p>There are no active or scheduled food distributions matching this filter. You can broaden your search area or check meals scheduled for later today.</p>
     <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
       <button type="button" class="btn btn-primary" onclick="openModal('manualLocationModal')">Search Another Area</button>
-      <a href="{% url 'food:event_list' %}?date=today" class="btn btn-secondary">View Today's Food</a>
+      <a href="{% url 'food:event_list' %}" class="btn btn-secondary">Browse All Free Food Events</a>
       <a href="{% url 'food:event_add' %}" class="btn btn-outline">Submit Free Food Event</a>
     </div>
   </div>

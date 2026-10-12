@@ -1,5 +1,5 @@
 /**
- * Map Integration using Leaflet + OpenStreetMap
+ * Map Integration using Leaflet + CARTO Voyager
  * Free Food — Community Free-Food Discovery Platform
  * Red Theme (Emoji-Free)
  */
@@ -26,6 +26,107 @@ const FoodMap = {
     });
   },
 
+  _createBaseLayers() {
+    const street = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    });
+
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USGS, GeoEye, GIS User Community'
+    });
+
+    const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    });
+
+    return {
+      street,
+      baseLayers: {
+        'Street View': street,
+        'Satellite View': satellite,
+        'Dark Mode': dark
+      }
+    };
+  },
+
+  _haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  },
+
+  _createMarkerGroup(map) {
+    if (typeof L.markerClusterGroup === 'function') {
+      const cluster = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        maxClusterRadius: 40,
+        spiderfyOnMaxZoom: true,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 16
+      });
+      map.addLayer(cluster);
+      return cluster;
+    }
+    return map;
+  },
+
+  _addLocateControl(map) {
+    if (!map || typeof L === 'undefined') return;
+    const LocateControl = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd: function() {
+        const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-locate-btn');
+        btn.type = 'button';
+        btn.title = 'Center on My Current Location';
+        btn.setAttribute('aria-label', 'Center on My Current Location');
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="7"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+            <circle cx="12" cy="12" r="2.5" fill="#dc2626"/>
+          </svg>
+        `;
+        L.DomEvent.disableClickPropagation(btn);
+        L.DomEvent.on(btn, 'click', (e) => {
+          L.DomEvent.preventDefault(e);
+          btn.classList.add('is-locating');
+          GeolocationManager.requestLocation(
+            (coords) => {
+              btn.classList.remove('is-locating');
+              FoodMap._placeUserMarker(map, coords.lat, coords.lng, coords.locationName);
+              map.flyTo([coords.lat, coords.lng], 14, { duration: 1.2 });
+              if (typeof showToast === 'function') {
+                showToast(`Centered on ${coords.locationName}`, 'success');
+              }
+            },
+            (errMsg) => {
+              btn.classList.remove('is-locating');
+              if (typeof showToast === 'function') {
+                showToast(errMsg, 'error');
+              }
+            }
+          );
+        });
+        return btn;
+      }
+    });
+    new LocateControl().addTo(map);
+  },
+
   // ──────────────────────────────────────────────────────────────
   // Full Discovery Map (map_view page)
   // ──────────────────────────────────────────────────────────────
@@ -49,10 +150,13 @@ const FoodMap = {
     const map = L.map(containerId, { zoomControl: true }).setView(center, zoom);
     FoodMap._mapInstance = map;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
+    // Multi-layer control (Street, Satellite, Dark Mode)
+    const { street, baseLayers } = FoodMap._createBaseLayers();
+    street.addTo(map);
+    L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
+
+    // Floating Locate Me button
+    FoodMap._addLocateControl(map);
 
     // Dismiss map skeleton screen placeholder if present
     const mapSkeleton = container.querySelector('.skeleton-map-wrapper');
@@ -64,16 +168,33 @@ const FoodMap = {
     }
 
     const bounds = [];
+    const markerGroup = FoodMap._createMarkerGroup(map);
 
-    // Plot all approved event pins (Red markers)
+    // Plot all approved event pins (Red markers with clustering & distance)
     pins.forEach(pin => {
-      const marker = L.marker([pin.lat, pin.lng], { icon: FoodMap._getRedPinIcon() }).addTo(map);
+      const marker = L.marker([pin.lat, pin.lng], { icon: FoodMap._getRedPinIcon() });
+      markerGroup.addLayer(marker);
       bounds.push([pin.lat, pin.lng]);
+
+      let distStr = '';
+      if (storedLoc && storedLoc.lat && storedLoc.lng) {
+        const d = FoodMap._haversineKm(storedLoc.lat, storedLoc.lng, pin.lat, pin.lng);
+        const dText = d < 1 ? `${Math.max(10, Math.round(d * 1000))} m away` : `${d.toFixed(1)} km away`;
+        distStr = `
+          <div style="font-size: 0.8rem; font-weight: 700; color: #16a34a; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 4px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="3"/></svg>
+            <span>${dText}</span>
+          </div>
+        `;
+      } else if (pin.distance_km) {
+        distStr = `<div style="font-size: 0.8rem; font-weight: 700; color: #16a34a; margin-bottom: 0.35rem;">${pin.distance_km} km away</div>`;
+      }
 
       const popupHtml = `
         <div class="map-popup-card">
           <div style="font-size: 0.75rem; font-weight: 700; color: #dc2626; text-transform: uppercase;">${pin.event_type}</div>
           <div class="map-popup-title">${pin.title}</div>
+          ${distStr}
           <div class="map-popup-timing">Date: ${pin.date} | Time: ${pin.time}</div>
           <div style="font-size: 0.825rem; color: #475569; margin-bottom: 0.75rem;">Venue: ${pin.venue_name}</div>
           <div style="display: flex; gap: 0.5rem;">
@@ -178,10 +299,13 @@ const FoodMap = {
 
     const map = L.map(containerId, { zoomControl: true }).setView([lat, lng], 12);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    // Multi-layer control (Street, Satellite, Dark Mode)
+    const { street, baseLayers } = FoodMap._createBaseLayers();
+    street.addTo(map);
+    L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
+
+    // Floating Locate Me button
+    FoodMap._addLocateControl(map);
 
     // Dismiss map skeleton screen placeholder if present
     const mapSkeleton = container.querySelector('.skeleton-map-wrapper');
@@ -217,11 +341,13 @@ const FoodMap = {
 
     userMarker.bindPopup(`<strong>${locationName || 'Your Location'}</strong><br><span style="font-size:0.8rem;color:#64748b;">Click map to change location</span>`).openPopup();
 
-    // 3. Plot Event Pins (Red markers)
+    // 3. Plot Event Pins (Red markers with clustering)
     const bounds = [[lat, lng]];
+    const markerGroup = FoodMap._createMarkerGroup(map);
 
     pins.forEach(pin => {
-      const marker = L.marker([pin.lat, pin.lng], { icon: FoodMap._getRedPinIcon() }).addTo(map);
+      const marker = L.marker([pin.lat, pin.lng], { icon: FoodMap._getRedPinIcon() });
+      markerGroup.addLayer(marker);
       bounds.push([pin.lat, pin.lng]);
 
       const distStr = pin.distance_km ? `<div style="font-size:0.8rem;font-weight:700;color:#16a34a;margin-bottom:0.25rem;">${pin.distance_km} km away</div>` : '';
@@ -323,7 +449,12 @@ const FoodMap = {
 
       debounce = setTimeout(async () => {
         try {
-          const resp = await fetch(`/api/locations/search/?q=${encodeURIComponent(query)}`);
+          const stored = GeolocationManager.getStoredLocation();
+          let searchUrl = `/api/locations/search/?q=${encodeURIComponent(query)}`;
+          if (stored && stored.lat && stored.lng) {
+            searchUrl += `&lat=${stored.lat}&lng=${stored.lng}`;
+          }
+          const resp = await fetch(searchUrl);
           const data = await resp.json();
           resultsBox.innerHTML = '';
 
@@ -391,9 +522,10 @@ const FoodMap = {
 
     const map = L.map(containerId).setView([initLat, initLng], initZoom);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
 
     // Dismiss map skeleton screen placeholder if present
@@ -455,7 +587,12 @@ const FoodMap = {
 
         debounce = setTimeout(async () => {
           try {
-            const resp = await fetch(`/api/locations/search/?q=${encodeURIComponent(query)}`);
+            const stored = GeolocationManager.getStoredLocation();
+            let searchUrl = `/api/locations/search/?q=${encodeURIComponent(query)}`;
+            if (stored && stored.lat && stored.lng) {
+              searchUrl += `&lat=${stored.lat}&lng=${stored.lng}`;
+            }
+            const resp = await fetch(searchUrl);
             const data = await resp.json();
             resultsBox.innerHTML = '';
 

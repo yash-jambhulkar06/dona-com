@@ -198,42 +198,109 @@ def get_recommended_events(
     return results
 
 
-def search_places_geocoding(query: str) -> List[Dict[str, Any]]:
+def search_places_geocoding(
+    query: str,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None
+) -> List[Dict[str, Any]]:
     """
     Geocoding helper to search for places/cities when manual location search is used.
-    Uses OpenStreetMap Nominatim with fallback.
+    Uses Photon (free OSM-based geocoder by Komoot) with Nominatim fallback.
+    Biased towards user's proximity (or central India default) and cached for 24 hours.
     """
     if not query or len(query.strip()) < 2:
         return []
-        
+
+    clean_query = query.strip()
+    bias_lat = round(lat, 2) if lat is not None else 20.92
+    bias_lon = round(lon, 2) if lon is not None else 79.86
+    cache_key = f"places_{clean_query.lower()[:32]}_{bias_lat}_{bias_lon}"
+
     try:
-        url = "https://nominatim.openstreetmap.org/search"
+        from django.core.cache import cache
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+    except Exception:
+        cache = None
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) DonaFreeFood/1.0'}
+    results = []
+
+    # 1. Primary: Photon Geocoding API with proximity bias (Fast, Free, No API key)
+    try:
+        url = "https://photon.komoot.io/api/"
         params = {
-            'q': query.strip(),
-            'format': 'json',
+            'q': clean_query,
             'limit': 5,
-            'addressdetails': 1,
+            'lat': bias_lat,
+            'lon': bias_lon,
         }
-        headers = {'User-Agent': 'CommunityFreeFoodDiscoveryApp/1.0'}
-        response = requests.get(url, params=params, headers=headers, timeout=5)
+        response = requests.get(url, params=params, headers=headers, timeout=3.5)
         if response.status_code == 200:
-            data = response.json()
-            return [{
-                'display_name': item.get('display_name'),
-                'lat': float(item.get('lat')),
-                'lon': float(item.get('lon')),
-                'type': item.get('type')
-            } for item in data]
+            features = response.json().get('features', [])
+            for f in features:
+                props = f.get('properties', {})
+                coords = f.get('geometry', {}).get('coordinates', [])
+                if len(coords) < 2:
+                    continue
+                name = props.get('name', '')
+                district = props.get('district') or props.get('county', '')
+                state = props.get('state', '')
+                country = props.get('country', '')
+                parts = [p for p in [name, district, state, country] if p]
+                seen = set()
+                deduped = []
+                for p in parts:
+                    if p not in seen:
+                        seen.add(p)
+                        deduped.append(p)
+                display_name = ', '.join(deduped) or name or clean_query
+                results.append({
+                    'display_name': display_name,
+                    'lat': float(coords[1]),
+                    'lon': float(coords[0]),
+                    'type': props.get('type') or 'place'
+                })
     except Exception:
         pass
-        
-    return []
+
+    # 2. Fallback: OpenStreetMap Nominatim
+    if not results:
+        try:
+            url = "https://nominatim.openstreetmap.org/search"
+            params = {
+                'q': clean_query,
+                'format': 'json',
+                'limit': 5,
+                'addressdetails': 1,
+            }
+            response = requests.get(url, params=params, headers=headers, timeout=4)
+            if response.status_code == 200:
+                data = response.json()
+                results = [{
+                    'display_name': item.get('display_name'),
+                    'lat': float(item.get('lat')),
+                    'lon': float(item.get('lon')),
+                    'type': item.get('type')
+                } for item in data]
+        except Exception:
+            pass
+
+    if results and cache:
+        try:
+            cache.set(cache_key, results, 86400)
+        except Exception:
+            pass
+
+    return results
 
 
 def reverse_geocode(lat: float, lon: float) -> Optional[str]:
     """
     Reverse geocoding helper to convert coordinates to a clean human-readable place name.
     Cached for 24 hours to eliminate redundant external HTTP requests.
+    Uses Photon with Nominatim fallback.
     """
     cache_key = f"revgeo_{round(lat, 3)}_{round(lon, 3)}"
     try:
@@ -244,42 +311,63 @@ def reverse_geocode(lat: float, lon: float) -> Optional[str]:
     except Exception:
         cache = None
 
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) DonaFreeFood/1.0'}
+    result = None
+
+    # 1. Primary: Photon Reverse Geocoder (Fast & Free)
     try:
-        url = "https://nominatim.openstreetmap.org/reverse"
-        params = {
-            'lat': lat,
-            'lon': lon,
-            'format': 'json',
-            'zoom': 14,
-            'addressdetails': 1,
-        }
-        headers = {'User-Agent': 'CommunityFreeFoodDiscoveryApp/1.0'}
+        url = "https://photon.komoot.io/reverse"
+        params = {'lat': lat, 'lon': lon}
         response = requests.get(url, params=params, headers=headers, timeout=2.5)
         if response.status_code == 200:
-            data = response.json()
-            address = data.get('address', {})
-            place = (
-                address.get('village') or 
-                address.get('town') or 
-                address.get('city') or 
-                address.get('suburb') or 
-                address.get('county') or
-                data.get('display_name', '').split(',')[0]
-            )
-            district = address.get('county') or address.get('state_district') or address.get('state')
-            result = None
-            if place and district and place != district:
-                result = f"{place}, {district}"
-            else:
-                result = place or data.get('display_name', '').split(',')[0]
-
-            if result and cache:
-                try:
-                    cache.set(cache_key, result, 86400)
-                except Exception:
-                    pass
-            return result
+            features = response.json().get('features', [])
+            if features:
+                props = features[0].get('properties', {})
+                name = props.get('name') or props.get('city') or props.get('locality')
+                district = props.get('county') or props.get('district') or props.get('state')
+                if name and district and name != district:
+                    result = f"{name}, {district}"
+                else:
+                    result = name or district
     except Exception:
         pass
-    return None
+
+    # 2. Fallback: OpenStreetMap Nominatim
+    if not result:
+        try:
+            url = "https://nominatim.openstreetmap.org/reverse"
+            params = {
+                'lat': lat,
+                'lon': lon,
+                'format': 'json',
+                'zoom': 14,
+                'addressdetails': 1,
+            }
+            response = requests.get(url, params=params, headers=headers, timeout=2.5)
+            if response.status_code == 200:
+                data = response.json()
+                address = data.get('address', {})
+                place = (
+                    address.get('village') or 
+                    address.get('town') or 
+                    address.get('city') or 
+                    address.get('suburb') or 
+                    address.get('county') or
+                    data.get('display_name', '').split(',')[0]
+                )
+                district = address.get('county') or address.get('state_district') or address.get('state')
+                if place and district and place != district:
+                    result = f"{place}, {district}"
+                else:
+                    result = place or data.get('display_name', '').split(',')[0]
+        except Exception:
+            pass
+
+    if result and cache:
+        try:
+            cache.set(cache_key, result, 86400)
+        except Exception:
+            pass
+
+    return result
 

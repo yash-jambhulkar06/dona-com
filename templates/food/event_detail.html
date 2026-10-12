@@ -13,6 +13,7 @@
 <meta name="twitter:title" content="{{ event.title|escape }} — Free Food">
 <meta name="twitter:description" content="Verified free food at {{ event.venue_name|escape }} on {{ event.event_date|date:'F j, Y' }}.">
 <link rel="canonical" href="{{ canonical_url }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <style>
   /* Mobile sticky bottom action bar */
   @media (max-width: 768px) {
@@ -343,6 +344,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const lat = {{ event.latitude }};
@@ -351,12 +353,28 @@
 
     if (typeof L !== 'undefined' && document.getElementById('eventDetailMap')) {
       const map = L.map('eventDetailMap').setView([lat, lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(map);
 
-      L.marker([lat, lng]).addTo(map)
+      const pinIcon = L.divIcon({
+        className: 'dona-map-pin',
+        html: `
+          <div style="position: relative; width: 30px; height: 38px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 6px rgba(220, 38, 38, 0.4)); cursor: pointer;">
+            <svg viewBox="0 0 24 24" width="30" height="38" fill="#dc2626">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#ffffff" stroke-width="1.2"/>
+              <circle cx="12" cy="9" r="3" fill="#ffffff"/>
+            </svg>
+          </div>
+        `,
+        iconSize: [30, 38],
+        iconAnchor: [15, 38],
+        popupAnchor: [0, -36]
+      });
+
+      L.marker([lat, lng], { icon: pinIcon }).addTo(map)
         .bindPopup(`<strong>${title}</strong><br>{{ event.venue_name|escapejs }}`)
         .openPopup();
     }

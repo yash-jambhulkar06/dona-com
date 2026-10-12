@@ -189,7 +189,7 @@ Dona.Com delivers a complete set of production-grade features built for reliabil
 - **Iconography:** Inline SVG icons with zero unicode emojis
 
 ### Mapping & Geolocation
-- **Map Library:** Leaflet.js with OpenStreetMap tiles
+- **Map Library:** Leaflet.js with CARTO Voyager tiles (OpenStreetMap-based)
 - **Proximity Calculations:** Haversine formula implemented in Python for fast distance filtering
 - **Directions:** Google Maps navigation integration
 

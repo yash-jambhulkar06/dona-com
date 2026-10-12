@@ -57,7 +57,7 @@
 
     <!-- Platform Transparency & Discovery Metrics -->
     <div class="account-grid-two">
-      <a href="{% url 'food:event_list' %}?availability=now" class="stat-card" style="text-decoration: none; cursor: pointer;" title="Filter food available right now">
+      <a href="{% url 'food:nearby_events' %}?availability=now" class="stat-card" style="text-decoration: none; cursor: pointer;" title="Filter food available right now">
         <strong style="color: #16a34a;">{{ active_now_count }}</strong>
         <span>Available Now &rarr;</span>
       </a>
@@ -75,7 +75,7 @@
     <div class="section-header section-space">
       <h2>Available Near You</h2>
       <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <a href="{% url 'food:event_list' %}?availability=now" class="inline-link" style="color: #16a34a; font-weight: 700;">
+        <a href="{% url 'food:nearby_events' %}?availability=now" class="inline-link" style="color: #16a34a; font-weight: 700;">
           <span>Available Now</span>
         </a>
         <a href="{% url 'food:event_list' %}" class="inline-link">

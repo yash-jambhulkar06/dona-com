@@ -4,95 +4,110 @@
 {% block title %}Browse Free Food Events — Free Food{% endblock %}
 
 {% block content %}
+<style>
+  .explore-search-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.15s ease;
+  }
+  .explore-search-item:last-child {
+    border-bottom: none;
+  }
+  .explore-search-item:hover, .explore-search-item:focus {
+    background-color: #fef2f2;
+  }
+  .explore-search-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #0f172a;
+  }
+  .explore-search-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .explore-search-empty {
+    padding: 1rem;
+    color: #64748b;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+  .spin-animation {
+    animation: btnSpinnerRotate 0.65s linear infinite;
+  }
+</style>
+
 <div class="container" style="padding-top: 1.5rem;">
   <div class="page-heading">
     <h1>All Free Food Events</h1>
-    <p>Browse verified community meals, langars, celebrations, and food programs.</p>
+    <p>Discover free community meals, langars, celebrations, and food programs by location.</p>
   </div>
 
-  <!-- Quick Status Discovery Bar -->
-  <div class="dietary-filter-bar" style="margin-bottom: 1.25rem;" aria-label="Quick availability status filter">
-    <a href="{% url 'food:event_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="filter-chip {% if not selected_availability %}is-active{% endif %}">
-      All Statuses
-    </a>
-    <a href="?availability=now{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_dietary %}&dietary={{ selected_dietary }}{% endif %}" class="filter-chip {% if selected_availability == 'now' %}is-active{% endif %}" style="font-weight: 700; {% if selected_availability != 'now' %}color: #15803d; border-color: #86efac; background-color: #f0fdf4;{% endif %}">
-      ⚡ Available Now
-    </a>
-    <a href="?availability=soon{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_dietary %}&dietary={{ selected_dietary }}{% endif %}" class="filter-chip {% if selected_availability == 'soon' %}is-active{% endif %}">
-      Starting Soon
-    </a>
-    <a href="?availability=today{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_dietary %}&dietary={{ selected_dietary }}{% endif %}" class="filter-chip {% if selected_availability == 'today' %}is-active{% endif %}">
-      Available Today
-    </a>
-  </div>
+  <!-- Location Search Bar -->
+  <div class="nearby-search-box" style="margin-bottom: 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+    <form method="GET" action="{% url 'food:event_list' %}" id="exploreLocationForm">
+      <input type="hidden" name="lat" id="exploreLat" value="{{ user_lat|default:'' }}">
+      <input type="hidden" name="lng" id="exploreLng" value="{{ user_lng|default:'' }}">
+      
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <!-- Location Input with Autocomplete dropdown -->
+        <div style="position: relative; flex: 1; min-width: 260px;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 0.65rem 0.95rem; transition: all 0.2s ease;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              <circle cx="12" cy="9" r="3"/>
+            </svg>
+            <input type="text"
+                   name="location"
+                   id="exploreLocationInput"
+                   class="nearby-search-input"
+                   placeholder="Search by city, town, or village (e.g. Palandur, Nagpur, Bhandara)..."
+                   value="{{ location_name|default:'' }}"
+                   autocomplete="off"
+                   style="border: none; outline: none; background: transparent; font-size: 16px; color: #0f172a; width: 100%;">
+          </div>
 
-  <!-- Modern Filter Card -->
-  <div class="filter-bar">
-    <form method="GET" action="{% url 'food:event_list' %}" class="filter-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label">Search Query</label>
-        <input type="text" name="q" class="form-input" placeholder="Search title, venue, or address..." value="{{ search_query }}">
-      </div>
+          <!-- Autocomplete results dropdown -->
+          <div id="exploreLocationResults" class="nearby-search-results" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; max-height: 260px; overflow-y: auto;"></div>
+        </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label">Category</label>
-        <select name="type" class="form-select">
-          <option value="">All Categories</option>
-          {% for code, name in event_types %}
-            <option value="{{ code }}" {% if selected_type == code %}selected{% endif %}>{{ name }}</option>
-          {% endfor %}
-        </select>
-      </div>
+        <!-- Action buttons: Use GPS & Search -->
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button type="button" id="btnExploreNearMe" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1rem;" title="Search near my current GPS location">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="7"/>
+              <line x1="12" y1="2" x2="12" y2="5"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="2" y1="12" x2="5" y2="12"/>
+              <line x1="19" y1="12" x2="22" y2="12"/>
+              <circle cx="12" cy="12" r="2.5" fill="#dc2626"/>
+            </svg>
+            <span>Near Me</span>
+          </button>
+          
+          <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">
+            Search
+          </button>
 
-      <!-- Dietary Preference Filter -->
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label">Dietary Preference</label>
-        <select name="dietary" class="form-select">
-          <option value="">All Dietary</option>
-          {% for code, name in dietary_types %}
-            <option value="{{ code }}" {% if selected_dietary == code %}selected{% endif %}>{{ name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label">Date</label>
-        <select name="date" class="form-select">
-          <option value="">Any Date</option>
-          <option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option>
-          <option value="tomorrow" {% if selected_date == 'tomorrow' %}selected{% endif %}>Tomorrow</option>
-          <option value="this_week" {% if selected_date == 'this_week' %}selected{% endif %}>Next 7 Days</option>
-        </select>
-      </div>
-
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label">Serving Status</label>
-        <select name="availability" class="form-select">
-          <option value="">All Statuses</option>
-          <option value="now" {% if selected_availability == 'now' %}selected{% endif %}>Available Now</option>
-          <option value="soon" {% if selected_availability == 'soon' %}selected{% endif %}>Starting Soon</option>
-          <option value="today" {% if selected_availability == 'today' %}selected{% endif %}>Available Today</option>
-        </select>
-      </div>
-
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label" for="max-distance">Max Distance (km)</label>
-        <input id="max-distance" type="number" name="max_distance" class="form-input" min="1" max="500" step="1" placeholder="Any distance" value="{{ selected_max_distance }}">
-      </div>
-
-      <!-- Quick Toggles -->
-      <div style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem;">
-        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #111827; cursor: pointer;">
-          <input type="checkbox" name="verified" value="true" {% if selected_verified %}checked{% endif %}>
-          Verified Organizers Only
-        </label>
-      </div>
-
-      <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-        <button type="submit" class="btn btn-primary" style="flex: 1;">Filter</button>
-        <a href="{% url 'food:event_list' %}" class="btn btn-secondary">Reset</a>
+          {% if location_name or user_lat %}
+            <a href="{% url 'food:event_list' %}" class="btn btn-ghost" style="color: #64748b;" title="Clear location filter">
+              Clear
+            </a>
+          {% endif %}
+        </div>
       </div>
     </form>
+
+    {% if location_name %}
+      <div style="margin-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; font-size: 0.875rem;">
+        <span style="color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="3"/></svg>
+          Showing events sorted by proximity to: <strong>{{ location_name }}</strong>
+        </span>
+        <a href="{% url 'food:event_list' %}" style="color: #64748b; font-size: 0.8rem; text-decoration: underline;">Reset to all locations</a>
+      </div>
+    {% endif %}
   </div>
 
   <div style="margin-bottom: 1.25rem; color: #64748b; font-size: 0.925rem;">
@@ -246,7 +261,7 @@
     {% if page_obj.has_other_pages %}
       <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2.5rem;">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}&max_distance={{ selected_max_distance }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if location_name %}&location={{ location_name|urlencode }}{% endif %}{% if user_lat %}&lat={{ user_lat }}{% endif %}{% if user_lng %}&lng={{ user_lng }}{% endif %}" class="btn btn-secondary btn-sm">&larr; Previous</a>
         {% endif %}
         
         <span style="padding: 0.4rem 1rem; font-size: 0.875rem; color: #64748b; font-weight: 600;">
@@ -254,7 +269,7 @@
         </span>
 
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&type={{ selected_type }}&dietary={{ selected_dietary }}&verified={{ selected_verified }}&date={{ selected_date }}&availability={{ selected_availability }}&max_distance={{ selected_max_distance }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+          <a href="?page={{ page_obj.next_page_number }}{% if location_name %}&location={{ location_name|urlencode }}{% endif %}{% if user_lat %}&lat={{ user_lat }}{% endif %}{% if user_lng %}&lng={{ user_lng }}{% endif %}" class="btn btn-secondary btn-sm">Next &rarr;</a>
         {% endif %}
       </div>
     {% endif %}
@@ -265,15 +280,167 @@
       <div class="empty-state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       </div>
-      <div class="empty-state-tag">Filter Results</div>
+      <div class="empty-state-tag">Location Search</div>
       <h3>No food locations found</h3>
-      <p>No food locations match your current filters. You can clear your filters, search another area, or view food scheduled for today.</p>
+      {% if location_name %}
+        <p>No free food events currently found near <strong>{{ location_name }}</strong>. Try searching for a nearby town or village (e.g. Palandur, Nagpur, Bhandara), or reset to view all events.</p>
+      {% else %}
+        <p>No food locations match your current search. Try searching by city, town, or village or use your current location.</p>
+      {% endif %}
       <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-        <a href="{% url 'food:event_list' %}" class="btn btn-secondary">Clear All Filters</a>
-        <button type="button" class="btn btn-primary" onclick="openModal('manualLocationModal')">Search Another Area</button>
-        <a href="{% url 'food:event_list' %}?date=today" class="btn btn-outline">View Today's Food</a>
+        <a href="{% url 'food:event_list' %}" class="btn btn-secondary">View All Locations</a>
+        <button type="button" class="btn btn-primary" onclick="const inp = document.getElementById('exploreLocationInput'); if (inp) { inp.focus(); inp.select(); }">Search Another Town</button>
       </div>
     </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('exploreLocationInput');
+  const resultsBox = document.getElementById('exploreLocationResults');
+  const form = document.getElementById('exploreLocationForm');
+  const latInput = document.getElementById('exploreLat');
+  const lngInput = document.getElementById('exploreLng');
+  const nearMeBtn = document.getElementById('btnExploreNearMe');
+
+  let debounceTimer = null;
+
+  if (input && resultsBox) {
+    // When the user edits the input manually, reset the coordinate fields so view falls back to geocoding the new input string
+    input.addEventListener('input', function() {
+      const query = this.value.trim();
+      latInput.value = '';
+      lngInput.value = '';
+
+      clearTimeout(debounceTimer);
+      if (query.length < 2) {
+        resultsBox.innerHTML = '';
+        resultsBox.style.display = 'none';
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        try {
+          let searchUrl = `/api/locations/search/?q=${encodeURIComponent(query)}`;
+          if (typeof GeolocationManager !== 'undefined') {
+            const stored = GeolocationManager.getStoredLocation();
+            if (stored && stored.lat && stored.lng) {
+              searchUrl += `&lat=${stored.lat}&lng=${stored.lng}`;
+            }
+          }
+          const resp = await fetch(searchUrl);
+          if (!resp.ok) return;
+          const data = await resp.json();
+          resultsBox.innerHTML = '';
+
+          if (!data.results || data.results.length === 0) {
+            resultsBox.innerHTML = '<div class="explore-search-empty">No matching places found. Try another town (e.g., Palandur, Nagpur, Bhandara).</div>';
+            resultsBox.style.display = 'block';
+            return;
+          }
+
+          data.results.forEach(place => {
+            const item = document.createElement('div');
+            item.className = 'explore-search-item';
+            const shortName = place.display_name.split(',')[0];
+            item.innerHTML = `
+              <div class="explore-search-name">${shortName}</div>
+              <div class="explore-search-sub">${place.display_name}</div>
+            `;
+            item.addEventListener('click', () => {
+              input.value = shortName;
+              latInput.value = place.lat;
+              lngInput.value = place.lon;
+              resultsBox.innerHTML = '';
+              resultsBox.style.display = 'none';
+              if (typeof GeolocationManager !== 'undefined') {
+                GeolocationManager.setStoredLocation(place.lat, place.lon, shortName, true);
+              }
+              form.submit();
+            });
+            resultsBox.appendChild(item);
+          });
+          resultsBox.style.display = 'block';
+        } catch (err) {
+          console.error('Explore location search error:', err);
+        }
+      }, 300);
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+      if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+        resultsBox.style.display = 'none';
+      }
+    });
+
+    // Pressing Enter closes dropdown
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        resultsBox.style.display = 'none';
+      }
+    });
+  }
+
+  // Handle "Near Me" GPS button
+  if (nearMeBtn && form) {
+    nearMeBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const originalHtml = nearMeBtn.innerHTML;
+      nearMeBtn.disabled = true;
+      nearMeBtn.innerHTML = `
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" class="spin-animation">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+          <path d="M12 2a10 10 0 0 1 10 10" />
+        </svg>
+        <span>Locating...</span>
+      `;
+
+      if (typeof GeolocationManager !== 'undefined') {
+        GeolocationManager.requestLocation(
+          function(coords) {
+            latInput.value = coords.lat;
+            lngInput.value = coords.lng;
+            input.value = coords.locationName || 'Near Me';
+            form.submit();
+          },
+          function(err) {
+            nearMeBtn.disabled = false;
+            nearMeBtn.innerHTML = originalHtml;
+            if (typeof showToast === 'function') {
+              showToast('Could not access GPS location. Please type your town or village.', 'error');
+            } else {
+              alert('Could not access GPS location. Please type your town or village.');
+            }
+            input.focus();
+          }
+        );
+      } else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(pos) {
+            latInput.value = pos.coords.latitude;
+            lngInput.value = pos.coords.longitude;
+            input.value = 'Near Me';
+            form.submit();
+          },
+          function(err) {
+            nearMeBtn.disabled = false;
+            nearMeBtn.innerHTML = originalHtml;
+            alert('Unable to detect location. Please type your city or town name.');
+            input.focus();
+          },
+          { timeout: 8000, enableHighAccuracy: true }
+        );
+      } else {
+        nearMeBtn.disabled = false;
+        nearMeBtn.innerHTML = originalHtml;
+        alert('Geolocation is not supported by your browser.');
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

@@ -49,12 +49,24 @@ def map_view(request):
 def location_search_api(request):
     """
     AJAX endpoint for manual location search when browser geolocation is denied or unavailable.
+    Supports proximity biasing using optional lat/lng query parameters.
     """
     query = request.GET.get('q', '').strip()
     if not query:
         return JsonResponse({'results': []})
-        
-    results = search_places_geocoding(query)
+
+    user_lat = None
+    user_lon = None
+    try:
+        lat_param = request.GET.get('lat')
+        lon_param = request.GET.get('lng') or request.GET.get('lon')
+        if lat_param and lon_param:
+            user_lat = float(lat_param)
+            user_lon = float(lon_param)
+    except (ValueError, TypeError):
+        pass
+
+    results = search_places_geocoding(query, lat=user_lat, lon=user_lon)
     return JsonResponse({'results': results})
 
 def reverse_geocode_api(request):

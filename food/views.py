@@ -12,7 +12,7 @@ from django.db.models import Q, Count
 
 from .models import FreeFoodEvent, Favorite, Report, CommunityLiveStatus
 from .forms import FreeFoodEventForm, ReportForm
-from locations.services import get_recommended_events, haversine_distance
+from locations.services import get_recommended_events, haversine_distance, search_places_geocoding
 
 def home_view(request):
     """
@@ -102,47 +102,41 @@ def home_view(request):
 
 def event_list_view(request):
     """
-    Search and filter directory for all approved free food events.
-    Supports filtering by event type, date, availability status, dietary preferences,
-    surplus food recovery, verified organizers, and search keywords.
+    Explore free food events directory searched strictly by location.
+    Ranks events by proximity when user coordinates or a place name is provided.
     """
-    q = request.GET.get('q', '').strip()
-    event_type = request.GET.get('type', '').strip()
-    dietary = request.GET.get('dietary', '').strip()
-    date_filter = request.GET.get('date', '').strip()
-    availability = request.GET.get('availability', '').strip()
-    verified_only = request.GET.get('verified', '').lower() in ('true', '1')
+    location_name = request.GET.get('location', request.GET.get('location_name', request.GET.get('q', ''))).strip()
     user_lat = request.GET.get('lat')
     user_lng = request.GET.get('lng')
-    max_dist = request.GET.get('max_distance')
 
+    lat_val = None
+    lng_val = None
     try:
-        max_dist_val = float(max_dist) if max_dist else None
-    except ValueError:
-        max_dist_val = None
-    if max_dist_val is not None and max_dist_val < 0:
-        max_dist_val = None
-
-    try:
-        lat_val = float(user_lat) if user_lat else None
-        lng_val = float(user_lng) if user_lng else None
-        if lat_val is not None and not -90 <= lat_val <= 90:
-            lat_val, lng_val = None, None
-        if lng_val is not None and not -180 <= lng_val <= 180:
-            lat_val, lng_val = None, None
-    except ValueError:
+        if user_lat:
+            lat_val = float(user_lat)
+            if not -90 <= lat_val <= 90:
+                lat_val = None
+        if user_lng:
+            lng_val = float(user_lng)
+            if not -180 <= lng_val <= 180:
+                lng_val = None
+    except (ValueError, TypeError):
         lat_val, lng_val = None, None
+
+    # If user provided a location name without lat/lng, auto-geocode to coordinates
+    if location_name and (lat_val is None or lng_val is None):
+        try:
+            geo_results = search_places_geocoding(location_name)
+            if geo_results:
+                lat_val = geo_results[0]['lat']
+                lng_val = geo_results[0]['lon']
+        except Exception:
+            pass
 
     results = get_recommended_events(
         user_lat=lat_val,
         user_lng=lng_val,
-        event_type=event_type or None,
-        availability=availability or None,
-        date_filter=date_filter or None,
-        max_distance_km=max_dist_val,
-        search_query=q or None,
-        dietary=dietary or None,
-        verified_only=verified_only,
+        search_query=location_name if (lat_val is None and lng_val is None) else None,
     )
 
     paginator = Paginator(results, 12)
@@ -156,18 +150,10 @@ def event_list_view(request):
     return render(request, 'food/event_list.html', {
         'page_obj': page_obj,
         'results_count': len(results),
-        'search_query': q,
-        'selected_type': event_type,
-        'selected_dietary': dietary,
-        'selected_verified': verified_only,
-        'selected_date': date_filter,
-        'selected_availability': availability,
-        'selected_max_distance': max_dist,
-        'event_types': FreeFoodEvent.EVENT_TYPES,
-        'dietary_types': FreeFoodEvent.DIETARY_TYPES,
+        'location_name': location_name,
+        'user_lat': lat_val,
+        'user_lng': lng_val,
         'user_favorites_ids': user_favorites_ids,
-        'user_lat': user_lat,
-        'user_lng': user_lng,
     })
 
 

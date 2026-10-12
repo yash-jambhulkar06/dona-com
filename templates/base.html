@@ -33,6 +33,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Map CDN Preconnects -->
+  <link rel="preconnect" href="https://basemaps.cartocdn.com">
+  <link rel="dns-prefetch" href="https://basemaps.cartocdn.com">
+  <link rel="preconnect" href="https://server.arcgisonline.com">
+  <link rel="dns-prefetch" href="https://server.arcgisonline.com">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://unpkg.com">
+
   <!-- Platform Stylesheets -->
   <link rel="stylesheet" href="/static/css/base.css">
   <link rel="stylesheet" href="/static/css/components.css">
@@ -68,7 +76,7 @@
     <div class="container header-inner">
       <a href="{% url 'food:home' %}" class="brand-logo" aria-label="Free Food home">
         <span class="brand-icon-mark" aria-hidden="true">
-          <img src="/static/images/logo-symbol.svg" alt="Free Food Logo" width="34" height="34">
+          <img src="/static/images/logo-symbol.png" alt="Free Food Logo" width="38" height="38">
         </span>
         <div class="brand-logo-text">
           <span class="brand-name">Free</span><span class="brand-food-word">Food</span>
@@ -372,8 +380,8 @@
   <footer class="site-footer">
     <div class="container site-footer-inner">
       <div class="site-footer-brand">
-        <span class="brand-icon-mark" style="width: 28px; height: 28px; border-radius: 8px;">
-          <img src="/static/images/logo-symbol.svg" alt="Free Food Logo" width="28" height="28">
+        <span class="brand-icon-mark" style="width: 32px; height: 32px; border-radius: 50%;">
+          <img src="/static/images/logo-symbol.png" alt="Free Food Logo" width="32" height="32">
         </span>
         <span>Free <span style="color: var(--primary);">Food</span></span>
       </div>
